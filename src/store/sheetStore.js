@@ -28,4 +28,106 @@ export const useSheetStore = create((set) => ({
     set((state) => ({
       topics: state.topics.filter((t) => t.id !== id),
     })),
+
+  // ----- SUBTOPICS -----
+  addSubTopic: (topicId, subTitle) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? {
+              ...t,
+              subTopics: [
+                ...t.subTopics,
+                { id: Date.now(), title: subTitle, questions: [] },
+              ],
+            }
+          : t
+      ),
+    })),
+
+  editSubTopic: (topicId, subId, newTitle) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? {
+              ...t,
+              subTopics: t.subTopics.map((s) =>
+                s.id === subId ? { ...s, title: newTitle } : s
+              ),
+            }
+          : t
+      ),
+    })),
+
+  deleteSubTopic: (topicId, subId) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? { ...t, subTopics: t.subTopics.filter((s) => s.id !== subId) }
+          : t
+      ),
+    })),
+
+  // ----- QUESTIONS -----
+  addQuestion: (topicId, subId, questionText) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? {
+              ...t,
+              subTopics: t.subTopics.map((s) =>
+                s.id === subId
+                  ? {
+                      ...s,
+                      questions: [
+                        ...s.questions,
+                        { id: Date.now(), text: questionText },
+                      ],
+                    }
+                  : s
+              ),
+            }
+          : t
+      ),
+    })),
+
+  editQuestion: (topicId, subId, questionId, newText) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? {
+              ...t,
+              subTopics: t.subTopics.map((s) =>
+                s.id === subId
+                  ? {
+                      ...s,
+                      questions: s.questions.map((q) =>
+                        q.id === questionId ? { ...q, text: newText } : q
+                      ),
+                    }
+                  : s
+              ),
+            }
+          : t
+      ),
+    })),
+
+  deleteQuestion: (topicId, subId, questionId) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === topicId
+          ? {
+              ...t,
+              subTopics: t.subTopics.map((s) =>
+                s.id === subId
+                  ? {
+                      ...s,
+                      questions: s.questions.filter((q) => q.id !== questionId),
+                    }
+                  : s
+              ),
+            }
+          : t
+      ),
+    })),
 }));
