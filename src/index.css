@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* ---- Theme tweaks & utility variables ---- */
+:root{
+  --bg: 24 24 27;          /* rgb components for convenience */
+  --card-bg: 17 19 23;     /* darker card */
+  --muted: 148 163 184;    /* muted text */
+  --accent: 255 122 0;     /* orange */
+}
+
+/* Subtle global body tweaks */
+body {
+  background-color: rgb(var(--bg));
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Small card utility (use className "card" if you want) */
+.card {
+  background-color: rgba(var(--card-bg), 0.7);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* input subtle inner glow on focus */
+:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(var(--accent),0.08);
+}
+
+/* small helper for muted text */
+.text-muted { color: rgba(var(--muted), 0.9); }
