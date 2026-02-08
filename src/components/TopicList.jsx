@@ -8,7 +8,7 @@ function TopicList() {
       {topics.map((topic) => (
         <div
           key={topic.id}
-          className="p-4 bg-white border rounded shadow"
+          className="p-4 bg-white rounded shadow"
         >
           <h2 className="text-lg font-semibold">{topic.title}</h2>
         </div>
@@ -16,5 +16,6 @@ function TopicList() {
     </div>
   );
 }
+//hello
 
 export default TopicList;
