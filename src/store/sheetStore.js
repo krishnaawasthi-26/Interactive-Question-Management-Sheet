@@ -16,4 +16,16 @@ export const useSheetStore = create((set) => ({
         },
       ],
     })),
+
+  editTopic: (id, newTitle) =>
+    set((state) => ({
+      topics: state.topics.map((t) =>
+        t.id === id ? { ...t, title: newTitle } : t
+      ),
+    })),
+
+  deleteTopic: (id) =>
+    set((state) => ({
+      topics: state.topics.filter((t) => t.id !== id),
+    })),
 }));
