@@ -150,41 +150,98 @@ export const useSheetStore = create((set) => ({
       return { topics: newTopics };
     }),
 
-  reorderSubTopics: (topicId, startIndex, endIndex) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: (() => {
-                const newSub = Array.from(t.subTopics);
-                const [removed] = newSub.splice(startIndex, 1);
-                newSub.splice(endIndex, 0, removed);
-                return newSub;
-              })(),
-            }
-          : t
-      ),
-    })),
+  moveSubTopic: (fromTopicId, toTopicId, startIndex, endIndex) =>
+    set((state) => {
+      const fromTopic = state.topics.find(t => t.id === fromTopicId);
+      const toTopic = state.topics.find(t => t.id === toTopicId);
+      if (!fromTopic || !toTopic) return state;
 
-  reorderQuestions: (topicId, subId, startIndex, endIndex) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId
-                  ? (() => {
-                      const newQs = Array.from(s.questions);
-                      const [removed] = newQs.splice(startIndex, 1);
-                      newQs.splice(endIndex, 0, removed);
-                      return { ...s, questions: newQs };
-                    })()
-                  : s
-              ),
-            }
-          : t
-      ),
-    })),
+      const newFromSub = Array.from(fromTopic.subTopics);
+      const [movedSub] = newFromSub.splice(startIndex, 1);
+
+      const newToSub = fromTopicId === toTopicId ? newFromSub : Array.from(toTopic.subTopics);
+      newToSub.splice(endIndex, 0, movedSub);
+
+      return {
+        topics: state.topics.map(t => {
+          if (t.id === fromTopicId) return { ...t, subTopics: newFromSub };
+          if (t.id === toTopicId) return { ...t, subTopics: newToSub };
+          return t;
+        })
+      };
+    }),
+
+  moveQuestion: (fromTopicId, fromSubId, toTopicId, toSubId, startIndex, endIndex) =>
+  set((state) => {
+    const fromTopic = state.topics.find(t => t.id === fromTopicId);
+    const toTopic = state.topics.find(t => t.id === toTopicId);
+    if (!fromTopic || !toTopic) return state;
+
+    const fromSub = fromTopic.subTopics.find(s => s.id === fromSubId);
+    const toSub = toTopic.subTopics.find(s => s.id === toSubId);
+    if (!fromSub || !toSub) return state;
+
+    // Same subtopic → reorder only
+    if (fromTopicId === toTopicId && fromSubId === toSubId) {
+      const newQs = Array.from(fromSub.questions);
+      const [movedQ] = newQs.splice(startIndex, 1);
+      newQs.splice(endIndex, 0, movedQ);
+
+      return {
+        topics: state.topics.map(t =>
+          t.id === fromTopicId
+            ? {
+                ...t,
+                subTopics: t.subTopics.map(s =>
+                  s.id === fromSubId ? { ...s, questions: newQs } : s
+                ),
+              }
+            : t
+        ),
+      };
+    }
+
+    // Different subtopic or different topic
+    const newFromQs = Array.from(fromSub.questions);
+    const [movedQ] = newFromQs.splice(startIndex, 1);
+    const newToQs = Array.from(toSub.questions);
+    newToQs.splice(endIndex, 0, movedQ);
+
+    return {
+      topics: state.topics.map(t => {
+        if (t.id === fromTopicId && fromTopicId === toTopicId) {
+          // Same topic, different subtopic
+          return {
+            ...t,
+            subTopics: t.subTopics.map(s => {
+              if (s.id === fromSubId) return { ...s, questions: newFromQs };
+              if (s.id === toSubId) return { ...s, questions: newToQs };
+              return s;
+            }),
+          };
+        } else if (t.id === fromTopicId) {
+          // Source topic
+          return {
+            ...t,
+            subTopics: t.subTopics.map(s =>
+              s.id === fromSubId ? { ...s, questions: newFromQs } : s
+            ),
+          };
+        } else if (t.id === toTopicId) {
+          // Destination topic
+          return {
+            ...t,
+            subTopics: t.subTopics.map(s =>
+              s.id === toSubId ? { ...s, questions: newToQs } : s
+            ),
+          };
+        }
+        return t;
+      }),
+    };
+  }),
+
+
+
+
 }));
