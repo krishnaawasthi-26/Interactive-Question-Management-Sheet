@@ -1,4 +1,4 @@
-function Header({ isEditing, onToggleEdit }) {
+function Header({ isEditing, onToggleEdit, onReset }) {
   return (
     <header className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
@@ -16,6 +16,12 @@ function Header({ isEditing, onToggleEdit }) {
           className="px-3 py-1 rounded-md text-sm border border-gray-700 text-gray-200 hover:bg-gray-800 transition"
         >
           {isEditing ? "View Only" : "Edit Sheet"}
+        </button>
+        <button
+          onClick={onReset}
+          className="px-3 py-1 rounded-md text-sm border border-red-500 text-red-200 hover:bg-red-900/40 transition"
+        >
+          Reset to API
         </button>
       </div>
     </header>
