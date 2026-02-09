@@ -1,3 +1,5 @@
+import sampleSheet from "../data/sampleSheet.json";
+
 const API_BASE_URL =
   "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet";
 const LOCAL_STORAGE_KEY = "question-sheet";
@@ -75,12 +77,25 @@ export const fetchSheetBySlug = async (slug) => {
     const data = await response.json();
     const payload = data?.data?.sheet ?? data?.data ?? data?.sheet ?? data;
     const sheet = normalizeSheet(payload, slug);
+    const localSheet = readLocalSheet(slug);
+    if (
+      (!localSheet || !Array.isArray(localSheet.topics) || localSheet.topics.length === 0) &&
+      (!Array.isArray(sheet.topics) || sheet.topics.length === 0)
+    ) {
+      const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
+      writeLocalSheet(fallbackSheet);
+      return fallbackSheet;
+    }
     writeLocalSheet(sheet);
     return sheet;
   } catch (error) {
     const localSheet = readLocalSheet(slug);
-    if (localSheet) return localSheet;
-    return normalizeSheet({ topics: [] }, slug);
+    if (localSheet && Array.isArray(localSheet.topics) && localSheet.topics.length > 0) {
+      return localSheet;
+    }
+    const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
+    writeLocalSheet(fallbackSheet);
+    return fallbackSheet;
   }
 };
 
