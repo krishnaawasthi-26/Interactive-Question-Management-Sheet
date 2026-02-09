@@ -35,7 +35,7 @@ export const useSheetStore = create((set, get) => ({
   topics: [],
   isLoading: false,
   loadError: null,
-  hasLoaded: false,
+  loadSource: "idle",
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
@@ -273,18 +273,24 @@ fetchSheetBySlug: async (slug) => {
     // const sheet = await fetchSheetBySlug(slug);
     // if (sheet?.topics) {
     //   set({ topics: sheet.topics });
-    set({ isLoading: true, loadError: null, hasLoaded: false });
+    set({ isLoading: true, loadError: null, loadSource: "idle" });
     try {
       const sheet = await fetchSheetBySlug(slug);
       if (sheet?.topics) {
-        set({ topics: sheet.topics, hasLoaded: true });
+        set({ topics: sheet.topics });
       }
+      set({
+        loadSource: sheet?.source ?? "local",
+        loadError: sheet?.hadRemoteError
+          ? "Failed to load API, showing local data."
+          : null,
+      });
       return sheet;
     } catch (error) {
       set({
         loadError:
           error instanceof Error ? error.message : "Unable to load sheet data.",
-        hasLoaded: false,
+        loadSource: "fallback",
       });
       return null;
     } finally {

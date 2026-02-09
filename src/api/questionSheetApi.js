@@ -78,24 +78,37 @@ export const fetchSheetBySlug = async (slug) => {
     const payload = data?.data?.sheet ?? data?.data ?? data?.sheet ?? data;
     const sheet = normalizeSheet(payload, slug);
     const localSheet = readLocalSheet(slug);
+    const hasLocalTopics =
+      Array.isArray(localSheet?.topics) && localSheet.topics.length > 0;
+    const isRemoteEmpty =
+      !Array.isArray(sheet.topics) || sheet.topics.length === 0;
     if (
-      (!localSheet || !Array.isArray(localSheet.topics) || localSheet.topics.length === 0) &&
-      (!Array.isArray(sheet.topics) || sheet.topics.length === 0)
+      // (!localSheet || !Array.isArray(localSheet.topics) || localSheet.topics.length === 0) &&
+      // (!Array.isArray(sheet.topics) || sheet.topics.length === 0)
+      !hasLocalTopics &&
+      isRemoteEmpty
     ) {
       const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
       writeLocalSheet(fallbackSheet);
-      return fallbackSheet;
+      // return fallbackSheet;
+      return { ...fallbackSheet, source: "fallback", hadRemoteError: false };
+    }
+    if (isRemoteEmpty && hasLocalTopics) {
+      return { ...localSheet, source: "local", hadRemoteError: false };
     }
     writeLocalSheet(sheet);
-    return sheet;
+    // return sheet;
+    return { ...sheet, source: "remote", hadRemoteError: false };
   } catch (error) {
     const localSheet = readLocalSheet(slug);
     if (localSheet && Array.isArray(localSheet.topics) && localSheet.topics.length > 0) {
-      return localSheet;
+      // return localSheet;
+      return { ...localSheet, source: "local", hadRemoteError: true };
     }
     const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
     writeLocalSheet(fallbackSheet);
-    return fallbackSheet;
+    // return fallbackSheet;
+    return { ...fallbackSheet, source: "fallback", hadRemoteError: true };
   }
 };
 

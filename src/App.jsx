@@ -11,7 +11,7 @@ function App() {
   const fetchSheetBySlug = useSheetStore((state) => state.fetchSheetBySlug);
   const isLoading = useSheetStore((state) => state.isLoading);
   const loadError = useSheetStore((state) => state.loadError);
-  const hasLoaded = useSheetStore((state) => state.hasLoaded);
+  const loadSource = useSheetStore((state) => state.loadSource);
 
   useEffect(() => {
     fetchSheetBySlug("striver-sde-sheet");
@@ -45,13 +45,14 @@ function App() {
 
         {/* Main sheet / cards container */}
         <main>
-          {(isLoading || loadError || hasLoaded) && (
+          {(isLoading || loadError || loadSource !== "idle") && (
             <p className="mb-4 text-sm text-zinc-300">
               {isLoading
                 ? "Loading sheet..."
-                : loadError
-                  ? "Failed to load API, showing local data."
-                  : "Sheet loaded successfully."}
+                : loadError ||
+                  (loadSource !== "remote"
+                    ? "Showing local data."
+                    : "Loaded from API.")}
             </p>
           )}
           <TopicList isEditing={isEditing} /> {/* pass editing state */}
