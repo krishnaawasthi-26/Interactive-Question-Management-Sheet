@@ -1,247 +1,310 @@
 import { create } from "zustand";
+import { fetchSheetBySlug, persistSheet } from "../api/questionSheetApi";
 
-export const useSheetStore = create((set) => ({
+const createTopic = (title) => ({
+  id: Date.now(),
+  title,
+  subTopics: [],
+});
+
+const createSubTopic = (title) => ({
+  id: Date.now(),
+  title,
+  questions: [],
+});
+
+const createQuestion = (text) => ({
+  id: Date.now(),
+  text,
+  link: "",
+});
+
+const updateTopicById = (topics, topicId, updater) =>
+  topics.map((topic) =>
+    topic.id === topicId ? updater(topic) : topic
+  );
+
+const updateSubTopicById = (subTopics, subId, updater) =>
+  subTopics.map((subTopic) =>
+    subTopic.id === subId ? updater(subTopic) : subTopic
+  );
+
+const updateQuestionById = (questions, questionId, updater) =>
+  questions.map((question) =>
+    question.id === questionId ? updater(question) : question
+  );
+
+const reorderArray = (items, startIndex, endIndex) => {
+  const nextItems = Array.from(items);
+  const [removed] = nextItems.splice(startIndex, 1);
+  nextItems.splice(endIndex, 0, removed);
+  return nextItems;
+};
+
+export const useSheetStore = create((set, get) => ({
   topics: [],
+  sheetTitle: "Question Sheet",
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
   addTopic: (title) =>
-    set((state) => ({
-      topics: [
-        ...state.topics,
-        { id: Date.now(), title, subTopics: [] },
-      ],
-    })),
+    set((state) => {
+      const topics = [...state.topics, createTopic(title)];
+      persistSheet({ topics });
+      return { topics };
+    }),
   editTopic: (id, newTitle) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === id ? { ...t, title: newTitle } : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, id, (topic) => ({
+        ...topic,
+        title: newTitle,
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteTopic: (id) =>
-    set((state) => ({
-      topics: state.topics.filter((t) => t.id !== id),
-    })),
+    set((state) => {
+      const topics = state.topics.filter((topic) => topic.id !== id);
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Subtopics -----
   addSubTopic: (topicId, subTitle) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: [
-                ...t.subTopics,
-                { id: Date.now(), title: subTitle, questions: [] },
-              ],
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: [...topic.subTopics, createSubTopic(subTitle)],
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   editSubTopic: (topicId, subId, newTitle) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId ? { ...s, title: newTitle } : s
-              ),
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
+          ...subTopic,
+          title: newTitle,
+        })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteSubTopic: (topicId, subId) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? { ...t, subTopics: t.subTopics.filter((s) => s.id !== subId) }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: topic.subTopics.filter((subTopic) => subTopic.id !== subId),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Questions -----
   addQuestion: (topicId, subId, questionText) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId
-                  ? {
-                      ...s,
-                      questions: [
-                        ...s.questions,
-                        { id: Date.now(), text: questionText, link: "" },
-                      ],
-                    }
-                  : s
-              ),
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
+          ...subTopic,
+          questions: [...subTopic.questions, createQuestion(questionText)],
+        })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   editQuestion: (topicId, subId, questionId, newText) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId
-                  ? {
-                      ...s,
-                      questions: s.questions.map((q) =>
-                        q.id === questionId ? { ...q, text: newText } : q
-                      ),
-                    }
-                  : s
-              ),
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
+          ...subTopic,
+          questions: updateQuestionById(
+            subTopic.questions,
+            questionId,
+            (question) => ({ ...question, text: newText })
+          ),
+        })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteQuestion: (topicId, subId, questionId) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId
-                  ? {
-                      ...s,
-                      questions: s.questions.filter((q) => q.id !== questionId),
-                    }
-                  : s
-              ),
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
+          ...subTopic,
+          questions: subTopic.questions.filter(
+            (question) => question.id !== questionId
+          ),
+        })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   addLinkToQuestion: (topicId, subId, questionId, link) =>
-    set((state) => ({
-      topics: state.topics.map((t) =>
-        t.id === topicId
-          ? {
-              ...t,
-              subTopics: t.subTopics.map((s) =>
-                s.id === subId
-                  ? {
-                      ...s,
-                      questions: s.questions.map((q) =>
-                        q.id === questionId ? { ...q, link } : q
-                      ),
-                    }
-                  : s
-              ),
-            }
-          : t
-      ),
-    })),
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
+        ...topic,
+        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
+          ...subTopic,
+          questions: updateQuestionById(
+            subTopic.questions,
+            questionId,
+            (question) => ({ ...question, link })
+          ),
+        })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Drag & Drop -----
   reorderTopics: (startIndex, endIndex) =>
     set((state) => {
-      const newTopics = Array.from(state.topics);
-      const [removed] = newTopics.splice(startIndex, 1);
-      newTopics.splice(endIndex, 0, removed);
-      return { topics: newTopics };
+      const topics = reorderArray(state.topics, startIndex, endIndex);
+      persistSheet({ topics });
+      return { topics };
     }),
 
   moveSubTopic: (fromTopicId, toTopicId, startIndex, endIndex) =>
     set((state) => {
-      const fromTopic = state.topics.find(t => t.id === fromTopicId);
-      const toTopic = state.topics.find(t => t.id === toTopicId);
+      const fromTopic = state.topics.find((topic) => topic.id === fromTopicId);
+      const toTopic = state.topics.find((topic) => topic.id === toTopicId);
       if (!fromTopic || !toTopic) return state;
 
-      const newFromSub = Array.from(fromTopic.subTopics);
-      const [movedSub] = newFromSub.splice(startIndex, 1);
+      const newFromSubTopics = Array.from(fromTopic.subTopics);
+      const [movedSubTopic] = newFromSubTopics.splice(startIndex, 1);
 
-      const newToSub = fromTopicId === toTopicId ? newFromSub : Array.from(toTopic.subTopics);
-      newToSub.splice(endIndex, 0, movedSub);
+      const newToSubTopics =
+        fromTopicId === toTopicId
+          ? newFromSubTopics
+          : Array.from(toTopic.subTopics);
+      newToSubTopics.splice(endIndex, 0, movedSubTopic);
 
-      return {
-        topics: state.topics.map(t => {
-          if (t.id === fromTopicId) return { ...t, subTopics: newFromSub };
-          if (t.id === toTopicId) return { ...t, subTopics: newToSub };
-          return t;
-        })
+      const updatedState = {
+        topics: state.topics.map((topic) => {
+          if (topic.id === fromTopicId) {
+            return { ...topic, subTopics: newFromSubTopics };
+          }
+          if (topic.id === toTopicId) {
+            return { ...topic, subTopics: newToSubTopics };
+          }
+          return topic;
+        }),
       };
+      persistSheet({ topics: updatedState.topics });
+      return updatedState;
     }),
 
-  moveQuestion: (fromTopicId, fromSubId, toTopicId, toSubId, startIndex, endIndex) =>
-  set((state) => {
-    const fromTopic = state.topics.find(t => t.id === fromTopicId);
-    const toTopic = state.topics.find(t => t.id === toTopicId);
-    if (!fromTopic || !toTopic) return state;
+  moveQuestion: (
+    fromTopicId,
+    fromSubId,
+    toTopicId,
+    toSubId,
+    startIndex,
+    endIndex
+  ) =>
+    set((state) => {
+      const fromTopic = state.topics.find(
+        (topic) => topic.id === fromTopicId
+      );
+      const toTopic = state.topics.find((topic) => topic.id === toTopicId);
+      if (!fromTopic || !toTopic) return state;
 
-    const fromSub = fromTopic.subTopics.find(s => s.id === fromSubId);
-    const toSub = toTopic.subTopics.find(s => s.id === toSubId);
-    if (!fromSub || !toSub) return state;
+      const fromSub = fromTopic.subTopics.find((sub) => sub.id === fromSubId);
+      const toSub = toTopic.subTopics.find((sub) => sub.id === toSubId);
+      if (!fromSub || !toSub) return state;
 
-    // Same subtopic → reorder only
-    if (fromTopicId === toTopicId && fromSubId === toSubId) {
-      const newQs = Array.from(fromSub.questions);
-      const [movedQ] = newQs.splice(startIndex, 1);
-      newQs.splice(endIndex, 0, movedQ);
+      // Same subtopic → reorder only
+      if (fromTopicId === toTopicId && fromSubId === toSubId) {
+        const newQuestions = reorderArray(
+          fromSub.questions,
+          startIndex,
+          endIndex
+        );
 
-      return {
-        topics: state.topics.map(t =>
-          t.id === fromTopicId
-            ? {
-                ...t,
-                subTopics: t.subTopics.map(s =>
-                  s.id === fromSubId ? { ...s, questions: newQs } : s
-                ),
-              }
-            : t
-        ),
+        const updatedState = {
+          topics: state.topics.map((topic) =>
+            topic.id === fromTopicId
+              ? {
+                  ...topic,
+                  subTopics: updateSubTopicById(
+                    topic.subTopics,
+                    fromSubId,
+                    (subTopic) => ({ ...subTopic, questions: newQuestions })
+                  ),
+                }
+              : topic
+          ),
+        };
+        persistSheet({ topics: updatedState.topics });
+        return updatedState;
+      }
+
+      // Different subtopic or different topic
+      const newFromQuestions = Array.from(fromSub.questions);
+      const [movedQuestion] = newFromQuestions.splice(startIndex, 1);
+      const newToQuestions = Array.from(toSub.questions);
+      newToQuestions.splice(endIndex, 0, movedQuestion);
+
+      const updatedState = {
+        topics: state.topics.map((topic) => {
+          if (topic.id === fromTopicId && fromTopicId === toTopicId) {
+            // Same topic, different subtopic
+            return {
+              ...topic,
+              subTopics: topic.subTopics.map((subTopic) => {
+                if (subTopic.id === fromSubId) {
+                  return { ...subTopic, questions: newFromQuestions };
+                }
+                if (subTopic.id === toSubId) {
+                  return { ...subTopic, questions: newToQuestions };
+                }
+                return subTopic;
+              }),
+            };
+          }
+          if (topic.id === fromTopicId) {
+            // Source topic
+            return {
+              ...topic,
+              subTopics: updateSubTopicById(
+                topic.subTopics,
+                fromSubId,
+                (subTopic) => ({ ...subTopic, questions: newFromQuestions })
+              ),
+            };
+          }
+          if (topic.id === toTopicId) {
+            // Destination topic
+            return {
+              ...topic,
+              subTopics: updateSubTopicById(
+                topic.subTopics,
+                toSubId,
+                (subTopic) => ({ ...subTopic, questions: newToQuestions })
+              ),
+            };
+          }
+          return topic;
+        }),
       };
+      persistSheet({ topics: updatedState.topics });
+      return updatedState;
+    }),
+
+  // ----- API -----
+  fetchSheetBySlug: async (slug) => {
+    const sheet = await fetchSheetBySlug(slug);
+    if (sheet?.topics) {
+      set({
+        topics: sheet.topics,
+        sheetTitle: sheet.title ?? "Question Sheet",
+      });
     }
-
-    // Different subtopic or different topic
-    const newFromQs = Array.from(fromSub.questions);
-    const [movedQ] = newFromQs.splice(startIndex, 1);
-    const newToQs = Array.from(toSub.questions);
-    newToQs.splice(endIndex, 0, movedQ);
-
-    return {
-      topics: state.topics.map(t => {
-        if (t.id === fromTopicId && fromTopicId === toTopicId) {
-          // Same topic, different subtopic
-          return {
-            ...t,
-            subTopics: t.subTopics.map(s => {
-              if (s.id === fromSubId) return { ...s, questions: newFromQs };
-              if (s.id === toSubId) return { ...s, questions: newToQs };
-              return s;
-            }),
-          };
-        } else if (t.id === fromTopicId) {
-          // Source topic
-          return {
-            ...t,
-            subTopics: t.subTopics.map(s =>
-              s.id === fromSubId ? { ...s, questions: newFromQs } : s
-            ),
-          };
-        } else if (t.id === toTopicId) {
-          // Destination topic
-          return {
-            ...t,
-            subTopics: t.subTopics.map(s =>
-              s.id === toSubId ? { ...s, questions: newToQs } : s
-            ),
-          };
-        }
-        return t;
-      }),
-    };
-  }),
-
-
-
-
+    return sheet;
+  },
 }));
