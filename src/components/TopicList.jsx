@@ -25,15 +25,17 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
   const [questionInput, setQuestionInput] = useState({});
   const [expandedTopics, setExpandedTopics] = useState({});
   const [expandedSubtopics, setExpandedSubtopics] = useState({});
-
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+ const normalizeText = (value) =>
+    value.trim().toLowerCase().replace(/\s+/g, " ");
+  const normalizedQuery = normalizeText(searchQuery);
+  const shouldExpandAll = Boolean(normalizedQuery);
   const visibleTopics = normalizedQuery
     ? topics
         .map((topic) => {
           const filteredSubTopics = topic.subTopics
             .map((sub) => {
               const filteredQuestions = sub.questions.filter((question) => {
-                const normalizedQuestion = question.text.toLowerCase();
+                const normalizedQuestion = normalizeText(question.text);
                 return onlyExactMatch
                   ? normalizedQuestion === normalizedQuery
                   : normalizedQuestion.includes(normalizedQuery);
@@ -53,7 +55,6 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
         })
         .filter((topic) => topic.subTopics.length > 0)
     : topics;
-
 
   const toggleTopic = (id) =>
     setExpandedTopics({ ...expandedTopics, [id]: !expandedTopics[id] });
@@ -177,7 +178,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
                       )}
                     </div>
 
-                    {expandedTopics[topic.id] && (
+                    {(expandedTopics[topic.id] || shouldExpandAll) && (
                       <>
                         {isEditing && (
                           <div className="flex gap-2 mb-2">
@@ -277,7 +278,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
                                         )}
                                       </div>
 
-                                      {expandedSubtopics[sub.id] && (
+                                      {(expandedSubtopics[sub.id] || shouldExpandAll) && (
                                         <>
                                           {isEditing && (
                                             <div className="flex gap-2 mt-1 mb-1">

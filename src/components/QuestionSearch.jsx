@@ -13,7 +13,7 @@ function QuestionSearch({ value, onChange, onlyExactMatch, onExactMatchChange })
           placeholder="Type to filter questions..."
           className="w-full bg-transparent border border-gray-700 px-3 py-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        {/* <label className="flex items-center gap-2 text-sm text-zinc-300">
           <input
             type="checkbox"
             checked={onlyExactMatch}
@@ -21,7 +21,7 @@ function QuestionSearch({ value, onChange, onlyExactMatch, onExactMatchChange })
             className="h-4 w-4 accent-orange-500"
           />
           Only show questions
-        </label>
+        </label> */}
       </div>
     </div>
   );
