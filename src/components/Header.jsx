@@ -3,7 +3,7 @@ function Header({ isEditing, onToggleEdit }) {
     <header className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {/* Logo placeholder */}
-        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold text-black">
+        <div className="w-10 h-10 rounded-md bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold text-black">
           C
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Question Sheet</h1>
