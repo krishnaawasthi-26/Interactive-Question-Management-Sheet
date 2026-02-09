@@ -1,23 +1,17 @@
 import { create } from "zustand";
-import { fetchSheetBySlug, persistSheet } from "../api/questionSheetApi";
-
-const createTopic = (title) => ({
-  id: Date.now(),
-  title,
-  subTopics: [],
-});
-
-const createSubTopic = (title) => ({
-  id: Date.now(),
-  title,
-  questions: [],
-});
-
-const createQuestion = (text) => ({
-  id: Date.now(),
-  text,
-  link: "",
-});
+import {
+  createQuestion,
+  createSubTopic,
+  createTopic,
+  deleteQuestion,
+  deleteSubTopic,
+  deleteTopic,
+  fetchSheetBySlug,
+  persistSheet,
+  updateQuestion,
+  updateSubTopic,
+  updateTopic,
+} from "../api/questionSheetApi";
 
 const updateTopicById = (topics, topicId, updater) =>
   topics.map((topic) => (topic.id === topicId ? updater(topic) : topic));
@@ -42,103 +36,84 @@ export const useSheetStore = create((set, get) => ({
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
-  addTopic: (title) =>
-    set((state) => {
-      const topics = [...state.topics, createTopic(title)];
-      persistSheet({ topics });
-      return { topics };
-    }),
-  editTopic: (id, newTitle) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, id, (topic) => ({
-        ...topic,
-        title: newTitle,
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
-  deleteTopic: (id) =>
-    set((state) => {
-      const topics = state.topics.filter((topic) => topic.id !== id);
-      persistSheet({ topics });
-      return { topics };
-    }),
+  addTopic: async (title) => {
+    const updatedSheet = await createTopic({ topics: get().topics }, title);
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  editTopic: async (id, newTitle) => {
+    const updatedSheet = await updateTopic({ topics: get().topics }, id, newTitle);
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  deleteTopic: async (id) => {
+    const updatedSheet = await deleteTopic({ topics: get().topics }, id);
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
 
   // ----- Subtopics -----
-  addSubTopic: (topicId, subTitle) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: [...topic.subTopics, createSubTopic(subTitle)],
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
-  editSubTopic: (topicId, subId, newTitle) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
-          ...subTopic,
-          title: newTitle,
-        })),
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
-  deleteSubTopic: (topicId, subId) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: topic.subTopics.filter((subTopic) => subTopic.id !== subId),
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
+  addSubTopic: async (topicId, subTitle) => {
+    const updatedSheet = await createSubTopic(
+      { topics: get().topics },
+      topicId,
+      subTitle
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  editSubTopic: async (topicId, subId, newTitle) => {
+    const updatedSheet = await updateSubTopic(
+      { topics: get().topics },
+      topicId,
+      subId,
+      newTitle
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  deleteSubTopic: async (topicId, subId) => {
+    const updatedSheet = await deleteSubTopic(
+      { topics: get().topics },
+      topicId,
+      subId
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
 
   // ----- Questions -----
-  addQuestion: (topicId, subId, questionText) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
-          ...subTopic,
-          questions: [...subTopic.questions, createQuestion(questionText)],
-        })),
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
-  editQuestion: (topicId, subId, questionId, newText) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
-          ...subTopic,
-          questions: updateQuestionById(
-            subTopic.questions,
-            questionId,
-            (question) => ({ ...question, text: newText })
-          ),
-        })),
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
-  deleteQuestion: (topicId, subId, questionId) =>
-    set((state) => {
-      const topics = updateTopicById(state.topics, topicId, (topic) => ({
-        ...topic,
-        subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
-          ...subTopic,
-          questions: subTopic.questions.filter(
-            (question) => question.id !== questionId
-          ),
-        })),
-      }));
-      persistSheet({ topics });
-      return { topics };
-    }),
+  addQuestion: async (topicId, subId, questionText) => {
+    const updatedSheet = await createQuestion(
+      { topics: get().topics },
+      topicId,
+      subId,
+      questionText
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  editQuestion: async (topicId, subId, questionId, newText) => {
+    const updatedSheet = await updateQuestion(
+      { topics: get().topics },
+      topicId,
+      subId,
+      questionId,
+      newText
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
+  deleteQuestion: async (topicId, subId, questionId) => {
+    const updatedSheet = await deleteQuestion(
+      { topics: get().topics },
+      topicId,
+      subId,
+      questionId
+    );
+    set({ topics: updatedSheet.topics });
+    return updatedSheet;
+  },
   addLinkToQuestion: (topicId, subId, questionId, link) =>
     set((state) => {
       const topics = updateTopicById(state.topics, topicId, (topic) => ({
