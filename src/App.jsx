@@ -15,16 +15,41 @@ function App() {
   const isLoading = useSheetStore((state) => state.isLoading);
   const loadError = useSheetStore((state) => state.loadError);
   const loadSource = useSheetStore((state) => state.loadSource);
+  const lastDeleted = useSheetStore((state) => state.lastDeleted);
+  const undoDelete = useSheetStore((state) => state.undoDelete);
+  const clearUndo = useSheetStore((state) => state.clearUndo);
 
   useEffect(() => {
     fetchSheetBySlug("striver-sde-sheet");
   }, [fetchSheetBySlug]);
+
+  useEffect(() => {
+    if (!lastDeleted) return;
+    const timeoutId = window.setTimeout(() => {
+      clearUndo();
+    }, 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [lastDeleted, clearUndo]);
 
   const handleAdd = () => {
     if (!title.trim()) return;
     addTopic(title);
     setTitle("");
   };
+
+  const undoMessage = lastDeleted
+    ? `Deleted ${
+        lastDeleted.type === "subTopic"
+          ? "subtopic"
+          : lastDeleted.type === "question"
+            ? "question"
+            : "topic"
+      }${
+        lastDeleted.item?.title || lastDeleted.item?.text
+          ? `: "${lastDeleted.item.title ?? lastDeleted.item.text}"`
+          : ""
+      }.`
+    : "";
 
   return (
     // Page background + global text color
@@ -52,6 +77,19 @@ function App() {
           onlyExactMatch={onlyExactMatch}
           onExactMatchChange={setOnlyExactMatch}
         />
+
+        {lastDeleted && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-100">
+            <span>{undoMessage}</span>
+            <button
+              className="rounded bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-900 transition hover:bg-white"
+              onClick={undoDelete}
+              type="button"
+            >
+              Undo
+            </button>
+          </div>
+        )}
 
         {/* Main sheet / cards container */}
         <main>

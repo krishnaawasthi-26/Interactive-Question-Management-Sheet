@@ -30,12 +30,12 @@ const reorderArray = (items, startIndex, endIndex) => {
   nextItems.splice(endIndex, 0, removed);
   return nextItems;
 };
-
 export const useSheetStore = create((set, get) => ({
   topics: [],
   isLoading: false,
   loadError: null,
   loadSource: "idle",
+  lastDeleted: null,
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
@@ -50,8 +50,17 @@ export const useSheetStore = create((set, get) => ({
     return updatedSheet;
   },
   deleteTopic: async (id) => {
+    const topics = get().topics;
+    const deletedIndex = topics.findIndex((topic) => topic.id === id);
+    const deletedTopic = deletedIndex > -1 ? topics[deletedIndex] : null;
     const updatedSheet = await deleteTopic({ topics: get().topics }, id);
-    set({ topics: updatedSheet.topics });
+    // set({ topics: updatedSheet.topics });
+    set({
+      topics: updatedSheet.topics,
+      lastDeleted: deletedTopic
+        ? { type: "topic", item: deletedTopic, index: deletedIndex }
+        : null,
+    });
     return updatedSheet;
   },
 
@@ -72,16 +81,34 @@ export const useSheetStore = create((set, get) => ({
       subId,
       newTitle
     );
-    set({ topics: updatedSheet.topics });
+    // set({ topics: updatedSheet.topics });
     return updatedSheet;
   },
   deleteSubTopic: async (topicId, subId) => {
+    const topics = get().topics;
+    const parentTopic = topics.find((topic) => topic.id === topicId);
+    const deletedIndex = parentTopic
+      ? parentTopic.subTopics.findIndex((subTopic) => subTopic.id === subId)
+      : -1;
+    const deletedSubTopic =
+      parentTopic && deletedIndex > -1 ? parentTopic.subTopics[deletedIndex] : null;
     const updatedSheet = await deleteSubTopic(
       { topics: get().topics },
       topicId,
       subId
     );
     set({ topics: updatedSheet.topics });
+    set({
+      topics: updatedSheet.topics,
+      lastDeleted: deletedSubTopic
+        ? {
+            type: "subTopic",
+            item: deletedSubTopic,
+            topicId,
+            index: deletedIndex,
+          }
+        : null,
+    });
     return updatedSheet;
   },
 
@@ -108,15 +135,79 @@ export const useSheetStore = create((set, get) => ({
     return updatedSheet;
   },
   deleteQuestion: async (topicId, subId, questionId) => {
+    const topics = get().topics;
+    const parentTopic = topics.find((topic) => topic.id === topicId);
+    const parentSubTopic = parentTopic?.subTopics.find((sub) => sub.id === subId);
+    const deletedIndex = parentSubTopic
+      ? parentSubTopic.questions.findIndex((question) => question.id === questionId)
+      : -1;
+    const deletedQuestion =
+      parentSubTopic && deletedIndex > -1
+        ? parentSubTopic.questions[deletedIndex]
+        : null;
     const updatedSheet = await deleteQuestion(
       { topics: get().topics },
       topicId,
       subId,
       questionId
     );
-    set({ topics: updatedSheet.topics });
+    // set({ topics: updatedSheet.topics });
+    set({
+      topics: updatedSheet.topics,
+      lastDeleted: deletedQuestion
+        ? {
+            type: "question",
+            item: deletedQuestion,
+            topicId,
+            subId,
+            index: deletedIndex,
+          }
+        : null,
+    });
     return updatedSheet;
   },
+  clearUndo: () => set({ lastDeleted: null }),
+  undoDelete: () =>
+    set((state) => {
+      const { lastDeleted } = state;
+      if (!lastDeleted) return state;
+      if (lastDeleted.type === "topic") {
+        const topics = Array.from(state.topics);
+        const insertIndex = Math.min(lastDeleted.index, topics.length);
+        topics.splice(insertIndex, 0, lastDeleted.item);
+        persistSheet({ topics });
+        return { topics, lastDeleted: null };
+      }
+      if (lastDeleted.type === "subTopic") {
+        const topics = state.topics.map((topic) => {
+          if (topic.id !== lastDeleted.topicId) return topic;
+          const subTopics = Array.from(topic.subTopics);
+          const insertIndex = Math.min(lastDeleted.index, subTopics.length);
+          subTopics.splice(insertIndex, 0, lastDeleted.item);
+          return { ...topic, subTopics };
+        });
+        persistSheet({ topics });
+        return { topics, lastDeleted: null };
+      }
+      if (lastDeleted.type === "question") {
+        const topics = state.topics.map((topic) => {
+          if (topic.id !== lastDeleted.topicId) return topic;
+          return {
+            ...topic,
+            subTopics: topic.subTopics.map((subTopic) => {
+              if (subTopic.id !== lastDeleted.subId) return subTopic;
+              const questions = Array.from(subTopic.questions);
+              const insertIndex = Math.min(lastDeleted.index, questions.length);
+              questions.splice(insertIndex, 0, lastDeleted.item);
+              return { ...subTopic, questions };
+            }),
+          };
+        });
+        persistSheet({ topics });
+        return { topics, lastDeleted: null };
+      }
+      return { ...state, lastDeleted: null };
+    }),
   addLinkToQuestion: (topicId, subId, questionId, link) =>
     set((state) => {
       const topics = updateTopicById(state.topics, topicId, (topic) => ({
