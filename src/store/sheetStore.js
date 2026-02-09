@@ -33,6 +33,9 @@ const reorderArray = (items, startIndex, endIndex) => {
 
 export const useSheetStore = create((set, get) => ({
   topics: [],
+  isLoading: false,
+  loadError: null,
+  hasLoaded: false,
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
@@ -265,11 +268,29 @@ export const useSheetStore = create((set, get) => ({
     }),
 
   // ----- API -----
-  fetchSheetBySlug: async (slug) => {
-    const sheet = await fetchSheetBySlug(slug);
-    if (sheet?.topics) {
-      set({ topics: sheet.topics });
+
+fetchSheetBySlug: async (slug) => {
+    // const sheet = await fetchSheetBySlug(slug);
+    // if (sheet?.topics) {
+    //   set({ topics: sheet.topics });
+    set({ isLoading: true, loadError: null, hasLoaded: false });
+    try {
+      const sheet = await fetchSheetBySlug(slug);
+      if (sheet?.topics) {
+        set({ topics: sheet.topics, hasLoaded: true });
+      }
+      return sheet;
+    } catch (error) {
+      set({
+        loadError:
+          error instanceof Error ? error.message : "Unable to load sheet data.",
+        hasLoaded: false,
+      });
+      return null;
+    } finally {
+      set({ isLoading: false });
     }
-    return sheet;
+    // return sheet;
   },
+// }));
 }));

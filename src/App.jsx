@@ -9,6 +9,9 @@ function App() {
   const [isEditing, setIsEditing] = useState(true); // toggle edit/view mode
   const addTopic = useSheetStore((state) => state.addTopic);
   const fetchSheetBySlug = useSheetStore((state) => state.fetchSheetBySlug);
+  const isLoading = useSheetStore((state) => state.isLoading);
+  const loadError = useSheetStore((state) => state.loadError);
+  const hasLoaded = useSheetStore((state) => state.hasLoaded);
 
   useEffect(() => {
     fetchSheetBySlug("striver-sde-sheet");
@@ -42,6 +45,15 @@ function App() {
 
         {/* Main sheet / cards container */}
         <main>
+          {(isLoading || loadError || hasLoaded) && (
+            <p className="mb-4 text-sm text-zinc-300">
+              {isLoading
+                ? "Loading sheet..."
+                : loadError
+                  ? "Failed to load API, showing local data."
+                  : "Sheet loaded successfully."}
+            </p>
+          )}
           <TopicList isEditing={isEditing} /> {/* pass editing state */}
         </main>
       </div>
