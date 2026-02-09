@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-function TopicList({ isEditing = true }) {
+function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
   const addQuestion = useSheetStore((state) => state.addQuestion);
@@ -25,6 +25,35 @@ function TopicList({ isEditing = true }) {
   const [questionInput, setQuestionInput] = useState({});
   const [expandedTopics, setExpandedTopics] = useState({});
   const [expandedSubtopics, setExpandedSubtopics] = useState({});
+
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleTopics = normalizedQuery
+    ? topics
+        .map((topic) => {
+          const filteredSubTopics = topic.subTopics
+            .map((sub) => {
+              const filteredQuestions = sub.questions.filter((question) => {
+                const normalizedQuestion = question.text.toLowerCase();
+                return onlyExactMatch
+                  ? normalizedQuestion === normalizedQuery
+                  : normalizedQuestion.includes(normalizedQuery);
+              });
+
+              return {
+                ...sub,
+                questions: filteredQuestions,
+              };
+            })
+            .filter((sub) => sub.questions.length > 0);
+
+          return {
+            ...topic,
+            subTopics: filteredSubTopics,
+          };
+        })
+        .filter((topic) => topic.subTopics.length > 0)
+    : topics;
+
 
   const toggleTopic = (id) =>
     setExpandedTopics({ ...expandedTopics, [id]: !expandedTopics[id] });
@@ -82,7 +111,7 @@ function TopicList({ isEditing = true }) {
             {...provided.droppableProps}
             className="space-y-4"
           >
-            {topics.map((topic, tIndex) => (
+            {visibleTopics.map((topic, tIndex) => (
               <Draggable
                 key={topic.id}
                 draggableId={topic.id.toString()}

@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useSheetStore } from "./store/sheetStore";
 import AddTopicForm from "./components/AddTopicForm";
 import Header from "./components/Header";
+import QuestionSearch from "./components/QuestionSearch";
 import TopicList from "./components/TopicList";
 
 function App() {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true); // toggle edit/view mode
+  const [searchQuery, setSearchQuery] = useState("");
+  const [onlyExactMatch, setOnlyExactMatch] = useState(false);
   const addTopic = useSheetStore((state) => state.addTopic);
   const fetchSheetBySlug = useSheetStore((state) => state.fetchSheetBySlug);
   const isLoading = useSheetStore((state) => state.isLoading);
@@ -43,6 +46,13 @@ function App() {
           />
         )}
 
+        <QuestionSearch
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onlyExactMatch={onlyExactMatch}
+          onExactMatchChange={setOnlyExactMatch}
+        />
+
         {/* Main sheet / cards container */}
         <main>
           {(isLoading || loadError || loadSource !== "idle") && (
@@ -55,7 +65,13 @@ function App() {
                     : "Loaded from API.")}
             </p>
           )}
-          <TopicList isEditing={isEditing} /> {/* pass editing state */}
+          {/* <TopicList isEditing={isEditing} /> pass editing state */}
+          <TopicList
+            isEditing={isEditing}
+            searchQuery={searchQuery}
+            onlyExactMatch={onlyExactMatch}
+          />{" "}
+          {/* pass editing state */}
         </main>
       </div>
     </div>
