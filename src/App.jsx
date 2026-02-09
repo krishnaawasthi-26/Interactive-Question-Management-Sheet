@@ -17,7 +17,7 @@ function App() {
 
   return (
     // Page background + global text color
-    <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
+    <div className="min-h-screen bg-[rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
       {/* Centered content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
 
