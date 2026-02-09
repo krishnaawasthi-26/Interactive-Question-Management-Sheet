@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSheetStore } from "./store/sheetStore";
 import AddTopicForm from "./components/AddTopicForm";
 import Header from "./components/Header";
@@ -8,6 +8,11 @@ function App() {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true); // toggle edit/view mode
   const addTopic = useSheetStore((state) => state.addTopic);
+  const fetchSheetBySlug = useSheetStore((state) => state.fetchSheetBySlug);
+
+  useEffect(() => {
+    fetchSheetBySlug("striver-sde-sheet");
+  }, [fetchSheetBySlug]);
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -17,18 +22,18 @@ function App() {
 
   return (
     // Page background + global text color
-    <div className="min-h-screen bg-[rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
+    <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
       {/* Centered content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
-
         {/* Header */}
-         <Header
+        <Header
           isEditing={isEditing}
           onToggleEdit={() => setIsEditing(!isEditing)}
         />
 
         {/* Add Topic area — only show in edit mode */}
-        {isEditing && ( <AddTopicForm
+        {isEditing && (
+          <AddTopicForm
             title={title}
             onTitleChange={(e) => setTitle(e.target.value)}
             onAdd={handleAdd}

@@ -1,75 +1,117 @@
 import { create } from "zustand";
-import {
-  createTopic,
-  createSubTopic,
-  createQuestion,
-  updateTopicById,
-  updateSubTopicById,
-  updateQuestionById,
-  reorderArray,
-} from "./sheetStore.helpers";
+import { fetchSheetBySlug, persistSheet } from "../api/questionSheetApi";
 
-export const useSheetStore = create((set) => ({
+const createTopic = (title) => ({
+  id: Date.now(),
+  title,
+  subTopics: [],
+});
+
+const createSubTopic = (title) => ({
+  id: Date.now(),
+  title,
+  questions: [],
+});
+
+const createQuestion = (text) => ({
+  id: Date.now(),
+  text,
+  link: "",
+});
+
+const updateTopicById = (topics, topicId, updater) =>
+  topics.map((topic) => (topic.id === topicId ? updater(topic) : topic));
+
+const updateSubTopicById = (subTopics, subId, updater) =>
+  subTopics.map((subTopic) => (subTopic.id === subId ? updater(subTopic) : subTopic));
+
+const updateQuestionById = (questions, questionId, updater) =>
+  questions.map((question) =>
+    question.id === questionId ? updater(question) : question
+  );
+
+const reorderArray = (items, startIndex, endIndex) => {
+  const nextItems = Array.from(items);
+  const [removed] = nextItems.splice(startIndex, 1);
+  nextItems.splice(endIndex, 0, removed);
+  return nextItems;
+};
+
+export const useSheetStore = create((set, get) => ({
   topics: [],
 
   // ----- Topics -----
   setTopics: (topics) => set({ topics }),
   addTopic: (title) =>
-    set((state) => ({
-      topics: [...state.topics, createTopic(title)],
-    })),
+    set((state) => {
+      const topics = [...state.topics, createTopic(title)];
+      persistSheet({ topics });
+      return { topics };
+    }),
   editTopic: (id, newTitle) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, id, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, id, (topic) => ({
         ...topic,
         title: newTitle,
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteTopic: (id) =>
-    set((state) => ({
-      topics: state.topics.filter((topic) => topic.id !== id),
-    })),
+    set((state) => {
+      const topics = state.topics.filter((topic) => topic.id !== id);
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Subtopics -----
   addSubTopic: (topicId, subTitle) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: [...topic.subTopics, createSubTopic(subTitle)],
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   editSubTopic: (topicId, subId, newTitle) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
           ...subTopic,
           title: newTitle,
         })),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteSubTopic: (topicId, subId) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: topic.subTopics.filter((subTopic) => subTopic.id !== subId),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Questions -----
   addQuestion: (topicId, subId, questionText) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
           ...subTopic,
           questions: [...subTopic.questions, createQuestion(questionText)],
         })),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   editQuestion: (topicId, subId, questionId, newText) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
           ...subTopic,
@@ -79,11 +121,13 @@ export const useSheetStore = create((set) => ({
             (question) => ({ ...question, text: newText })
           ),
         })),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   deleteQuestion: (topicId, subId, questionId) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
           ...subTopic,
@@ -91,11 +135,13 @@ export const useSheetStore = create((set) => ({
             (question) => question.id !== questionId
           ),
         })),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
   addLinkToQuestion: (topicId, subId, questionId, link) =>
-    set((state) => ({
-      topics: updateTopicById(state.topics, topicId, (topic) => ({
+    set((state) => {
+      const topics = updateTopicById(state.topics, topicId, (topic) => ({
         ...topic,
         subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
           ...subTopic,
@@ -105,14 +151,18 @@ export const useSheetStore = create((set) => ({
             (question) => ({ ...question, link })
           ),
         })),
-      })),
-    })),
+      }));
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   // ----- Drag & Drop -----
   reorderTopics: (startIndex, endIndex) =>
-    set((state) => ({
-      topics: reorderArray(state.topics, startIndex, endIndex),
-    })),
+    set((state) => {
+      const topics = reorderArray(state.topics, startIndex, endIndex);
+      persistSheet({ topics });
+      return { topics };
+    }),
 
   moveSubTopic: (fromTopicId, toTopicId, startIndex, endIndex) =>
     set((state) => {
@@ -129,7 +179,7 @@ export const useSheetStore = create((set) => ({
           : Array.from(toTopic.subTopics);
       newToSubTopics.splice(endIndex, 0, movedSubTopic);
 
-      return {
+      const updatedState = {
         topics: state.topics.map((topic) => {
           if (topic.id === fromTopicId) {
             return { ...topic, subTopics: newFromSubTopics };
@@ -140,6 +190,8 @@ export const useSheetStore = create((set) => ({
           return topic;
         }),
       };
+      persistSheet({ topics: updatedState.topics });
+      return updatedState;
     }),
 
   moveQuestion: (
@@ -151,9 +203,7 @@ export const useSheetStore = create((set) => ({
     endIndex
   ) =>
     set((state) => {
-      const fromTopic = state.topics.find(
-        (topic) => topic.id === fromTopicId
-      );
+      const fromTopic = state.topics.find((topic) => topic.id === fromTopicId);
       const toTopic = state.topics.find((topic) => topic.id === toTopicId);
       if (!fromTopic || !toTopic) return state;
 
@@ -169,7 +219,7 @@ export const useSheetStore = create((set) => ({
           endIndex
         );
 
-        return {
+        const updatedState = {
           topics: state.topics.map((topic) =>
             topic.id === fromTopicId
               ? {
@@ -183,6 +233,8 @@ export const useSheetStore = create((set) => ({
               : topic
           ),
         };
+        persistSheet({ topics: updatedState.topics });
+        return updatedState;
       }
 
       // Different subtopic or different topic
@@ -191,7 +243,7 @@ export const useSheetStore = create((set) => ({
       const newToQuestions = Array.from(toSub.questions);
       newToQuestions.splice(endIndex, 0, movedQuestion);
 
-      return {
+      const updatedState = {
         topics: state.topics.map((topic) => {
           if (topic.id === fromTopicId && fromTopicId === toTopicId) {
             // Same topic, different subtopic
@@ -233,5 +285,16 @@ export const useSheetStore = create((set) => ({
           return topic;
         }),
       };
+      persistSheet({ topics: updatedState.topics });
+      return updatedState;
     }),
+
+  // ----- API -----
+  fetchSheetBySlug: async (slug) => {
+    const sheet = await fetchSheetBySlug(slug);
+    if (sheet?.topics) {
+      set({ topics: sheet.topics });
+    }
+    return sheet;
+  },
 }));

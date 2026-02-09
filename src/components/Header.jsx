@@ -3,7 +3,7 @@ function Header({ isEditing, onToggleEdit }) {
     <header className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {/* Logo placeholder */}
-        <div className="w-10 h-10 rounded-md bg-linear-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold text-black">
+        <div className="w-10 h-10 rounded-md bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold text-black">
           C
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Question Sheet</h1>
@@ -17,10 +17,6 @@ function Header({ isEditing, onToggleEdit }) {
         >
           {isEditing ? "View Only" : "Edit Sheet"}
         </button>
-
-        {/* <button className="px-3 py-1 rounded-md bg-orange-600 hover:bg-orange-700 text-white text-sm transition">
-          Sign in
-        </button> */}
       </div>
     </header>
   );
