@@ -9,10 +9,12 @@ function App() {
   const [isEditing, setIsEditing] = useState(true); // toggle edit/view mode
   const addTopic = useSheetStore((state) => state.addTopic);
   const fetchSheetBySlug = useSheetStore((state) => state.fetchSheetBySlug);
+  const resetSheet = useSheetStore((state) => state.resetSheet);
+  const slug = "striver-sde-sheet";
 
   useEffect(() => {
-    fetchSheetBySlug("striver-sde-sheet");
-  }, [fetchSheetBySlug]);
+    fetchSheetBySlug(slug);
+  }, [fetchSheetBySlug, slug]);
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -29,6 +31,7 @@ function App() {
         <Header
           isEditing={isEditing}
           onToggleEdit={() => setIsEditing(!isEditing)}
+          onReset={() => resetSheet(slug)}
         />
 
         {/* Add Topic area — only show in edit mode */}
