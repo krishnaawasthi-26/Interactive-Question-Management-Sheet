@@ -1,6 +1,6 @@
 {
-  "slug": "sample-question-sheet",
-  "title": "Sample Question Sheet",
+  "slug": "sample-question-sheet-expanded",
+  "title": "Sample Question Sheet (Expanded)",
   "topics": [
     {
       "id": 101,
@@ -13,23 +13,33 @@
             {
               "id": 301,
               "text": "Find the maximum subarray sum.",
-              "link": ""
+              "link": "https://leetcode.com/problems/maximum-subarray/"
             },
             {
               "id": 302,
               "text": "Rotate an array by k positions.",
-              "link": "https://www.geeksforgeeks.org/array-rotation"
+              "link": "https://leetcode.com/problems/rotate-array/"
+            },
+            {
+              "id": 303,
+              "text": "Two Sum.",
+              "link": "https://leetcode.com/problems/two-sum/"
             }
           ]
         },
         {
           "id": 202,
-          "title": "Two Pointers",
+          "title": "Two Pointers & Sliding Window",
           "questions": [
             {
-              "id": 303,
+              "id": 304,
               "text": "Check if a string is a palindrome.",
-              "link": ""
+              "link": "https://leetcode.com/problems/valid-palindrome/"
+            },
+            {
+              "id": 305,
+              "text": "Longest substring without repeating characters.",
+              "link": "https://leetcode.com/problems/longest-substring-without-repeating-characters/"
             }
           ]
         }
@@ -44,14 +54,302 @@
           "title": "Operations",
           "questions": [
             {
-              "id": 304,
+              "id": 306,
               "text": "Reverse a linked list.",
-              "link": ""
+              "link": "https://leetcode.com/problems/reverse-linked-list/"
             },
             {
-              "id": 305,
+              "id": 307,
+              "text": "Merge two sorted linked lists.",
+              "link": "https://leetcode.com/problems/merge-two-sorted-lists/"
+            },
+            {
+              "id": 308,
               "text": "Detect a cycle in a linked list.",
-              "link": ""
+              "link": "https://leetcode.com/problems/linked-list-cycle/"
+            }
+          ]
+        },
+        {
+          "id": 204,
+          "title": "Advanced",
+          "questions": [
+            {
+              "id": 309,
+              "text": "Copy list with random pointer.",
+              "link": "https://leetcode.com/problems/copy-list-with-random-pointer/"
+            },
+            {
+              "id": 310,
+              "text": "Reorder list.",
+              "link": "https://leetcode.com/problems/reorder-list/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "title": "Trees",
+      "subTopics": [
+        {
+          "id": 205,
+          "title": "Traversals & Validation",
+          "questions": [
+            {
+              "id": 311,
+              "text": "Binary tree inorder traversal.",
+              "link": "https://leetcode.com/problems/binary-tree-inorder-traversal/"
+            },
+            {
+              "id": 312,
+              "text": "Validate binary search tree.",
+              "link": "https://leetcode.com/problems/validate-binary-search-tree/"
+            }
+          ]
+        },
+        {
+          "id": 206,
+          "title": "LCA & Path Problems",
+          "questions": [
+            {
+              "id": 313,
+              "text": "Lowest common ancestor of a binary tree.",
+              "link": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/"
+            },
+            {
+              "id": 314,
+              "text": "Path sum.",
+              "link": "https://leetcode.com/problems/path-sum/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "title": "Graphs",
+      "subTopics": [
+        {
+          "id": 207,
+          "title": "Basics (BFS / DFS)",
+          "questions": [
+            {
+              "id": 315,
+              "text": "Number of islands (grid DFS/BFS).",
+              "link": "https://leetcode.com/problems/number-of-islands/"
+            },
+            {
+              "id": 316,
+              "text": "Clone graph.",
+              "link": "https://leetcode.com/problems/clone-graph/"
+            }
+          ]
+        },
+        {
+          "id": 208,
+          "title": "Topological / Shortest Path",
+          "questions": [
+            {
+              "id": 317,
+              "text": "Course schedule (detect cycle in directed graph).",
+              "link": "https://leetcode.com/problems/course-schedule/"
+            },
+            {
+              "id": 318,
+              "text": "Network delay time (shortest path).",
+              "link": "https://leetcode.com/problems/network-delay-time/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "title": "Dynamic Programming",
+      "subTopics": [
+        {
+          "id": 209,
+          "title": "Fundamentals",
+          "questions": [
+            {
+              "id": 319,
+              "text": "Climbing stairs (basic DP).",
+              "link": "https://leetcode.com/problems/climbing-stairs/"
+            },
+            {
+              "id": 320,
+              "text": "Coin change (minimum coins).",
+              "link": "https://leetcode.com/problems/coin-change/"
+            }
+          ]
+        },
+        {
+          "id": 210,
+          "title": "Sequences",
+          "questions": [
+            {
+              "id": 321,
+              "text": "Longest increasing subsequence.",
+              "link": "https://leetcode.com/problems/longest-increasing-subsequence/"
+            },
+            {
+              "id": 322,
+              "text": "Longest common subsequence.",
+              "link": "https://leetcode.com/problems/longest-common-subsequence/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "title": "Greedy & Sorting",
+      "subTopics": [
+        {
+          "id": 211,
+          "title": "Sorting-related",
+          "questions": [
+            {
+              "id": 323,
+              "text": "Sort colors (Dutch national flag).",
+              "link": "https://leetcode.com/problems/sort-colors/"
+            },
+            {
+              "id": 324,
+              "text": "Kth largest element in an array.",
+              "link": "https://leetcode.com/problems/kth-largest-element-in-an-array/"
+            }
+          ]
+        },
+        {
+          "id": 212,
+          "title": "Greedy",
+          "questions": [
+            {
+              "id": 325,
+              "text": "Jump Game (can you reach the end?).",
+              "link": "https://leetcode.com/problems/jump-game/"
+            },
+            {
+              "id": 326,
+              "text": "Minimum number of arrows to burst balloons.",
+              "link": "https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 107,
+      "title": "Backtracking",
+      "subTopics": [
+        {
+          "id": 213,
+          "title": "Classic backtracking",
+          "questions": [
+            {
+              "id": 327,
+              "text": "Subsets (power set).",
+              "link": "https://leetcode.com/problems/subsets/"
+            },
+            {
+              "id": 328,
+              "text": "Combination Sum.",
+              "link": "https://leetcode.com/problems/combination-sum/"
+            },
+            {
+              "id": 329,
+              "text": "Word search (board DFS).",
+              "link": "https://leetcode.com/problems/word-search/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 108,
+      "title": "Heaps & Hashing",
+      "subTopics": [
+        {
+          "id": 214,
+          "title": "Heap / Priority Queue",
+          "questions": [
+            {
+              "id": 330,
+              "text": "Top K frequent elements.",
+              "link": "https://leetcode.com/problems/top-k-frequent-elements/"
+            },
+            {
+              "id": 331,
+              "text": "LRU Cache (design + O(1) ops).",
+              "link": "https://leetcode.com/problems/lru-cache/"
+            }
+          ]
+        },
+        {
+          "id": 215,
+          "title": "Hashing",
+          "questions": [
+            {
+              "id": 332,
+              "text": "Group anagrams.",
+              "link": "https://leetcode.com/problems/group-anagrams/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 109,
+      "title": "Math & Bit Manipulation",
+      "subTopics": [
+        {
+          "id": 216,
+          "title": "Math",
+          "questions": [
+            {
+              "id": 333,
+              "text": "Implement pow(x, n).",
+              "link": "https://leetcode.com/problems/powx-n/"
+            },
+            {
+              "id": 334,
+              "text": "Single Number (use XOR).",
+              "link": "https://leetcode.com/problems/single-number/"
+            }
+          ]
+        },
+        {
+          "id": 217,
+          "title": "Bitwise",
+          "questions": [
+            {
+              "id": 335,
+              "text": "Number of 1 bits (Hamming weight).",
+              "link": "https://leetcode.com/problems/number-of-1-bits/"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 110,
+      "title": "Design & Misc",
+      "subTopics": [
+        {
+          "id": 218,
+          "title": "System Design & Serialization",
+          "questions": [
+            {
+              "id": 336,
+              "text": "Design Twitter (system design exercise).",
+              "link": "https://leetcode.com/problems/design-twitter/"
+            },
+            {
+              "id": 337,
+              "text": "Serialize and deserialize binary tree.",
+              "link": "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/"
             }
           ]
         }
