@@ -24,6 +24,8 @@ const request = async (path, body) => {
     });
   } catch {
     throw new Error("Unable to connect right now. Please try again in a moment.");
+
+
   }
 
   if (!response.ok) {
