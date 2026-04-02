@@ -4,12 +4,13 @@ import { useAuthStore } from "../store/authStore";
 function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
   const authError = useAuthStore((state) => state.authError);
+  const authLoading = useAuthStore((state) => state.authLoading);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    const success = login(form);
+    const success = await login(form);
     if (success) onLoginSuccess();
   };
 
@@ -20,6 +21,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         <input
           type="email"
           required
+          disabled={authLoading}
           value={form.email}
           placeholder="Email"
           onChange={(event) => {
@@ -31,6 +33,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         <input
           type="password"
           required
+          disabled={authLoading}
           value={form.password}
           placeholder="Password"
           onChange={(event) => {
@@ -42,15 +45,17 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         {authError && <p className="text-sm text-rose-400">{authError}</p>}
         <button
           type="submit"
-          className="w-full rounded-md bg-orange-600 px-4 py-2 font-medium text-white"
+          disabled={authLoading}
+          className="w-full rounded-md bg-orange-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Login
+          {authLoading ? "Checking account..." : "Login"}
         </button>
       </form>
       <button
         type="button"
+        disabled={authLoading}
         onClick={onGoToSignUp}
-        className="mt-4 text-sm text-sky-300 hover:text-sky-200"
+        className="mt-4 text-sm text-sky-300 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-70"
       >
         Don&apos;t have an account? Sign up
       </button>
