@@ -4,12 +4,13 @@ import { useAuthStore } from "../store/authStore";
 function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
   const signUp = useAuthStore((state) => state.signUp);
   const authError = useAuthStore((state) => state.authError);
+  const authLoading = useAuthStore((state) => state.authLoading);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    const success = signUp(form);
+    const success = await signUp(form);
     if (success) onSignUpSuccess();
   };
 
@@ -20,6 +21,7 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
         <input
           type="text"
           required
+          disabled={authLoading}
           value={form.name}
           placeholder="Full name"
           onChange={(event) => {
@@ -31,6 +33,7 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
         <input
           type="email"
           required
+          disabled={authLoading}
           value={form.email}
           placeholder="Email"
           onChange={(event) => {
@@ -43,6 +46,7 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
           type="password"
           required
           minLength={6}
+          disabled={authLoading}
           value={form.password}
           placeholder="Password"
           onChange={(event) => {
@@ -54,15 +58,17 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
         {authError && <p className="text-sm text-rose-400">{authError}</p>}
         <button
           type="submit"
-          className="w-full rounded-md bg-orange-600 px-4 py-2 font-medium text-white"
+          disabled={authLoading}
+          className="w-full rounded-md bg-orange-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Create account
+          {authLoading ? "Creating account..." : "Create account"}
         </button>
       </form>
       <button
         type="button"
+        disabled={authLoading}
         onClick={onGoToLogin}
-        className="mt-4 text-sm text-sky-300 hover:text-sky-200"
+        className="mt-4 text-sm text-sky-300 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-70"
       >
         Already have an account? Login
       </button>

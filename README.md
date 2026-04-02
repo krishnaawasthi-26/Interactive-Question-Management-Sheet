@@ -1,226 +1,148 @@
 # Interactive Question Management Sheet
+
 deployment link : https://interactive-question-management-she-gamma.vercel.app/
 
-A modern single-page web application to manage a hierarchical question bank using:
+This project now contains:
 
-- **Topics**
-- **Sub-topics**
-- **Questions**
-
-The app supports full in-app CRUD operations, drag-and-drop reordering, API-based initial loading, and local persistence.
+- A **React + Vite frontend** (`/`) for question sheet UI.
+- A **Spring Boot backend** (`/backend`) for authentication APIs.
+- A **local MongoDB database** for user accounts.
 
 ---
 
-## 1) Assignment Context
+## What was fixed
 
-This project is built for the **Interactive Question Management Sheet** assignment with focus on:
+The login/sign-up flow now uses a real backend API instead of only browser local storage.
 
-- Creating, editing, deleting topics
-- Creating, editing, deleting sub-topics
-- Creating, editing, deleting questions
-- Reordering topics/sub-topics/questions using drag-and-drop
-- Keeping UX clean and intuitive
-- Using React + state management
-- Integrating API data using provided curl reference
-
----
-
-## 2) Tech Stack
-
-- **React** (UI framework)
-- **Zustand** (state management)
-- **@hello-pangea/dnd** (drag-and-drop)
-- **Vite** (dev/build tooling)
-- **TailwindCSS** utility-first classes for styling
+- Creates users in MongoDB.
+- Logs in only if account exists.
+- Returns clear errors for:
+  - account not found
+  - wrong password
+  - duplicate account
+  - validation issues
+- Shows loading states in the UI while request is in progress.
 
 ---
 
-## 3) Features Implemented
+## Backend API (Spring Boot + MongoDB)
 
-### Topic Management
-- Add topic
-- Edit topic
-- Delete topic
+Base URL: `http://localhost:8080`
 
-### Sub-topic Management
-- Add sub-topic under topic
-- Edit sub-topic
-- Delete sub-topic
+### Endpoints
 
-### Question Management
-- Add question under sub-topic
-- Edit question
-- Delete question
-- Add external link to question
+- `POST /api/auth/signup`
+  - Body: `{ "name": "...", "email": "...", "password": "..." }`
+- `POST /api/auth/login`
+  - Body: `{ "email": "...", "password": "..." }`
 
-###  Drag-and-Drop Reordering
-- Reorder topics
-- Move/reorder sub-topics
-- Move/reorder questions
-  - same sub-topic reorder
-  - cross-sub-topic move
-  - cross-topic move
+### Tech
 
-###  Sheet API Integration
-- Fetch initial sheet by slug from:
-  - `https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet`
-- Normalize payload safely
-- Fallback to local storage if API fails
+- Spring Boot 3
+- Spring Web
+- Spring Data MongoDB
+- Bean Validation
 
-###  Local Persistence (No Database)
-- All mutations persist to local storage to preserve state across refreshes
+Mongo connection is configured in:
 
-### Better UX
-- Edit/View mode toggle
-- Expand/collapse topic and sub-topic blocks
-- Dynamic header title from API sheet data
+- `backend/src/main/resources/application.properties`
+
+Default DB URI:
+
+- `mongodb://localhost:27017/iqms`
 
 ---
 
-## 4) How Features Are Implemented in Code
+## Run the program (step by step)
 
-### `src/App.jsx`
-- App entry layout
-- Loads sheet data on mount (`fetchSheetBySlug("striver-sde-sheet")`)
-- Reads `sheetTitle` from Zustand and passes it to header
-- Handles add-topic input and submit
+## 1) Start MongoDB locally
 
-### `src/components/Header.jsx`
-- Displays dynamic sheet title from store
-- Edit/View mode toggle button
+If you already have MongoDB as a service, ensure it is running on port `27017`.
 
-### `src/components/AddTopicForm.jsx`
-- Controlled input for topic title
-- Submit via button and Enter key
+Example (Linux/macOS):
 
-### `src/components/TopicList.jsx`
-- Renders nested topic/sub-topic/question structure
-- Inline edit/delete controls
-- Expand/collapse behavior
-- Full drag-and-drop wiring via `DragDropContext`
-
-### `src/store/sheetStore.js`
-- Central state source (`topics`, `sheetTitle`)
-- All CRUD actions (topics, sub-topics, questions)
-- DnD actions (`reorderTopics`, `moveSubTopic`, `moveQuestion`)
-- Local persistence call after mutations
-- API load action (`fetchSheetBySlug`)
-
-### `src/api/questionSheetApi.js`
-- Encapsulates API + local storage behavior
-- `fetchSheetBySlug(slug)`
-- `persistSheet(sheet)`
-- Payload normalization and fallback strategy
-
----
-
-## 5) Project Structure
-
-```text
-Interactive-Question-Management-Sheet/
-├── README.md
-├── package.json
-├── index.html
-├── public/
-└── src/
-    ├── App.jsx
-    ├── main.jsx
-    ├── index.css
-    ├── App.css
-    ├── assets/
-    ├── api/
-    │   └── questionSheetApi.js
-    ├── components/
-    │   ├── AddTopicForm.jsx
-    │   ├── Header.jsx
-    │   └── TopicList.jsx
-    └── store/
-        └── sheetStore.js
+```bash
+mongod --dbpath ~/data/db
 ```
 
----
+Or with Docker:
 
-## 6) Setup & Run Instructions
-
-### Prerequisites
-- Node.js (LTS recommended)
-- npm
-
-### Install dependencies
 ```bash
+docker run --name iqms-mongo -p 27017:27017 -d mongo:7
+```
+
+## 2) Start backend
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Backend runs on `http://localhost:8080`.
+
+## 3) Start frontend (new terminal)
+
+```bash
+cd /workspace/Interactive-Question-Management-Sheet
 npm install
-```
-
-### Run in development
-```bash
 npm run dev
 ```
 
-### Build for production
+Frontend runs on Vite default URL (`http://localhost:5173`).
+
+---
+
+## Quick API checks
+
+### Sign up
+
 ```bash
+curl --location 'http://localhost:8080/api/auth/signup' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "secret123"
+}'
+```
+
+### Login (existing account)
+
+```bash
+curl --location 'http://localhost:8080/api/auth/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "email": "test@example.com",
+  "password": "secret123"
+}'
+```
+
+### Login (non-existing account → expected error)
+
+```bash
+curl --location 'http://localhost:8080/api/auth/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "email": "nouser@example.com",
+  "password": "secret123"
+}'
+```
+
+---
+
+## Frontend scripts
+
+```bash
+npm run dev
 npm run build
-```
-
-### Preview production build
-```bash
 npm run preview
-```
-
-### Lint
-```bash
 npm run lint
 ```
 
----
-
-## 7) NPM Scripts
-
-From `package.json`:
-
-- `dev` → starts Vite dev server
-- `build` → creates production build
-- `preview` → previews production build
-- `lint` → runs ESLint checks
-
----
-
-## 8) API Reference Used
-
-Provided assignment reference:
+## Backend scripts
 
 ```bash
-curl --location 'https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet'
+cd backend
+mvn spring-boot:run
+mvn test
 ```
-
-In the app, this is consumed through `fetchSheetBySlug` in `src/api/questionSheetApi.js`.
-
----
-
-## 9) Requirement Coverage Summary
-
-### Functional Requirements
-- Add Topic 
-- Add Sub-topic 
-- Add Question 
-- Reorder Elements 
-
-### Technical Requirements
-- React-based SPA 
-- State management with Zustand 
-- API integration with provided endpoint reference 
-- Works without database using local persistence 
-
-### Bonus Improvements Included
-- Edit/View mode toggle
-- Expand/collapse sections
-- Question link attachment
-- API title shown in header
-
----
-
-## 10) Notes
-
-- The application is designed to work even if API is unavailable by using localStorage fallback.
-- Existing features are preserved while modular components and store logic keep code maintainable.
-
-
