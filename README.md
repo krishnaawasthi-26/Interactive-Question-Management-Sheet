@@ -53,6 +53,22 @@ Default DB URI:
 
 ---
 
+### Use MongoDB Atlas (online MongoDB)
+
+If you are using an Atlas URI, set it before starting the backend:
+
+```bash
+export MONGODB_URI="mongodb+srv://sheet:samplepass1@sheet.d6mwyaj.mongodb.net/iqms?retryWrites=true&w=majority&appName=sheet"
+cd backend
+mvn spring-boot:run
+```
+
+Notes:
+- Include a database name in the URI path (for example `/iqms`).
+- In Atlas, allow your client IP in **Network Access** (or `0.0.0.0/0` for testing).
+- Ensure the Atlas database user (`sheet`) has read/write permission.
+
+
 ## Run the program (step by step)
 
 ## 1) Start MongoDB locally
