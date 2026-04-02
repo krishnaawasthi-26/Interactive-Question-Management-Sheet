@@ -23,7 +23,9 @@ const request = async (path, body) => {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("Cannot reach the server. Please check backend/CORS setup and try again.");
+    throw new Error("Unable to connect right now. Please try again in a moment.");
+
+
   }
 
   if (!response.ok) {
