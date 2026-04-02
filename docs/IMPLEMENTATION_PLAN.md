@@ -1,0 +1,257 @@
+# Interactive Question Management Sheet — Step-by-Step Implementation Plan
+
+This plan is designed for **incremental delivery** so you can build safely now (local-first), then add Spring Boot APIs later without rewriting everything.
+
+## 1) Product Goals (as requested)
+
+- Login page + Sign-up page (if user does not exist).
+- Local-first data behavior:
+  - If internet is unavailable: **no error shown**, save locally.
+  - If internet becomes available: sync local changes to backend/database.
+- NoSQL backend (MongoDB preferred).
+- Undo/Redo support with history cap (recommended: **20 actions**).
+- Sheet editor for topics/subtopics/questions/links (create, edit, delete, reorder).
+- Import page for JSON upload + human-readable format instructions.
+- Export button to download current sheet JSON.
+- Current stage: mostly local operation.
+- Next stage: Spring Boot APIs with MongoDB URI/URL support.
+
+---
+
+## 2) Architecture Direction
+
+Use a **local-first architecture** with an operation queue:
+
+1. UI writes changes to in-memory state (Zustand).
+2. Every change is persisted to localStorage immediately.
+3. Every change is added to an `outbox` queue (pending sync operations).
+4. If online and API available, background sync flushes queue to server.
+5. If offline or API unavailable, queue remains pending silently.
+
+This prevents user-facing errors during offline usage.
+
+---
+
+## 3) Phased Delivery Plan
+
+## Phase 1 — Foundation (Local-first, no backend dependency)
+
+### 1. Authentication (local only for now)
+- Add routes/pages:
+  - `/login`
+  - `/signup`
+  - `/app` (sheet workspace)
+  - `/import`
+- Store local users in localStorage for development prototype only.
+- Keep active session in localStorage (`currentUser`).
+
+> Note: This is only a temporary auth strategy until Spring Boot auth is added.
+
+### 2. Sheet Data Model
+Use this structure consistently across app/import/export:
+
+```json
+{
+  "id": "sheet_001",
+  "name": "My DSA Sheet",
+  "createdAt": "2026-04-02T00:00:00.000Z",
+  "updatedAt": "2026-04-02T00:00:00.000Z",
+  "topics": [
+    {
+      "id": "topic_1",
+      "title": "Arrays",
+      "subTopics": [
+        {
+          "id": "sub_1",
+          "title": "Sliding Window",
+          "questions": [
+            {
+              "id": "q_1",
+              "text": "Longest Substring Without Repeating Characters",
+              "answer": "...optional...",
+              "link": "https://..."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 3. Undo/Redo (cap = 20)
+- Implement two stacks:
+  - `undoStack`
+  - `redoStack`
+- Save state snapshot (or reversible command) on every mutation.
+- Max history size: **20** (good default and memory-safe).
+- New action clears `redoStack`.
+
+### 4. Import Page
+- Dedicated `/import` page with:
+  - Upload JSON file area.
+  - Validation results panel.
+  - Instructions section:
+    - required fields
+    - optional fields (`link`, `answer`)
+    - business rules (e.g., subtopic requires parent topic).
+
+### 5. Export Button
+- Add `Export JSON` button in header.
+- Download current active sheet as `.json`.
+
+---
+
+## Phase 2 — Offline Queue + Sync Contract (still safe without live backend)
+
+### 1. Outbox Queue
+Each mutation creates an operation like:
+
+```json
+{
+  "opId": "op_123",
+  "type": "QUESTION_ADD",
+  "sheetId": "sheet_001",
+  "payload": { "topicId": "topic_1", "subTopicId": "sub_1", "text": "Two Sum" },
+  "createdAt": "2026-04-02T10:00:00.000Z",
+  "status": "pending"
+}
+```
+
+### 2. Sync Trigger
+- On `window.online` event, try flushing queue.
+- On app startup, if online, retry pending ops.
+- Failure keeps ops pending (no disruptive errors).
+
+### 3. Conflict Strategy
+For first version use **last write wins** by `updatedAt` timestamp.
+
+---
+
+## Phase 3 — Spring Boot + MongoDB APIs
+
+### 1. Backend Modules
+- `auth-service`
+- `sheet-service`
+- `sync-service` (optional initially)
+
+### 2. Suggested Endpoints
+
+#### Auth
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+
+#### Sheets
+- `POST /api/sheets`
+- `GET /api/sheets/{sheetId}`
+- `PUT /api/sheets/{sheetId}`
+- `DELETE /api/sheets/{sheetId}`
+
+#### Nested operations (optional explicit endpoints)
+- `POST /api/sheets/{sheetId}/topics`
+- `PATCH /api/sheets/{sheetId}/topics/{topicId}`
+- `DELETE /api/sheets/{sheetId}/topics/{topicId}`
+- Similar for subtopics/questions.
+
+#### Batch sync (recommended)
+- `POST /api/sync/outbox`
+  - accepts array of pending operations.
+
+### 3. MongoDB Collections
+- `users`
+- `sheets`
+- (optional) `operations_audit`
+
+### 4. Environment
+- `SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/iqms`
+
+---
+
+## 4) JSON Import Rules (for your Import page docs)
+
+### Required
+- `name` (string)
+- `topics` (array)
+- For each topic: `title`
+- For each subtopic: `title`
+- For each question: `text`
+
+### Optional
+- `answer`
+- `link`
+- IDs (`id`) can be autogenerated if absent.
+
+### Constraints
+- Topic may have empty `subTopics`.
+- Subtopic may have empty `questions`.
+- Subtopic cannot exist outside a topic.
+- Question cannot exist outside a subtopic.
+
+---
+
+## 5) Recommended Folder Structure (frontend)
+
+```text
+src/
+  pages/
+    LoginPage.jsx
+    SignUpPage.jsx
+    SheetPage.jsx
+    ImportPage.jsx
+  components/
+    Header.jsx
+    UndoRedoControls.jsx
+    ExportButton.jsx
+    JsonImportDropzone.jsx
+  store/
+    authStore.js
+    sheetStore.js
+    historyStore.js
+    syncStore.js
+  services/
+    localDb.js
+    syncService.js
+    importValidation.js
+```
+
+---
+
+## 6) Milestone Checklist
+
+### Milestone A (now)
+- [ ] Login/Signup pages locally.
+- [ ] Undo/Redo 20 actions.
+- [ ] Import page + validation + instructions.
+- [ ] Export JSON button.
+- [ ] All local data persistence.
+
+### Milestone B
+- [ ] Outbox queue.
+- [ ] Online/offline listeners.
+- [ ] Retry sync job.
+
+### Milestone C
+- [ ] Spring Boot auth + sheet CRUD APIs.
+- [ ] MongoDB integration via URI.
+- [ ] Frontend switched from mock/local-only sync to real API sync.
+
+---
+
+## 7) Why 20 for Undo/Redo is a good default
+
+- Covers normal editing behavior comfortably.
+- Keeps memory/storage growth bounded.
+- Can be made user-configurable later (10/20/50).
+
+---
+
+## 8) Immediate Next Step Recommendation
+
+Implement Milestone A first in this order:
+1. Login/Signup page scaffolding.
+2. Undo/Redo store with 20 cap.
+3. Import page and JSON validator.
+4. Export JSON button.
+5. Only after that, build out outbox sync.
+
+This keeps your app stable and production-oriented while staying simple today.

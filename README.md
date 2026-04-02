@@ -222,3 +222,8 @@ In the app, this is consumed through `fetchSheetBySlug` in `src/api/questionShee
 
 - The application is designed to work even if API is unavailable by using localStorage fallback.
 - Existing features are preserved while modular components and store logic keep code maintainable.
+
+
+## Roadmap
+
+See `docs/IMPLEMENTATION_PLAN.md` for the phased local-first + Spring Boot/MongoDB implementation plan.
