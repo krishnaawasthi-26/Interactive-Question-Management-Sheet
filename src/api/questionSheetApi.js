@@ -2,14 +2,15 @@ import sampleSheet from "../data/sampleSheet.json";
 
 const API_BASE_URL =
   "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet";
-const LOCAL_STORAGE_KEY = "question-sheet";
 
+export const LOCAL_STORAGE_KEY = "question-sheet";
 const isBrowser = typeof window !== "undefined";
 
 const readLocalSheet = (slug) => {
   if (!isBrowser) return null;
   const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
   if (!raw) return null;
+
   const parsed = JSON.parse(raw);
   if (slug && parsed?.slug && parsed.slug !== slug) return null;
   return parsed;
@@ -22,9 +23,15 @@ const writeLocalSheet = (sheet) => {
 
 const normalizeSheet = (payload, slug) => {
   const topics = payload?.topics ?? payload?.topicList ?? [];
+  const title = payload?.title ?? payload?.name ?? "Question Sheet";
+
   return {
     slug: payload?.slug ?? slug ?? "local-sheet",
-    title: payload?.title ?? payload?.name ?? "Question Sheet",
+    id: payload?.id ?? `sheet_${Date.now()}`,
+    title,
+    name: payload?.name ?? title,
+    createdAt: payload?.createdAt ?? new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     topics,
   };
 };
@@ -44,6 +51,7 @@ const createSubTopicEntry = (title) => ({
 const createQuestionEntry = (text) => ({
   id: Date.now(),
   text,
+  answer: "",
   link: "",
 });
 
@@ -65,6 +73,7 @@ const resolveSheet = (sheet) => {
       ...(localSheet ?? {}),
       ...sheet,
       topics: sheet.topics ?? localSheet?.topics ?? [],
+      updatedAt: new Date().toISOString(),
     };
   }
   return normalizeSheet(sheet ?? localSheet ?? { topics: [] });
@@ -74,48 +83,47 @@ export const fetchSheetBySlug = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/${slug}`);
     if (!response.ok) throw new Error("Failed to fetch sheet");
+
     const data = await response.json();
     const payload = data?.data?.sheet ?? data?.data ?? data?.sheet ?? data;
     const sheet = normalizeSheet(payload, slug);
     const localSheet = readLocalSheet(slug);
+
     const hasLocalTopics =
       Array.isArray(localSheet?.topics) && localSheet.topics.length > 0;
-    const isRemoteEmpty =
-      !Array.isArray(sheet.topics) || sheet.topics.length === 0;
-    if (
-      // (!localSheet || !Array.isArray(localSheet.topics) || localSheet.topics.length === 0) &&
-      // (!Array.isArray(sheet.topics) || sheet.topics.length === 0)
-      !hasLocalTopics &&
-      isRemoteEmpty
-    ) {
+    const isRemoteEmpty = !Array.isArray(sheet.topics) || sheet.topics.length === 0;
+
+    if (!hasLocalTopics && isRemoteEmpty) {
       const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
       writeLocalSheet(fallbackSheet);
-      // return fallbackSheet;
       return { ...fallbackSheet, source: "fallback", hadRemoteError: false };
     }
+
     if (isRemoteEmpty && hasLocalTopics) {
       return { ...localSheet, source: "local", hadRemoteError: false };
     }
+
     writeLocalSheet(sheet);
-    // return sheet;
     return { ...sheet, source: "remote", hadRemoteError: false };
   } catch {
     const localSheet = readLocalSheet(slug);
     if (localSheet && Array.isArray(localSheet.topics) && localSheet.topics.length > 0) {
-      // return localSheet;
       return { ...localSheet, source: "local", hadRemoteError: true };
     }
+
     const fallbackSheet = normalizeSheet({ ...sampleSheet, slug }, slug);
     writeLocalSheet(fallbackSheet);
-    // return fallbackSheet;
     return { ...fallbackSheet, source: "fallback", hadRemoteError: true };
   }
 };
 
 export const persistSheet = (sheet) => {
-  writeLocalSheet(sheet);
-  return Promise.resolve(sheet);
+  const currentSheet = resolveSheet(sheet);
+  writeLocalSheet(currentSheet);
+  return Promise.resolve(currentSheet);
 };
+
+export const setSheet = (sheet) => persistSheet(sheet);
 
 export const createTopic = (sheet, title) => {
   const currentSheet = resolveSheet(sheet);
@@ -216,11 +224,10 @@ export const updateQuestion = (sheet, topicId, subId, questionId, newText) => {
       ...topic,
       subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
         ...subTopic,
-        questions: updateQuestionById(
-          subTopic.questions,
-          questionId,
-          (question) => ({ ...question, text: newText })
-        ),
+        questions: updateQuestionById(subTopic.questions, questionId, (question) => ({
+          ...question,
+          text: newText,
+        })),
       })),
     })),
   };
@@ -236,9 +243,7 @@ export const deleteQuestion = (sheet, topicId, subId, questionId) => {
       ...topic,
       subTopics: updateSubTopicById(topic.subTopics, subId, (subTopic) => ({
         ...subTopic,
-        questions: subTopic.questions.filter(
-          (question) => question.id !== questionId
-        ),
+        questions: subTopic.questions.filter((question) => question.id !== questionId),
       })),
     })),
   };
