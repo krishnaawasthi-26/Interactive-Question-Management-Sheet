@@ -4,12 +4,17 @@ import LoginPage from "./pages/LoginPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
 import { getCurrentHashRoute, navigateTo, ROUTES } from "./services/hashRouter";
+import { initBackgroundSync } from "./api/questionSheetApi";
 import { useAuthStore } from "./store/authStore";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
   const [route, setRoute] = useState(getCurrentHashRoute());
+
+  useEffect(() => {
+    initBackgroundSync();
+  }, []);
 
   useEffect(() => {
     const syncHashRoute = () => setRoute(getCurrentHashRoute());

@@ -37,6 +37,8 @@ const writeCurrentUser = (user) => {
   window.localStorage.removeItem(CURRENT_USER_KEY);
 };
 
+const sanitizeUser = ({ password, ...user }) => user;
+
 export const useAuthStore = create((set, get) => ({
   users: readUsers(),
   currentUser: readCurrentUser(),
@@ -46,7 +48,25 @@ export const useAuthStore = create((set, get) => ({
 
   signUp: ({ name, email, password }) => {
     const users = get().users;
+    const normalizedName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedName) {
+      set({ authError: "Name is required." });
+      return false;
+    }
+
+    if (!normalizedEmail) {
+      set({ authError: "Email is required." });
+      return false;
+    }
+
+    if (normalizedPassword.length < 6) {
+      set({ authError: "Password must be at least 6 characters." });
+      return false;
+    }
+
     const alreadyExists = users.some((user) => user.email === normalizedEmail);
 
     if (alreadyExists) {
@@ -56,34 +76,42 @@ export const useAuthStore = create((set, get) => ({
 
     const newUser = {
       id: `user_${Date.now()}`,
-      name: name.trim(),
+      name: normalizedName,
       email: normalizedEmail,
-      password,
+      password: normalizedPassword,
       createdAt: new Date().toISOString(),
     };
 
     const nextUsers = [...users, newUser];
-    writeUsers(nextUsers);
-    writeCurrentUser(newUser);
+    const sessionUser = sanitizeUser(newUser);
 
-    set({ users: nextUsers, currentUser: newUser, authError: null });
+    writeUsers(nextUsers);
+    writeCurrentUser(sessionUser);
+
+    set({ users: nextUsers, currentUser: sessionUser, authError: null });
     return true;
   },
 
   login: ({ email, password }) => {
     const users = get().users;
     const normalizedEmail = email.trim().toLowerCase();
-    const matchedUser = users.find(
-      (user) => user.email === normalizedEmail && user.password === password
-    );
+    const normalizedPassword = password.trim();
 
-    if (!matchedUser) {
-      set({ authError: "Invalid email or password." });
+    const userByEmail = users.find((user) => user.email === normalizedEmail);
+
+    if (!userByEmail) {
+      set({ authError: "Account does not exist. Please sign up first." });
       return false;
     }
 
-    writeCurrentUser(matchedUser);
-    set({ currentUser: matchedUser, authError: null });
+    if (userByEmail.password !== normalizedPassword) {
+      set({ authError: "Incorrect password. Please try again." });
+      return false;
+    }
+
+    const sessionUser = sanitizeUser(userByEmail);
+    writeCurrentUser(sessionUser);
+    set({ currentUser: sessionUser, authError: null });
     return true;
   },
 
