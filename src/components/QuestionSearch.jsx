@@ -1,4 +1,4 @@
-function QuestionSearch({ value, onChange, onlyExactMatch, onExactMatchChange }) {
+function QuestionSearch({ value, onChange }) {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-zinc-300 mb-2" htmlFor="question-search">

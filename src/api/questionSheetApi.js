@@ -99,7 +99,7 @@ export const fetchSheetBySlug = async (slug) => {
     writeLocalSheet(sheet);
     // return sheet;
     return { ...sheet, source: "remote", hadRemoteError: false };
-  } catch (error) {
+  } catch {
     const localSheet = readLocalSheet(slug);
     if (localSheet && Array.isArray(localSheet.topics) && localSheet.topics.length > 0) {
       // return localSheet;
