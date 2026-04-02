@@ -12,13 +12,19 @@ const parseErrorMessage = async (response) => {
 };
 
 const request = async (path, body) => {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("Unable to connect right now. Please try again in a moment.");
+  }
 
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response));
