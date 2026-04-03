@@ -5,7 +5,14 @@ const parseErrorMessage = async (response) => {
     const payload = await response.json();
     if (payload?.message) return payload.message;
   } catch {
-    // Ignore parse errors and use fallback below.
+    // Ignore JSON parse errors and try plain text fallback below.
+  }
+
+  try {
+    const text = (await response.text())?.trim();
+    if (text) return text;
+  } catch {
+    // Ignore text parse errors and use fallback below.
   }
 
   return "Request failed. Please try again.";

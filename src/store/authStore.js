@@ -16,7 +16,12 @@ const safeParse = (value, fallback) => {
 
 const readCurrentUser = () => {
   if (!isBrowser) return null;
-  return safeParse(window.localStorage.getItem(CURRENT_USER_KEY), null);
+  const parsed = safeParse(window.localStorage.getItem(CURRENT_USER_KEY), null);
+  if (!parsed?.token) {
+    window.localStorage.removeItem(CURRENT_USER_KEY);
+    return null;
+  }
+  return parsed;
 };
 
 const writeCurrentUser = (user) => {
