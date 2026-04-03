@@ -1,7 +1,7 @@
 import ExportButton from "./ExportButton";
 import UndoRedoControls from "./UndoRedoControls";
 
-function Header({ isEditing, onToggleEdit, onOpenImport, onLogout, title }) {
+function Header({ isEditing, onToggleEdit, onOpenImport, onLogout, title, onBackProfile }) {
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
@@ -12,6 +12,7 @@ function Header({ isEditing, onToggleEdit, onOpenImport, onLogout, title }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={onBackProfile} className="rounded-md border border-zinc-700 px-3 py-1 text-sm text-zinc-200">Profile</button>
         <UndoRedoControls />
         <ExportButton />
         <button

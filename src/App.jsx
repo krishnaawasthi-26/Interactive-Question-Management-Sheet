@@ -4,53 +4,70 @@ import LoginPage from "./pages/LoginPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
 import { getCurrentHashRoute, navigateTo, ROUTES } from "./services/hashRouter";
-import { initBackgroundSync } from "./api/questionSheetApi";
 import { useAuthStore } from "./store/authStore";
+import ProfilePage from "./pages/ProfilePage";
+import SharedPage from "./pages/SharedPage";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
-  const [route, setRoute] = useState(getCurrentHashRoute());
+  const [routeState, setRouteState] = useState(getCurrentHashRoute());
 
   useEffect(() => {
-    initBackgroundSync();
-  }, []);
-
-  useEffect(() => {
-    const syncHashRoute = () => setRoute(getCurrentHashRoute());
+    const syncHashRoute = () => setRouteState(getCurrentHashRoute());
     window.addEventListener("hashchange", syncHashRoute);
     syncHashRoute();
     return () => window.removeEventListener("hashchange", syncHashRoute);
   }, []);
 
   useEffect(() => {
+    const route = routeState.route;
+    if (route === ROUTES.SHARED_PREFIX) return;
+
     if (!currentUser && route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
       navigateTo(ROUTES.LOGIN);
       return;
     }
 
     if (currentUser && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP)) {
-      navigateTo(ROUTES.APP);
+      navigateTo(ROUTES.PROFILE);
     }
-  }, [currentUser, route]);
+  }, [currentUser, routeState]);
 
-  if (route === ROUTES.SIGNUP) {
+  if (routeState.route === ROUTES.SIGNUP) {
     return (
       <SignUpPage
-        onSignUpSuccess={() => navigateTo(ROUTES.APP)}
+        onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)}
         onGoToLogin={() => navigateTo(ROUTES.LOGIN)}
       />
     );
   }
 
-  if (route === ROUTES.IMPORT) {
-    return <ImportPage onBack={() => navigateTo(ROUTES.APP)} />;
+  if (routeState.route === ROUTES.SHARED_PREFIX) {
+    return <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />;
   }
 
-  if (route === ROUTES.APP) {
+  if (routeState.route === ROUTES.IMPORT) {
+    return <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
+  }
+
+  if (routeState.route === ROUTES.PROFILE) {
+    return (
+      <ProfilePage
+        onLogout={() => {
+          logout();
+          navigateTo(ROUTES.LOGIN);
+        }}
+      />
+    );
+  }
+
+  if (routeState.route === ROUTES.APP) {
     return (
       <SheetPage
+        sheetId={routeState.sheetId}
         onOpenImport={() => navigateTo(ROUTES.IMPORT)}
+        onBackProfile={() => navigateTo(ROUTES.PROFILE)}
         onLogout={() => {
           logout();
           navigateTo(ROUTES.LOGIN);
@@ -61,7 +78,7 @@ function App() {
 
   return (
     <LoginPage
-      onLoginSuccess={() => navigateTo(ROUTES.APP)}
+      onLoginSuccess={() => navigateTo(ROUTES.PROFILE)}
       onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)}
     />
   );

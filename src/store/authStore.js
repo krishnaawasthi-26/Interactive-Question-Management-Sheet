@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { loginUser, signUpUser } from "../api/authApi";
+import { updateProfile as updateProfileApi } from "../api/profileApi";
 
 const CURRENT_USER_KEY = "iqms-current-user";
 
@@ -27,7 +28,7 @@ const writeCurrentUser = (user) => {
   window.localStorage.removeItem(CURRENT_USER_KEY);
 };
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   currentUser: readCurrentUser(),
   authError: null,
   authLoading: false,
@@ -67,6 +68,22 @@ export const useAuthStore = create((set) => ({
       return true;
     } catch (error) {
       set({ authError: error.message, authLoading: false });
+      return false;
+    }
+  },
+
+  updateProfile: async ({ name, email }) => {
+    const user = get().currentUser;
+    if (!user?.token) return false;
+
+    try {
+      const updated = await updateProfileApi(user.token, { name, email });
+      const merged = { ...user, ...updated };
+      writeCurrentUser(merged);
+      set({ currentUser: merged });
+      return true;
+    } catch (error) {
+      set({ authError: error.message });
       return false;
     }
   },

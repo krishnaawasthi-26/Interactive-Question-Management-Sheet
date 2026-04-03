@@ -1,0 +1,65 @@
+package com.iqms.backend.sheet;
+
+import com.iqms.backend.security.CurrentUser;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/sheets")
+public class SheetController {
+
+  private final SheetService sheetService;
+  private final CurrentUser currentUser;
+
+  public SheetController(SheetService sheetService, CurrentUser currentUser) {
+    this.sheetService = sheetService;
+    this.currentUser = currentUser;
+  }
+
+  @GetMapping
+  public ResponseEntity<List<Sheet>> listSheets(HttpServletRequest request) {
+    return ResponseEntity.ok(sheetService.listSheetsForOwner(currentUser.getUserId(request)));
+  }
+
+  @PostMapping
+  public ResponseEntity<Sheet> createSheet(HttpServletRequest request, @RequestBody Map<String, Object> body) {
+    String title = body.get("title") == null ? null : body.get("title").toString();
+    return ResponseEntity.ok(sheetService.createSheet(currentUser.getUserId(request), title));
+  }
+
+  @GetMapping("/{sheetId}")
+  public ResponseEntity<Sheet> getSheet(HttpServletRequest request, @PathVariable String sheetId) {
+    return ResponseEntity.ok(sheetService.getOwnedSheet(currentUser.getUserId(request), sheetId));
+  }
+
+  @PutMapping("/{sheetId}")
+  public ResponseEntity<Sheet> updateSheet(
+      HttpServletRequest request,
+      @PathVariable String sheetId,
+      @RequestBody Map<String, Object> body) {
+    String title = body.get("title") == null ? null : body.get("title").toString();
+    List<Map<String, Object>> topics = (List<Map<String, Object>>) body.get("topics");
+    return ResponseEntity.ok(sheetService.updateOwnedSheet(currentUser.getUserId(request), sheetId, title, topics));
+  }
+
+  @DeleteMapping("/{sheetId}")
+  public ResponseEntity<Void> deleteSheet(HttpServletRequest request, @PathVariable String sheetId) {
+    sheetService.deleteOwnedSheet(currentUser.getUserId(request), sheetId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/shared/{shareId}")
+  public ResponseEntity<Sheet> getSharedSheet(@PathVariable String shareId) {
+    return ResponseEntity.ok(sheetService.getByShareId(shareId));
+  }
+}

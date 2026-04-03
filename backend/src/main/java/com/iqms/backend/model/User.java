@@ -18,6 +18,9 @@ public class User {
 
   private String password;
 
+  @Indexed(unique = true)
+  private String profileShareId;
+
   private Instant createdAt;
 
   public String getId() {
@@ -50,6 +53,14 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getProfileShareId() {
+    return profileShareId;
+  }
+
+  public void setProfileShareId(String profileShareId) {
+    this.profileShareId = profileShareId;
   }
 
   public Instant getCreatedAt() {
