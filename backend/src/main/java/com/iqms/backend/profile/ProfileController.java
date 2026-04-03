@@ -6,6 +6,7 @@ import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.sheet.Sheet;
 import com.iqms.backend.sheet.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -80,11 +81,14 @@ public class ProfileController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
     List<Map<String, Object>> sheets = sheetService.listSheetsForOwner(user.getId()).stream()
-        .map(sheet -> Map.of(
-            "id", sheet.getId(),
-            "title", sheet.getTitle(),
-            "shareId", sheet.getShareId(),
-            "updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString()))
+        .map(sheet -> {
+          Map<String, Object> sharedSheet = new LinkedHashMap<>();
+          sharedSheet.put("id", sheet.getId());
+          sharedSheet.put("title", sheet.getTitle());
+          sharedSheet.put("shareId", sheet.getShareId());
+          sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
+          return sharedSheet;
+        })
         .toList();
 
     return ResponseEntity.ok(Map.of(
