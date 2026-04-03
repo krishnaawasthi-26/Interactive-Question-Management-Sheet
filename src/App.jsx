@@ -13,6 +13,7 @@ function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
   const [routeState, setRouteState] = useState(getCurrentHashRoute());
+  const isAuthenticated = Boolean(currentUser?.token);
 
   useEffect(() => {
     const syncHashRoute = () => setRouteState(getCurrentHashRoute());
@@ -29,15 +30,15 @@ function App() {
     const route = routeState.route;
     if (route === ROUTES.SHARED_PREFIX || route === ROUTES.PUBLIC_PROFILE || route === ROUTES.PUBLIC_SHEET) return;
 
-    if (!currentUser && route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
+    if (!isAuthenticated && route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
       navigateTo(ROUTES.LOGIN);
       return;
     }
 
-    if (currentUser && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP)) {
+    if (isAuthenticated && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP)) {
       navigateTo(ROUTES.PROFILE);
     }
-  }, [currentUser, routeState]);
+  }, [isAuthenticated, routeState]);
 
   if (routeState.route === ROUTES.SIGNUP) {
     return (
