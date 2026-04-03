@@ -116,7 +116,7 @@ public class ProfileController {
 
   private String normalizeUsername(String username) {
     String normalized = username.trim().toLowerCase();
-    if (!normalized.matches("^[a-z0-9_\-]{3,30}$")) {
+    if (!normalized.matches("^[a-z0-9_\\-]{3,30}$")) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Username can use lowercase letters, numbers, _ and - (3-30 chars).");
