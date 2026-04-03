@@ -4,7 +4,7 @@ const API_BASE_URL =
   "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet";
 
 const SYNC_API_BASE_URL =
-  import.meta.env.VITE_SYNC_API_BASE_URL || "http://localhost:8080/api/sync/outbox";
+  import.meta.env.VITE_SYNC_API_BASE_URL || "/api/sync/outbox";
 
 export const LOCAL_STORAGE_KEY = "question-sheet";
 export const OUTBOX_STORAGE_KEY = "iqms-outbox";

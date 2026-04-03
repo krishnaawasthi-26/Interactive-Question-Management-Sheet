@@ -89,6 +89,24 @@ npm run dev
 ```
 
 Frontend runs on Vite default URL (`http://localhost:5173`).
+If port `5173` is already in use, stop the other process first (this project now keeps the frontend fixed on 5173).
+
+---
+
+## Troubleshooting: "Website is not running"
+
+If backend logs show lines like:
+
+- `Tomcat started on port 8080`
+- `Started IqmsBackendApplication`
+
+then the backend is actually running successfully (not an error). In that case:
+
+1. Keep backend terminal running.
+2. Open a **second terminal** and run frontend with `npm run dev`.
+3. Open `http://localhost:5173` in browser (not `http://localhost:8080`).
+
+The frontend now uses Vite proxy for `/api/*`, so local API calls route to `http://localhost:8080` automatically.
 
 ---
 
