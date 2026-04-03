@@ -5,8 +5,11 @@ import com.iqms.backend.dto.LoginRequest;
 import com.iqms.backend.dto.SignUpRequest;
 import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
+import com.iqms.backend.security.TokenService;
 import java.time.Instant;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,9 +17,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthService {
 
   private final UserRepository userRepository;
+  private final TokenService tokenService;
+  private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-  public AuthService(UserRepository userRepository) {
+  public AuthService(UserRepository userRepository, TokenService tokenService) {
     this.userRepository = userRepository;
+    this.tokenService = tokenService;
   }
 
   public AuthResponse signUp(SignUpRequest request) {
@@ -31,7 +37,8 @@ public class AuthService {
     User user = new User();
     user.setName(normalizedName);
     user.setEmail(normalizedEmail);
-    user.setPassword(normalizedPassword);
+    user.setPassword(passwordEncoder.encode(normalizedPassword));
+    user.setProfileShareId("profile_" + UUID.randomUUID().toString().replace("-", ""));
     user.setCreatedAt(Instant.now());
 
     User created = userRepository.save(user);
@@ -48,7 +55,7 @@ public class AuthService {
             HttpStatus.NOT_FOUND,
             "Account does not exist. Please sign up first."));
 
-    if (!user.getPassword().equals(normalizedPassword)) {
+    if (!passwordEncoder.matches(normalizedPassword, user.getPassword())) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect password. Please try again.");
     }
 
@@ -57,6 +64,7 @@ public class AuthService {
 
   private AuthResponse toResponse(User user) {
     String createdAt = user.getCreatedAt() == null ? null : user.getCreatedAt().toString();
-    return new AuthResponse(user.getId(), user.getName(), user.getEmail(), createdAt);
+    String token = tokenService.issueToken(user.getId());
+    return new AuthResponse(user.getId(), user.getName(), user.getEmail(), createdAt, user.getProfileShareId(), token);
   }
 }

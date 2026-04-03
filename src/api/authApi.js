@@ -11,30 +11,30 @@ const parseErrorMessage = async (response) => {
   return "Request failed. Please try again.";
 };
 
-const request = async (path, body) => {
+export const authRequest = async (path, method = "GET", body, token) => {
   let response;
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      method: "POST",
+      method,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(body),
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
   } catch {
     throw new Error("Unable to connect right now. Please try again in a moment.");
-
-
   }
 
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response));
   }
 
+  if (response.status === 204) return null;
   return response.json();
 };
 
-export const signUpUser = (payload) => request("/api/auth/signup", payload);
+export const signUpUser = (payload) => authRequest("/api/auth/signup", "POST", payload);
 
-export const loginUser = (payload) => request("/api/auth/login", payload);
+export const loginUser = (payload) => authRequest("/api/auth/login", "POST", payload);
