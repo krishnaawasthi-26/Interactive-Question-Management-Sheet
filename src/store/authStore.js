@@ -55,12 +55,12 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  login: async ({ email, password }) => {
+  login: async ({ identifier, password }) => {
     set({ authLoading: true, authError: null });
 
     try {
       const user = await loginUser({
-        email: email.trim().toLowerCase(),
+        identifier: identifier.trim().toLowerCase(),
         password: password.trim(),
       });
 

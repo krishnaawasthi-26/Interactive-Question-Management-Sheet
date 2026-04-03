@@ -6,7 +6,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   const authError = useAuthStore((state) => state.authError);
   const authLoading = useAuthStore((state) => state.authLoading);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ identifier: "", password: "" });
 
   const submit = async (event) => {
     event.preventDefault();
@@ -19,14 +19,14 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
       <h1 className="mb-5 text-2xl font-semibold text-white">Login</h1>
       <form className="space-y-3" onSubmit={submit}>
         <input
-          type="email"
+          type="text"
           required
           disabled={authLoading}
-          value={form.email}
-          placeholder="Email"
+          value={form.identifier}
+          placeholder="Email or username"
           onChange={(event) => {
             clearAuthError();
-            setForm((current) => ({ ...current, email: event.target.value }));
+            setForm((current) => ({ ...current, identifier: event.target.value }));
           }}
           className="w-full rounded-md border border-gray-700 bg-transparent px-3 py-2 text-white"
         />
