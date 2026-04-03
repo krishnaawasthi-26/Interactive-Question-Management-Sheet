@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import TopicList from "../components/TopicList";
-import { fetchSharedProfile } from "../api/profileApi";
+import { fetchPublicProfile, fetchPublicSheet, fetchSharedProfile } from "../api/profileApi";
 import { getSharedSheet } from "../api/sheetApi";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
-import { navigateTo, ROUTES } from "../services/hashRouter";
+import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
 
-function SharedPage({ shareType, shareId }) {
+function SharedPage({ shareType, shareId, username, sheetSlug }) {
   const [profile, setProfile] = useState(null);
   const [sharedSheet, setSharedSheet] = useState(null);
   const [error, setError] = useState(null);
@@ -25,6 +25,19 @@ function SharedPage({ shareType, shareId }) {
           return;
         }
 
+        if (shareType === "public-profile") {
+          const data = await fetchPublicProfile(username);
+          setProfile(data);
+          return;
+        }
+
+        if (shareType === "public-sheet") {
+          const sheet = await fetchPublicSheet(username, sheetSlug);
+          setSharedSheet(sheet);
+          setReadOnlySheet(sheet);
+          return;
+        }
+
         const sheet = await getSharedSheet(shareId);
         setSharedSheet(sheet);
         setReadOnlySheet(sheet);
@@ -33,11 +46,11 @@ function SharedPage({ shareType, shareId }) {
       }
     };
     load();
-  }, [setReadOnlySheet, shareId, shareType]);
+  }, [setReadOnlySheet, shareId, shareType, sheetSlug, username]);
 
   if (error) return <div className="p-6 text-red-300">{error}</div>;
 
-  if (shareType === "profile") {
+  if (shareType === "profile" || shareType === "public-profile") {
     return (
       <div className="min-h-screen bg-zinc-900 p-6 text-white">
         <h1 className="mb-4 text-2xl font-semibold">{profile?.name}&apos;s profile</h1>
@@ -47,6 +60,14 @@ function SharedPage({ shareType, shareId }) {
               <a href={`#/shared/sheet/${sheet.shareId}`} className="font-medium underline-offset-2 hover:underline">
                 {sheet.title}
               </a>
+              {profile?.username && (
+                <a
+                  href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
+                  className="text-sm text-zinc-300 underline-offset-2 hover:underline"
+                >
+                  Open clean URL
+                </a>
+              )}
             </div>
           ))}
         </div>

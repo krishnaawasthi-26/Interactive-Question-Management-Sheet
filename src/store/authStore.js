@@ -35,13 +35,14 @@ export const useAuthStore = create((set, get) => ({
 
   clearAuthError: () => set({ authError: null }),
 
-  signUp: async ({ name, email, password }) => {
+  signUp: async ({ name, email, username, password }) => {
     set({ authLoading: true, authError: null });
 
     try {
       const user = await signUpUser({
         name: name.trim(),
         email: email.trim().toLowerCase(),
+        username: username.trim().toLowerCase(),
         password: password.trim(),
       });
 
@@ -72,12 +73,12 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  updateProfile: async ({ name, email }) => {
+  updateProfile: async ({ name, email, username }) => {
     const user = get().currentUser;
     if (!user?.token) return false;
 
     try {
-      const updated = await updateProfileApi(user.token, { name, email });
+      const updated = await updateProfileApi(user.token, { name, email, username });
       const merged = { ...user, ...updated };
       writeCurrentUser(merged);
       set({ currentUser: merged });
