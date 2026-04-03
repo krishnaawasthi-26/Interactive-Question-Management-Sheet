@@ -6,81 +6,44 @@ This project now contains:
 
 - A **React + Vite frontend** (`/`) for question sheet UI.
 - A **Spring Boot backend** (`/backend`) for authentication APIs.
-- A **local MongoDB database** for user accounts.
+- A **MongoDB database** for users/sheets.
 
 ---
 
-## What was fixed
+## Environment configuration
 
-The login/sign-up flow now uses a real backend API instead of only browser local storage.
+Backend Mongo connection now supports an environment variable:
 
-- Creates users in MongoDB.
-- Logs in only if account exists.
-- Returns clear errors for:
-  - account not found
-  - wrong password
-  - duplicate account
-  - validation issues
-- Shows loading states in the UI while request is in progress.
+- `MONGODB_URI` (recommended)
+- fallback default: `mongodb://localhost:27017/iqms`
 
----
+Configured in `backend/src/main/resources/application.properties` as:
 
-## Backend API (Spring Boot + MongoDB)
-
-Base URL: `http://localhost:8080`
-
-### Endpoints
-
-- `POST /api/auth/signup`
-  - Body: `{ "name": "...", "email": "...", "password": "..." }`
-- `POST /api/auth/login`
-  - Body: `{ "email": "...", "password": "..." }`
-
-### Tech
-
-- Spring Boot 3
-- Spring Web
-- Spring Data MongoDB
-- Bean Validation
-
-Mongo connection is configured in:
-
-- `backend/src/main/resources/application.properties`
-
-Default DB URI:
-
-- `mongodb://localhost:27017/iqms`
-
----
-
-## Run the program (step by step)
-
-## 1) Start MongoDB locally
-
-If you already have MongoDB as a service, ensure it is running on port `27017`.
-
-Example (Linux/macOS):
-
-```bash
-mongod --dbpath ~/data/db
+```properties
+spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/iqms}
 ```
 
-Or with Docker:
+---
 
-```bash
-docker run --name iqms-mongo -p 27017:27017 -d mongo:7
-```
+## Run the project
 
-## 2) Start backend
+### 1) Start backend (Spring Boot)
+
+Open terminal 1:
 
 ```bash
 cd backend
+export MONGODB_URI="mongodb+srv://sheet:samplepass1@sheet.d6mwyaj.mongodb.net/iqms?retryWrites=true&w=majority&appName=sheet"
 mvn spring-boot:run
 ```
 
-Backend runs on `http://localhost:8080`.
+Backend starts at: `http://localhost:8080`
 
-## 3) Start frontend (new terminal)
+> If you want local Mongo instead, skip `export MONGODB_URI=...` and keep the default local URI.
+
+### 2) Start frontend (React + Vite)
+
+Open terminal 2:
 
 ```bash
 cd /workspace/Interactive-Question-Management-Sheet
@@ -88,25 +51,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs on Vite default URL (`http://localhost:5173`).
-If port `5173` is already in use, stop the other process first (this project now keeps the frontend fixed on 5173).
-
----
-
-## Troubleshooting: "Website is not running"
-
-If backend logs show lines like:
-
-- `Tomcat started on port 8080`
-- `Started IqmsBackendApplication`
-
-then the backend is actually running successfully (not an error). In that case:
-
-1. Keep backend terminal running.
-2. Open a **second terminal** and run frontend with `npm run dev`.
-3. Open `http://localhost:5173` in browser (not `http://localhost:8080`).
-
-The frontend now uses Vite proxy for `/api/*`, so local API calls route to `http://localhost:8080` automatically.
+Frontend starts at: `http://localhost:5173`
 
 ---
 
@@ -124,7 +69,7 @@ curl --location 'http://localhost:8080/api/auth/signup' \
 }'
 ```
 
-### Login (existing account)
+### Login
 
 ```bash
 curl --location 'http://localhost:8080/api/auth/login' \
@@ -135,20 +80,11 @@ curl --location 'http://localhost:8080/api/auth/login' \
 }'
 ```
 
-### Login (non-existing account → expected error)
-
-```bash
-curl --location 'http://localhost:8080/api/auth/login' \
---header 'Content-Type: application/json' \
---data-raw '{
-  "email": "nouser@example.com",
-  "password": "secret123"
-}'
-```
-
 ---
 
-## Frontend scripts
+## Scripts
+
+### Frontend
 
 ```bash
 npm run dev
@@ -157,7 +93,7 @@ npm run preview
 npm run lint
 ```
 
-## Backend scripts
+### Backend
 
 ```bash
 cd backend
