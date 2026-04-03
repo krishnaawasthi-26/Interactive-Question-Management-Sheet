@@ -48,10 +48,12 @@ Open terminal 2:
 ```bash
 cd /workspace/Interactive-Question-Management-Sheet
 npm install
-npm run dev
+npm start
 ```
 
 Frontend starts at: `http://localhost:5173`
+
+Frontend is configured to always bind to `0.0.0.0:5173` with strict port mode, so if 5173 is taken Vite will fail fast instead of silently switching ports.
 
 ---
 
@@ -87,6 +89,7 @@ curl --location 'http://localhost:8080/api/auth/login' \
 ### Frontend
 
 ```bash
+npm start
 npm run dev
 npm run build
 npm run preview
