@@ -6,6 +6,7 @@ import SignUpPage from "./pages/SignUpPage";
 import { getCurrentHashRoute, navigateTo, ROUTES } from "./services/hashRouter";
 import { useAuthStore } from "./store/authStore";
 import ProfilePage from "./pages/ProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 import SharedPage from "./pages/SharedPage";
 import ExportPage from "./pages/ExportPage";
 
@@ -78,6 +79,10 @@ function App() {
         }}
       />
     );
+  }
+
+  if (routeState.route === ROUTES.EDIT_PROFILE) {
+    return <EditProfilePage />;
   }
 
   if (routeState.route === ROUTES.APP) {
