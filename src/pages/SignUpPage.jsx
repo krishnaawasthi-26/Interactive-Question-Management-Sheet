@@ -50,7 +50,7 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
           pattern="[a-zA-Z0-9_-]+"
           disabled={authLoading}
           value={form.username}
-          placeholder="Username (unique)"
+          placeholder="Unique name (used in shareable URL)"
           onChange={(event) => {
             clearAuthError();
             setForm((current) => ({ ...current, username: event.target.value }));

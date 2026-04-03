@@ -51,14 +51,16 @@ public class AuthService {
   }
 
   public AuthResponse login(LoginRequest request) {
-    String normalizedEmail = request.getEmail().trim().toLowerCase();
+    String normalizedIdentifier = request.getIdentifier().trim().toLowerCase();
     String normalizedPassword = request.getPassword().trim();
 
-    User user = userRepository
-        .findByEmail(normalizedEmail)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Account does not exist. Please sign up first."));
+    User user = normalizedIdentifier.contains("@")
+        ? userRepository.findByEmail(normalizedIdentifier).orElse(null)
+        : userRepository.findByUsername(normalizedIdentifier).orElse(null);
+
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account does not exist. Please sign up first.");
+    }
 
     if (!passwordEncoder.matches(normalizedPassword, user.getPassword())) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect password. Please try again.");
