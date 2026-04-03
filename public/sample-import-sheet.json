@@ -1,0 +1,20 @@
+{
+  "name": "Frontend Interview Sheet",
+  "topics": [
+    {
+      "title": "JavaScript",
+      "subTopics": [
+        {
+          "title": "Closures",
+          "questions": [
+            {
+              "text": "What is a closure in JavaScript?",
+              "answer": "A closure is when a function keeps access to variables from its outer scope.",
+              "link": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

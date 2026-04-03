@@ -10,6 +10,7 @@ function ProfilePage({ onLogout }) {
   const loadSheets = useSheetStore((state) => state.loadSheets);
   const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const deleteSheet = useSheetStore((state) => state.deleteSheet);
+  const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
 
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
@@ -68,6 +69,15 @@ function ProfilePage({ onLogout }) {
                 </div>
                 <div className="flex gap-2">
                   <button className="rounded border border-sky-700 px-2 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
+                  <button
+                    className="rounded border border-amber-700 px-2 py-1"
+                    onClick={async () => {
+                      const copied = await duplicateSheetById(currentUser.token, sheet.id);
+                      navigateTo(`${ROUTES.APP}/${copied.id}`);
+                    }}
+                  >
+                    Copy
+                  </button>
                   <button
                     className="rounded border border-red-700 px-2 py-1"
                     onClick={async () => {

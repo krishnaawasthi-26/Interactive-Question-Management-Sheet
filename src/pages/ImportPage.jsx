@@ -11,6 +11,12 @@ function ImportPage({ onBack }) {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!file.name.toLowerCase().endsWith(".json")) {
+      setErrors(["Only JSON files are allowed for import."]);
+      setMessage("");
+      return;
+    }
+
     const content = await file.text();
 
     try {
@@ -36,14 +42,21 @@ function ImportPage({ onBack }) {
     <div className="mx-auto max-w-3xl px-6 py-10 text-white">
       <h1 className="mb-4 text-2xl font-semibold">Import Sheet JSON</h1>
       <p className="mb-3 text-sm text-zinc-300">
-        Upload JSON with required fields: <code>name</code>, <code>topics</code>, each topic
-        needs <code>title</code>, each subtopic needs <code>title</code>, and each question
+        Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, each
+        topic needs <code>title</code>, each subtopic needs <code>title</code>, and each question
         needs <code>text</code>.
       </p>
+      <a
+        href="/sample-import-sheet.json"
+        download
+        className="mb-4 inline-block rounded-md border border-amber-600 px-3 py-2 text-sm text-amber-200"
+      >
+        Download sample JSON file
+      </a>
 
       <input
         type="file"
-        accept="application/json"
+        accept="application/json,.json"
         onChange={onFileChange}
         className="mb-4 block w-full rounded-md border border-gray-700 p-3"
       />

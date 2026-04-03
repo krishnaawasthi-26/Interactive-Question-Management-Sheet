@@ -7,6 +7,7 @@ import { getCurrentHashRoute, navigateTo, ROUTES } from "./services/hashRouter";
 import { useAuthStore } from "./store/authStore";
 import ProfilePage from "./pages/ProfilePage";
 import SharedPage from "./pages/SharedPage";
+import ExportPage from "./pages/ExportPage";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -51,6 +52,10 @@ function App() {
     return <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
   }
 
+  if (routeState.route === ROUTES.EXPORT) {
+    return <ExportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
+  }
+
   if (routeState.route === ROUTES.PROFILE) {
     return (
       <ProfilePage
@@ -66,7 +71,8 @@ function App() {
     return (
       <SheetPage
         sheetId={routeState.sheetId}
-        onOpenImport={() => navigateTo(ROUTES.IMPORT)}
+        onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
+        onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
         onBackProfile={() => navigateTo(ROUTES.PROFILE)}
         onLogout={() => {
           logout();

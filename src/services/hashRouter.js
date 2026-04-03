@@ -4,6 +4,7 @@ export const ROUTES = {
   PROFILE: "/profile",
   APP: "/app",
   IMPORT: "/import",
+  EXPORT: "/export",
   SHARED_PREFIX: "/shared",
 };
 
@@ -19,6 +20,16 @@ export const getCurrentHashRoute = () => {
   if (hash.startsWith("/app/")) {
     const [, , sheetId] = hash.split("/");
     return { route: ROUTES.APP, sheetId };
+  }
+
+  if (hash.startsWith("/import/")) {
+    const [, , sheetId] = hash.split("/");
+    return { route: ROUTES.IMPORT, sheetId };
+  }
+
+  if (hash.startsWith("/export/")) {
+    const [, , sheetId] = hash.split("/");
+    return { route: ROUTES.EXPORT, sheetId };
   }
 
   if (Object.values(ROUTES).includes(hash)) return { route: hash };
