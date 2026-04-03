@@ -17,13 +17,17 @@ function App() {
   useEffect(() => {
     const syncHashRoute = () => setRouteState(getCurrentHashRoute());
     window.addEventListener("hashchange", syncHashRoute);
+    window.addEventListener("popstate", syncHashRoute);
     syncHashRoute();
-    return () => window.removeEventListener("hashchange", syncHashRoute);
+    return () => {
+      window.removeEventListener("hashchange", syncHashRoute);
+      window.removeEventListener("popstate", syncHashRoute);
+    };
   }, []);
 
   useEffect(() => {
     const route = routeState.route;
-    if (route === ROUTES.SHARED_PREFIX) return;
+    if (route === ROUTES.SHARED_PREFIX || route === ROUTES.PUBLIC_PROFILE || route === ROUTES.PUBLIC_SHEET) return;
 
     if (!currentUser && route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
       navigateTo(ROUTES.LOGIN);
@@ -46,6 +50,14 @@ function App() {
 
   if (routeState.route === ROUTES.SHARED_PREFIX) {
     return <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />;
+  }
+
+  if (routeState.route === ROUTES.PUBLIC_PROFILE) {
+    return <SharedPage shareType="public-profile" username={routeState.username} />;
+  }
+
+  if (routeState.route === ROUTES.PUBLIC_SHEET) {
+    return <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />;
   }
 
   if (routeState.route === ROUTES.IMPORT) {

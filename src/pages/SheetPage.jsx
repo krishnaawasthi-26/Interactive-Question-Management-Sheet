@@ -20,6 +20,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   const isLoading = useSheetStore((state) => state.isLoading);
   const loadError = useSheetStore((state) => state.loadError);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
+  const setSheetTitle = useSheetStore((state) => state.setSheetTitle);
   const topics = useSheetStore((state) => state.topics);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
           onOpenImport={onOpenImport}
           onOpenExport={onOpenExport}
           onCreateNewSheet={handleCreateNewSheet}
+          onTitleChange={(nextTitle) => setSheetTitle(nextTitle)}
           onLogout={onLogout}
           onBackProfile={onBackProfile}
         />

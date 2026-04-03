@@ -108,6 +108,16 @@ export const useSheetStore = create((set, get) => ({
     await saveSheet(token, activeSheetId, { title: sheetTitle, topics });
   },
 
+  renameSheet: async (token, sheetId, title) => {
+    await saveSheet(token, sheetId, { title });
+    const sheets = await listSheets(token);
+    set({ sheets });
+  },
+
+  setSheetTitle: (title) => {
+    set({ sheetTitle: title });
+  },
+
   addTopic: async (title) => {
     const updatedSheet = await createTopic({ topics: get().topics }, title);
     set((state) => withHistory(state, updatedSheet.topics));

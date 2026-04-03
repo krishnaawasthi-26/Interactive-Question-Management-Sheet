@@ -6,7 +6,7 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
   const authError = useAuthStore((state) => state.authError);
   const authLoading = useAuthStore((state) => state.authLoading);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", username: "", password: "" });
 
   const submit = async (event) => {
     event.preventDefault();
@@ -39,6 +39,21 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
           onChange={(event) => {
             clearAuthError();
             setForm((current) => ({ ...current, email: event.target.value }));
+          }}
+          className="w-full rounded-md border border-gray-700 bg-transparent px-3 py-2 text-white"
+        />
+        <input
+          type="text"
+          required
+          minLength={3}
+          maxLength={30}
+          pattern="[a-zA-Z0-9_-]+"
+          disabled={authLoading}
+          value={form.username}
+          placeholder="Username (unique)"
+          onChange={(event) => {
+            clearAuthError();
+            setForm((current) => ({ ...current, username: event.target.value }));
           }}
           className="w-full rounded-md border border-gray-700 bg-transparent px-3 py-2 text-white"
         />

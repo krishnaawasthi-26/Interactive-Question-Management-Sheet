@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { navigateTo, ROUTES } from "../services/hashRouter";
+import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
 import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 
@@ -14,14 +14,17 @@ function ProfilePage({ onLogout }) {
 
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
+  const [username, setUsername] = useState(currentUser?.username || "");
   const [newSheetTitle, setNewSheetTitle] = useState("");
+  const [sheetTitles, setSheetTitles] = useState({});
 
   useEffect(() => {
     if (!currentUser?.token) return;
     loadSheets(currentUser.token);
   }, [currentUser?.token, loadSheets]);
 
-  const profileShareUrl = `${window.location.origin}${window.location.pathname}#/shared/profile/${currentUser?.profileShareId}`;
+  const renameSheet = useSheetStore((state) => state.renameSheet);
+  const profileShareUrl = `${window.location.origin}/profile/${currentUser?.username || "username"}`;
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -35,9 +38,15 @@ function ProfilePage({ onLogout }) {
           <h2 className="font-semibold">Edit profile</h2>
           <input className="w-full rounded border border-gray-700 bg-transparent px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} />
           <input className="w-full rounded border border-gray-700 bg-transparent px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input
+            className="w-full rounded border border-gray-700 bg-transparent px-3 py-2"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+            placeholder="Unique username"
+          />
           <button
             className="rounded bg-emerald-600 px-3 py-2"
-            onClick={() => updateProfile({ name, email })}
+            onClick={() => updateProfile({ name, email, username })}
           >
             Save Profile
           </button>
@@ -63,11 +72,25 @@ function ProfilePage({ onLogout }) {
           <div className="space-y-2">
             {sheets.map((sheet) => (
               <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{sheet.title}</p>
-                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}${window.location.pathname}#/shared/sheet/${sheet.shareId}`}</p>
+                <div className="w-full max-w-md space-y-2">
+                  <input
+                    className="w-full rounded border border-gray-700 bg-transparent px-2 py-1 font-medium"
+                    value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
+                    onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
+                  />
+                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${currentUser?.username}/${slugifySegment((sheetTitles[sheet.id] ?? sheet.title) || "Untitled Sheet")}`}</p>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    className="rounded border border-emerald-700 px-2 py-1"
+                    onClick={async () => {
+                      const nextTitle = ((sheetTitles[sheet.id] ?? sheet.title) || "").trim();
+                      if (!nextTitle) return;
+                      await renameSheet(currentUser.token, sheet.id, nextTitle);
+                    }}
+                  >
+                    Save Name
+                  </button>
                   <button className="rounded border border-sky-700 px-2 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
                   <button
                     className="rounded border border-amber-700 px-2 py-1"
