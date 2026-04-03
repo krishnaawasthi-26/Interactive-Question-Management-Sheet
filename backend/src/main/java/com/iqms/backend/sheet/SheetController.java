@@ -2,6 +2,7 @@ package com.iqms.backend.sheet;
 
 import com.iqms.backend.security.CurrentUser;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -48,8 +49,19 @@ public class SheetController {
       @PathVariable String sheetId,
       @RequestBody Map<String, Object> body) {
     String title = body.get("title") == null ? null : body.get("title").toString();
-    List<Map<String, Object>> topics = (List<Map<String, Object>>) body.get("topics");
+    List<Map<String, Object>> topics = parseTopics(body.get("topics"));
     return ResponseEntity.ok(sheetService.updateOwnedSheet(currentUser.getUserId(request), sheetId, title, topics));
+  }
+
+  private List<Map<String, Object>> parseTopics(Object topicsValue) {
+    if (!(topicsValue instanceof List<?> rawTopics)) {
+      return Collections.emptyList();
+    }
+
+    return rawTopics.stream()
+        .filter(Map.class::isInstance)
+        .map(topic -> (Map<String, Object>) topic)
+        .toList();
   }
 
   @DeleteMapping("/{sheetId}")
