@@ -6,7 +6,6 @@ import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.sheet.Sheet;
 import com.iqms.backend.sheet.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -26,11 +25,17 @@ public class ProfileController {
   private final UserRepository userRepository;
   private final CurrentUser currentUser;
   private final SheetService sheetService;
+  private final ProfileShareService profileShareService;
 
-  public ProfileController(UserRepository userRepository, CurrentUser currentUser, SheetService sheetService) {
+  public ProfileController(
+      UserRepository userRepository,
+      CurrentUser currentUser,
+      SheetService sheetService,
+      ProfileShareService profileShareService) {
     this.userRepository = userRepository;
     this.currentUser = currentUser;
     this.sheetService = sheetService;
+    this.profileShareService = profileShareService;
   }
 
   @GetMapping
@@ -90,64 +95,17 @@ public class ProfileController {
 
   @GetMapping("/shared/{profileShareId}")
   public ResponseEntity<Map<String, Object>> getSharedProfile(@PathVariable String profileShareId) {
-    User user = userRepository
-        .findByProfileShareId(profileShareId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
-
-    List<Map<String, Object>> sheets = sheetService.listSheetsForOwner(user.getId()).stream()
-        .map(sheet -> {
-          Map<String, Object> sharedSheet = new LinkedHashMap<>();
-          sharedSheet.put("id", sheet.getId());
-          sharedSheet.put("title", sheet.getTitle());
-          sharedSheet.put("shareId", sheet.getShareId());
-          sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
-          return sharedSheet;
-        })
-        .toList();
-
-    return ResponseEntity.ok(Map.of(
-        "name", user.getName(),
-        "username", user.getUsername(),
-        "profileShareId", user.getProfileShareId(),
-        "sheets", sheets));
+    return ResponseEntity.ok(profileShareService.getSharedProfile(profileShareId));
   }
 
   @GetMapping("/public/{username}")
   public ResponseEntity<Map<String, Object>> getPublicProfile(@PathVariable String username) {
-    User user = userRepository
-        .findByUsername(username.toLowerCase())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
-
-    List<Map<String, Object>> sheets = sheetService.listSheetsForOwner(user.getId()).stream()
-        .map(sheet -> {
-          Map<String, Object> sharedSheet = new LinkedHashMap<>();
-          sharedSheet.put("id", sheet.getId());
-          sharedSheet.put("title", sheet.getTitle());
-          sharedSheet.put("sheetSlug", toSlug(sheet.getTitle()));
-          sharedSheet.put("shareId", sheet.getShareId());
-          sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
-          return sharedSheet;
-        })
-        .toList();
-
-    return ResponseEntity.ok(Map.of(
-        "name", user.getName(),
-        "username", user.getUsername(),
-        "sheets", sheets));
+    return ResponseEntity.ok(profileShareService.getPublicProfile(username));
   }
 
   @GetMapping("/public/{username}/{sheetSlug}")
   public ResponseEntity<Sheet> getPublicSheet(@PathVariable String username, @PathVariable String sheetSlug) {
-    User user = userRepository
-        .findByUsername(username.toLowerCase())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
-
-    Sheet sheet = sheetService.listSheetsForOwner(user.getId()).stream()
-        .filter(found -> toSlug(found.getTitle()).equals(sheetSlug.toLowerCase()))
-        .findFirst()
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared sheet not found."));
-
-    return ResponseEntity.ok(sheet);
+    return ResponseEntity.ok(profileShareService.getPublicSheet(username, sheetSlug));
   }
 
   private User findUser(String id) {
@@ -158,18 +116,11 @@ public class ProfileController {
 
   private String normalizeUsername(String username) {
     String normalized = username.trim().toLowerCase();
-    if (!normalized.matches("^[a-z0-9_\\-]{3,30}$")) {
+    if (!normalized.matches("^[a-z0-9_\-]{3,30}$")) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Username can use lowercase letters, numbers, _ and - (3-30 chars).");
     }
     return normalized;
-  }
-
-  private String toSlug(String input) {
-    if (input == null || input.isBlank()) return "untitled-sheet";
-    String normalized = input.trim().toLowerCase();
-    String slug = normalized.replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
-    return slug.isBlank() ? "untitled-sheet" : slug;
   }
 }
