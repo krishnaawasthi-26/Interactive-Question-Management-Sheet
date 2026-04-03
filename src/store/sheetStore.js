@@ -58,6 +58,22 @@ export const useSheetStore = create((set, get) => ({
   },
 
 
+  duplicateSheet: async (token, sourceSheet, customTitle) => {
+    const created = await createSheet(token, customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`);
+    await saveSheet(token, created.id, {
+      title: customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`,
+      topics: sourceSheet.topics || [],
+    });
+    const sheets = await listSheets(token);
+    set({ sheets });
+    return created;
+  },
+
+  duplicateSheetById: async (token, sheetId, customTitle) => {
+    const sourceSheet = await getSheet(token, sheetId);
+    return get().duplicateSheet(token, sourceSheet, customTitle);
+  },
+
   setFullSheet: async (sheet) => {
     const normalized = {
       title: sheet.name || sheet.title || "Question Sheet",
