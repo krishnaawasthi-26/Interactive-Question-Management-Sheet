@@ -24,8 +24,8 @@ function ProfilePage({ onLogout }) {
   }, [currentUser?.token, loadSheets]);
 
   const renameSheet = useSheetStore((state) => state.renameSheet);
-  const shareUsername = (username || currentUser?.username || "username").trim().toLowerCase();
-  const profileShareUrl = `${window.location.origin}/profile/${shareUsername}`;
+  const persistedUsername = (currentUser?.username || "username").trim().toLowerCase();
+  const profileShareUrl = `${window.location.origin}/profile/${persistedUsername}`;
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -51,6 +51,7 @@ function ProfilePage({ onLogout }) {
           >
             Save Profile
           </button>
+          <p className="text-xs text-zinc-400">Public links use your saved username and saved sheet names.</p>
           <p className="text-sm text-zinc-300 break-all">Share profile (read-only): {profileShareUrl}</p>
         </div>
 
@@ -79,7 +80,7 @@ function ProfilePage({ onLogout }) {
                     value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
                     onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
                   />
-                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${shareUsername}/${slugifySegment((sheetTitles[sheet.id] ?? sheet.title) || "Untitled Sheet")}`}</p>
+                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
