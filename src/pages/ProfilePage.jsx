@@ -24,7 +24,8 @@ function ProfilePage({ onLogout }) {
   }, [currentUser?.token, loadSheets]);
 
   const renameSheet = useSheetStore((state) => state.renameSheet);
-  const profileShareUrl = `${window.location.origin}/profile/${currentUser?.username || "username"}`;
+  const shareUsername = (username || currentUser?.username || "username").trim().toLowerCase();
+  const profileShareUrl = `${window.location.origin}/profile/${shareUsername}`;
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -78,7 +79,7 @@ function ProfilePage({ onLogout }) {
                     value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
                     onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
                   />
-                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${currentUser?.username}/${slugifySegment((sheetTitles[sheet.id] ?? sheet.title) || "Untitled Sheet")}`}</p>
+                  <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${shareUsername}/${slugifySegment((sheetTitles[sheet.id] ?? sheet.title) || "Untitled Sheet")}`}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
