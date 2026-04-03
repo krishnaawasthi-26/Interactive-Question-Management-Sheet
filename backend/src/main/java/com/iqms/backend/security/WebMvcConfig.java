@@ -18,6 +18,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     registry
         .addInterceptor(authInterceptor)
         .addPathPatterns("/api/profile/**", "/api/sheets/**")
-        .excludePathPatterns("/api/sheets/shared/**", "/api/sheets/profile/shared/**");
+        .excludePathPatterns(
+            "/api/profile/shared/**",
+            "/api/profile/public/**",
+            "/api/sheets/shared/**",
+            "/api/sheets/profile/shared/**");
   }
 }
