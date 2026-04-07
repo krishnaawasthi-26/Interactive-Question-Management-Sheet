@@ -22,6 +22,8 @@ public class SheetService {
     sheet.setOwnerId(ownerId);
     sheet.setTitle(title == null || title.isBlank() ? "Untitled Sheet" : title.trim());
     sheet.setShareId("sheet_" + UUID.randomUUID().toString().replace("-", ""));
+    sheet.setPublic(false);
+    sheet.setArchived(false);
     sheet.setCreatedAt(Instant.now());
     sheet.setUpdatedAt(Instant.now());
     return sheetRepository.save(sheet);
@@ -37,13 +39,25 @@ public class SheetService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
   }
 
-  public Sheet updateOwnedSheet(String ownerId, String sheetId, String title, List<Map<String, Object>> topics) {
+  public Sheet updateOwnedSheet(
+      String ownerId,
+      String sheetId,
+      String title,
+      List<Map<String, Object>> topics,
+      Boolean isPublic,
+      Boolean isArchived) {
     Sheet sheet = getOwnedSheet(ownerId, sheetId);
     if (title != null && !title.isBlank()) {
       sheet.setTitle(title.trim());
     }
     if (topics != null) {
       sheet.setTopics(topics);
+    }
+    if (isPublic != null) {
+      sheet.setPublic(isPublic);
+    }
+    if (isArchived != null) {
+      sheet.setArchived(isArchived);
     }
     sheet.setUpdatedAt(Instant.now());
     return sheetRepository.save(sheet);

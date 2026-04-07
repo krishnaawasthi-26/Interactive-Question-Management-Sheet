@@ -28,8 +28,9 @@ public class ProfileShareService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
     List<Sheet> ownerSheets = sheetService.listSheetsForOwner(user.getId());
+    List<Sheet> publicSheets = ownerSheets.stream().filter(Sheet::isPublic).toList();
 
-    List<Map<String, Object>> sheets = ownerSheets.stream()
+    List<Map<String, Object>> sheets = publicSheets.stream()
         .map(sheet -> {
           Map<String, Object> sharedSheet = new LinkedHashMap<>();
           sharedSheet.put("id", sheet.getId());
@@ -40,7 +41,7 @@ public class ProfileShareService {
         })
         .toList();
 
-    Map<String, Object> profile = buildPublicProfile(user, ownerSheets.size());
+    Map<String, Object> profile = buildPublicProfile(user, publicSheets.size());
     profile.put("profileShareId", user.getProfileShareId());
     profile.put("sheets", sheets);
     return profile;
@@ -52,8 +53,9 @@ public class ProfileShareService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
     List<Sheet> ownerSheets = sheetService.listSheetsForOwner(user.getId());
+    List<Sheet> publicSheets = ownerSheets.stream().filter(Sheet::isPublic).toList();
 
-    List<Map<String, Object>> sheets = ownerSheets.stream()
+    List<Map<String, Object>> sheets = publicSheets.stream()
         .map(sheet -> {
           Map<String, Object> sharedSheet = new LinkedHashMap<>();
           sharedSheet.put("id", sheet.getId());
@@ -65,7 +67,7 @@ public class ProfileShareService {
         })
         .toList();
 
-    Map<String, Object> profile = buildPublicProfile(user, ownerSheets.size());
+    Map<String, Object> profile = buildPublicProfile(user, publicSheets.size());
     profile.put("sheets", sheets);
     return profile;
   }
@@ -76,6 +78,7 @@ public class ProfileShareService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
     return sheetService.listSheetsForOwner(user.getId()).stream()
+        .filter(Sheet::isPublic)
         .filter(found -> toSlug(found.getTitle()).equals(sheetSlug.toLowerCase()))
         .findFirst()
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared sheet not found."));

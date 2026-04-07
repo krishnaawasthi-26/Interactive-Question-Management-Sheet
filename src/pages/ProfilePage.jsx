@@ -13,6 +13,8 @@ function ProfilePage({ onLogout }) {
   const deleteSheet = useSheetStore((state) => state.deleteSheet);
   const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
   const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
+  const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
+  const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
 
   const [newSheetTitle, setNewSheetTitle] = useState("");
   const [sheetTitles, setSheetTitles] = useState({});
@@ -26,6 +28,9 @@ function ProfilePage({ onLogout }) {
   const persistedUsername = (currentUser?.username || "username").trim().toLowerCase();
   const profileShareUrl = `${window.location.origin}/profile/${persistedUsername}`;
   const overallProgress = calculateOverallProgress(sheets);
+  const ongoingSheets = sheets.filter((sheet) => !sheet.isArchived);
+  const archivedSheets = sheets.filter((sheet) => sheet.isArchived);
+  const publicSheets = sheets.filter((sheet) => sheet.isPublic);
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -40,6 +45,8 @@ function ProfilePage({ onLogout }) {
           <p className="text-sm text-zinc-200">Name: {currentUser?.name || "-"}</p>
           <p className="text-sm text-zinc-200">Username: @{persistedUsername}</p>
           <p className="text-sm text-zinc-200">Total sheets: {sheets.length}</p>
+          <p className="text-sm text-zinc-200">Public sheets: {publicSheets.length}</p>
+          <p className="text-sm text-zinc-200">Archived sheets: {archivedSheets.length}</p>
           <button
             className="rounded bg-indigo-600 px-3 py-2"
             onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
@@ -81,12 +88,13 @@ function ProfilePage({ onLogout }) {
         </div>
 
         <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
-          <h2 className="font-semibold">Your sheets</h2>
-          {sheets.length === 0 ? (
+          <h2 className="font-semibold">On-going sheets</h2>
+          <p className="text-xs text-zinc-400">These are active sheets and are easiest to access from the main profile page.</p>
+          {ongoingSheets.length === 0 ? (
             <p className="text-sm text-zinc-400">No sheets created yet.</p>
           ) : (
             <div className="space-y-2">
-              {sheets.map((sheet) => {
+              {ongoingSheets.map((sheet) => {
                 const progress = calculateSheetProgress(sheet);
                 return (
                   <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
@@ -120,6 +128,18 @@ function ProfilePage({ onLogout }) {
                       </button>
                       <button className="rounded border border-sky-700 px-2 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
                       <button
+                        className="rounded border border-violet-700 px-2 py-1"
+                        onClick={() => setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic)}
+                      >
+                        {sheet.isPublic ? "Make Private" : "Make Public"}
+                      </button>
+                      <button
+                        className="rounded border border-zinc-600 px-2 py-1"
+                        onClick={() => setSheetArchived(currentUser.token, sheet.id, true)}
+                      >
+                        Archive
+                      </button>
+                      <button
                         className="rounded border border-amber-700 px-2 py-1"
                         onClick={async () => {
                           const copied = await duplicateSheetById(currentUser.token, sheet.id);
@@ -141,6 +161,58 @@ function ProfilePage({ onLogout }) {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+          <h2 className="font-semibold">Public sheets</h2>
+          <p className="text-xs text-zinc-400">Only these sheets are visible on your public profile URL.</p>
+          {publicSheets.length === 0 ? (
+            <p className="text-sm text-zinc-400">No public sheets yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {publicSheets.map((sheet) => (
+                <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
+                  <p className="font-medium">{sheet.title}</p>
+                  <a
+                    className="text-xs text-zinc-300 underline-offset-2 hover:underline"
+                    href={`/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}
+                  >
+                    Open public URL
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+          <h2 className="font-semibold">Archived sheets</h2>
+          <p className="text-xs text-zinc-400">Archived sheets are moved out of your main workflow, but still easy to restore.</p>
+          {archivedSheets.length === 0 ? (
+            <p className="text-sm text-zinc-400">No archived sheets yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {archivedSheets.map((sheet) => (
+                <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
+                  <p className="font-medium">{sheet.title}</p>
+                  <div className="flex gap-2">
+                    <button
+                      className="rounded border border-sky-700 px-2 py-1"
+                      onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}
+                    >
+                      Open
+                    </button>
+                    <button
+                      className="rounded border border-zinc-500 px-2 py-1"
+                      onClick={() => setSheetArchived(currentUser.token, sheet.id, false)}
+                    >
+                      Restore
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

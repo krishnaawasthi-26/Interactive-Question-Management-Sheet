@@ -101,7 +101,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Sheets</h2>
+            <h2 className="text-lg font-semibold">Public sheets</h2>
           {profile?.sheets?.map((sheet) => (
             <div className="flex items-center justify-between rounded border border-gray-700 p-3" key={sheet.id}>
               <a href={`#/shared/sheet/${sheet.shareId}`} className="font-medium underline-offset-2 hover:underline">
