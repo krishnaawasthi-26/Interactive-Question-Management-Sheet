@@ -9,6 +9,9 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import SharedPage from "./pages/SharedPage";
 import ExportPage from "./pages/ExportPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import HowToUsePage from "./pages/HowToUsePage";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -31,7 +34,14 @@ function App() {
     const route = routeState.route;
     if (route === ROUTES.SHARED_PREFIX || route === ROUTES.PUBLIC_PROFILE || route === ROUTES.PUBLIC_SHEET) return;
 
-    if (!isAuthenticated && route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
+    if (
+      !isAuthenticated &&
+      route !== ROUTES.LOGIN &&
+      route !== ROUTES.SIGNUP &&
+      route !== ROUTES.ABOUT &&
+      route !== ROUTES.CONTACT &&
+      route !== ROUTES.HOW_TO_USE
+    ) {
       navigateTo(ROUTES.LOGIN);
       return;
     }
@@ -64,6 +74,18 @@ function App() {
 
   if (routeState.route === ROUTES.IMPORT) {
     return <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
+  }
+
+  if (routeState.route === ROUTES.ABOUT) {
+    return <AboutPage />;
+  }
+
+  if (routeState.route === ROUTES.CONTACT) {
+    return <ContactPage />;
+  }
+
+  if (routeState.route === ROUTES.HOW_TO_USE) {
+    return <HowToUsePage />;
   }
 
   if (routeState.route === ROUTES.EXPORT) {

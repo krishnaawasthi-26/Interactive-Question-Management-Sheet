@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { validateSheetJson } from "../services/importValidation";
 import { useSheetStore } from "../store/sheetStore";
+import SiteNav from "../components/SiteNav";
 
 function ImportPage({ onBack }) {
   const setFullSheet = useSheetStore((state) => state.setFullSheet);
@@ -40,6 +41,7 @@ function ImportPage({ onBack }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10 text-white">
+      <SiteNav />
       <h1 className="mb-4 text-2xl font-semibold">Import Sheet JSON</h1>
       <p className="mb-3 text-sm text-zinc-300">
         Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, each

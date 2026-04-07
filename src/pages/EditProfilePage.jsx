@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { navigateTo, ROUTES } from "../services/hashRouter";
 import { useAuthStore } from "../store/authStore";
+import SiteNav from "../components/SiteNav";
 
 function EditProfilePage() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -19,6 +20,7 @@ function EditProfilePage() {
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
       <div className="mx-auto max-w-2xl px-6 py-8 space-y-6">
+        <SiteNav />
         <h1 className="text-2xl font-semibold">Edit Profile</h1>
 
         <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">

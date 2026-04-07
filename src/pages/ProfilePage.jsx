@@ -5,6 +5,7 @@ import { useSheetStore } from "../store/sheetStore";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
 import { famousDsaSheets } from "../data/famousSheets";
 import { fetchProfile } from "../api/profileApi";
+import SiteNav from "../components/SiteNav";
 
 function ProfilePage({ onLogout }) {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -60,6 +61,7 @@ function ProfilePage({ onLogout }) {
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
       <div className="mx-auto max-w-4xl px-6 py-8 space-y-6">
+        <SiteNav />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">My Profile</h1>
           <button onClick={onLogout} className="rounded-md border border-rose-700 px-3 py-1 text-sm text-rose-200">Logout</button>
