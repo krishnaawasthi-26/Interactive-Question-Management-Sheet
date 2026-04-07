@@ -72,7 +72,20 @@ public class AuthService {
   private AuthResponse toResponse(User user) {
     String createdAt = user.getCreatedAt() == null ? null : user.getCreatedAt().toString();
     String token = tokenService.issueToken(user.getId());
-    return new AuthResponse(user.getId(), user.getName(), user.getEmail(), user.getUsername(), createdAt, user.getProfileShareId(), token);
+    return new AuthResponse(
+        user.getId(),
+        user.getName(),
+        user.getEmail(),
+        user.getUsername(),
+        createdAt,
+        user.getProfileShareId(),
+        user.getBio(),
+        user.getInstitution(),
+        user.getCompany(),
+        user.getWebsiteUrl(),
+        user.getGithubUrl(),
+        user.getLinkedinUrl(),
+        token);
   }
 
   private String normalizeUsername(String username) {

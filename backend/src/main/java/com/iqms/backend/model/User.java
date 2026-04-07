@@ -25,6 +25,12 @@ public class User {
   private String profileShareId;
 
   private Instant createdAt;
+  private String bio;
+  private String institution;
+  private String company;
+  private String websiteUrl;
+  private String githubUrl;
+  private String linkedinUrl;
 
   public String getId() {
     return id;
@@ -80,5 +86,53 @@ public class User {
 
   public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getBio() {
+    return bio;
+  }
+
+  public void setBio(String bio) {
+    this.bio = bio;
+  }
+
+  public String getInstitution() {
+    return institution;
+  }
+
+  public void setInstitution(String institution) {
+    this.institution = institution;
+  }
+
+  public String getCompany() {
+    return company;
+  }
+
+  public void setCompany(String company) {
+    this.company = company;
+  }
+
+  public String getWebsiteUrl() {
+    return websiteUrl;
+  }
+
+  public void setWebsiteUrl(String websiteUrl) {
+    this.websiteUrl = websiteUrl;
+  }
+
+  public String getGithubUrl() {
+    return githubUrl;
+  }
+
+  public void setGithubUrl(String githubUrl) {
+    this.githubUrl = githubUrl;
+  }
+
+  public String getLinkedinUrl() {
+    return linkedinUrl;
+  }
+
+  public void setLinkedinUrl(String linkedinUrl) {
+    this.linkedinUrl = linkedinUrl;
   }
 }

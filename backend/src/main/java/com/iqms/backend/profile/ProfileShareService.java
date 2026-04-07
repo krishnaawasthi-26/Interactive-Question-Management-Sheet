@@ -27,7 +27,9 @@ public class ProfileShareService {
         .findByProfileShareId(profileShareId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
-    List<Map<String, Object>> sheets = sheetService.listSheetsForOwner(user.getId()).stream()
+    List<Sheet> ownerSheets = sheetService.listSheetsForOwner(user.getId());
+
+    List<Map<String, Object>> sheets = ownerSheets.stream()
         .map(sheet -> {
           Map<String, Object> sharedSheet = new LinkedHashMap<>();
           sharedSheet.put("id", sheet.getId());
@@ -38,11 +40,10 @@ public class ProfileShareService {
         })
         .toList();
 
-    return Map.of(
-        "name", user.getName(),
-        "username", user.getUsername(),
-        "profileShareId", user.getProfileShareId(),
-        "sheets", sheets);
+    Map<String, Object> profile = buildPublicProfile(user, ownerSheets.size());
+    profile.put("profileShareId", user.getProfileShareId());
+    profile.put("sheets", sheets);
+    return profile;
   }
 
   public Map<String, Object> getPublicProfile(String username) {
@@ -50,7 +51,9 @@ public class ProfileShareService {
         .findByUsername(username.toLowerCase())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
 
-    List<Map<String, Object>> sheets = sheetService.listSheetsForOwner(user.getId()).stream()
+    List<Sheet> ownerSheets = sheetService.listSheetsForOwner(user.getId());
+
+    List<Map<String, Object>> sheets = ownerSheets.stream()
         .map(sheet -> {
           Map<String, Object> sharedSheet = new LinkedHashMap<>();
           sharedSheet.put("id", sheet.getId());
@@ -62,10 +65,9 @@ public class ProfileShareService {
         })
         .toList();
 
-    return Map.of(
-        "name", user.getName(),
-        "username", user.getUsername(),
-        "sheets", sheets);
+    Map<String, Object> profile = buildPublicProfile(user, ownerSheets.size());
+    profile.put("sheets", sheets);
+    return profile;
   }
 
   public Sheet getPublicSheet(String username, String sheetSlug) {
@@ -84,5 +86,19 @@ public class ProfileShareService {
     String normalized = input.trim().toLowerCase();
     String slug = normalized.replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
     return slug.isBlank() ? "untitled-sheet" : slug;
+  }
+
+  private Map<String, Object> buildPublicProfile(User user, int totalSheets) {
+    Map<String, Object> profile = new LinkedHashMap<>();
+    profile.put("name", user.getName());
+    profile.put("username", user.getUsername());
+    profile.put("bio", user.getBio());
+    profile.put("institution", user.getInstitution());
+    profile.put("company", user.getCompany());
+    profile.put("websiteUrl", user.getWebsiteUrl());
+    profile.put("githubUrl", user.getGithubUrl());
+    profile.put("linkedinUrl", user.getLinkedinUrl());
+    profile.put("totalSheets", totalSheets);
+    return profile;
   }
 }
