@@ -1,6 +1,7 @@
 package com.iqms.backend.sheet;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -72,5 +73,39 @@ public class SheetService {
     return sheetRepository
         .findByShareId(shareId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared sheet not found."));
+  }
+
+  public Sheet recordDownload(String sheetId, String username) {
+    Sheet sheet = sheetRepository
+        .findById(sheetId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
+
+    List<String> downloadedBy = sheet.getDownloadedByUsernames() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(sheet.getDownloadedByUsernames());
+    if (!downloadedBy.contains(username)) {
+      downloadedBy.add(username);
+      sheet.setDownloadedByUsernames(downloadedBy);
+      sheet.setUpdatedAt(Instant.now());
+      return sheetRepository.save(sheet);
+    }
+    return sheet;
+  }
+
+  public Sheet recordCopy(String sheetId, String username) {
+    Sheet sheet = sheetRepository
+        .findById(sheetId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
+
+    List<String> copiedBy = sheet.getCopiedByUsernames() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(sheet.getCopiedByUsernames());
+    if (!copiedBy.contains(username)) {
+      copiedBy.add(username);
+      sheet.setCopiedByUsernames(copiedBy);
+      sheet.setUpdatedAt(Instant.now());
+      return sheetRepository.save(sheet);
+    }
+    return sheet;
   }
 }
