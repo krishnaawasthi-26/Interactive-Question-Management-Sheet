@@ -23,6 +23,8 @@ public class Sheet {
 
   private Instant createdAt;
   private Instant updatedAt;
+  private boolean isPublic;
+  private boolean isArchived;
 
   private List<Map<String, Object>> topics = new ArrayList<>();
 
@@ -38,6 +40,10 @@ public class Sheet {
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
   public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+  public boolean isPublic() { return isPublic; }
+  public void setPublic(boolean aPublic) { isPublic = aPublic; }
+  public boolean isArchived() { return isArchived; }
+  public void setArchived(boolean archived) { isArchived = archived; }
   public List<Map<String, Object>> getTopics() { return topics; }
   public void setTopics(List<Map<String, Object>> topics) { this.topics = topics; }
 }

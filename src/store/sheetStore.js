@@ -114,6 +114,18 @@ export const useSheetStore = create((set, get) => ({
     set({ sheets });
   },
 
+  setSheetVisibility: async (token, sheetId, isPublic) => {
+    await saveSheet(token, sheetId, { isPublic });
+    const sheets = await listSheets(token);
+    set({ sheets });
+  },
+
+  setSheetArchived: async (token, sheetId, isArchived) => {
+    await saveSheet(token, sheetId, { isArchived });
+    const sheets = await listSheets(token);
+    set({ sheets });
+  },
+
   setSheetTitle: (title) => {
     set({ sheetTitle: title });
   },

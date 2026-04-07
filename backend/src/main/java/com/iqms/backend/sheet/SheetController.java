@@ -50,7 +50,10 @@ public class SheetController {
       @RequestBody Map<String, Object> body) {
     String title = body.get("title") == null ? null : body.get("title").toString();
     List<Map<String, Object>> topics = parseTopics(body.get("topics"));
-    return ResponseEntity.ok(sheetService.updateOwnedSheet(currentUser.getUserId(request), sheetId, title, topics));
+    Boolean isPublic = parseBoolean(body.get("isPublic"));
+    Boolean isArchived = parseBoolean(body.get("isArchived"));
+    return ResponseEntity.ok(
+        sheetService.updateOwnedSheet(currentUser.getUserId(request), sheetId, title, topics, isPublic, isArchived));
   }
 
   private List<Map<String, Object>> parseTopics(Object topicsValue) {
@@ -62,6 +65,12 @@ public class SheetController {
         .filter(Map.class::isInstance)
         .map(topic -> (Map<String, Object>) topic)
         .toList();
+  }
+
+  private Boolean parseBoolean(Object value) {
+    if (value == null) return null;
+    if (value instanceof Boolean booleanValue) return booleanValue;
+    return Boolean.parseBoolean(value.toString());
   }
 
   @DeleteMapping("/{sheetId}")
