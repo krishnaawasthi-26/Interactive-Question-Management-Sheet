@@ -17,6 +17,8 @@ function ProfilePage({ onLogout }) {
   const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
   const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
   const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
+  const limitWarning = useSheetStore((state) => state.limitWarning);
+  const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
 
   const [newSheetTitle, setNewSheetTitle] = useState("");
   const [sheetTitles, setSheetTitles] = useState({});
@@ -135,12 +137,21 @@ function ProfilePage({ onLogout }) {
 
         <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
           <h2 className="font-semibold">Create own sheets</h2>
+          {limitWarning && (
+            <div className="flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              <span>{limitWarning}</span>
+              <button type="button" className="rounded border border-amber-500 px-2 py-0.5 text-xs" onClick={clearLimitWarning}>
+                Dismiss
+              </button>
+            </div>
+          )}
           <div className="flex gap-2">
             <input className="flex-1 rounded border border-gray-700 bg-transparent px-3 py-2" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => setNewSheetTitle(e.target.value)} />
             <button
               className="rounded bg-orange-600 px-3 py-2"
               onClick={async () => {
                 const created = await createNewSheet(currentUser.token, newSheetTitle || "Untitled Sheet");
+                if (!created) return;
                 setNewSheetTitle("");
                 navigateTo(`${ROUTES.APP}/${created.id}`);
               }}
@@ -206,6 +217,7 @@ function ProfilePage({ onLogout }) {
                         className="rounded border border-amber-700 px-2 py-1"
                         onClick={async () => {
                           const copied = await duplicateSheetById(currentUser.token, sheet.id);
+                          if (!copied) return;
                           navigateTo(`${ROUTES.APP}/${copied.id}`);
                         }}
                       >
@@ -294,6 +306,7 @@ function ProfilePage({ onLogout }) {
                   className="rounded border border-orange-700 px-2 py-1 text-sm"
                   onClick={async () => {
                     const copied = await duplicateSheet(currentUser.token, sheet, sheet.title);
+                    if (!copied) return;
                     navigateTo(`${ROUTES.APP}/${copied.id}`);
                   }}
                 >

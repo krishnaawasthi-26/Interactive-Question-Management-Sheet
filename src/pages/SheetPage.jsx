@@ -22,6 +22,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const setSheetTitle = useSheetStore((state) => state.setSheetTitle);
   const topics = useSheetStore((state) => state.topics);
+  const limitWarning = useSheetStore((state) => state.limitWarning);
+  const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -38,13 +40,15 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
 
   const handleAdd = () => {
     if (!title.trim()) return;
-    addTopic(title);
-    setTitle("");
+    addTopic(title).then((created) => {
+      if (created) setTitle("");
+    });
   };
 
   const handleCreateNewSheet = async () => {
     if (!currentUser?.token) return;
     const created = await createNewSheet(currentUser.token, "Untitled Sheet");
+    if (!created) return;
     navigateTo(`${ROUTES.APP}/${created.id}`);
   };
 
@@ -65,6 +69,14 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
 
         {isEditing && (
           <AddTopicForm title={title} onTitleChange={(e) => setTitle(e.target.value)} onAdd={handleAdd} />
+        )}
+        {limitWarning && (
+          <div className="mb-4 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            <span>{limitWarning}</span>
+            <button type="button" className="rounded border border-amber-500 px-2 py-0.5 text-xs" onClick={clearLimitWarning}>
+              Dismiss
+            </button>
+          </div>
         )}
 
         <QuestionSearch value={searchQuery} onChange={setSearchQuery} />

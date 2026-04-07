@@ -13,6 +13,20 @@ import {
 import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../api/sheetApi";
 
 const HISTORY_LIMIT = 20;
+const MAX_SHEETS = 5;
+const MAX_TOPICS = 50;
+const MAX_SUBTOPICS = 100;
+const MAX_QUESTIONS = 200;
+
+const countSubTopics = (topics) =>
+  topics.reduce((count, topic) => count + (topic.subTopics?.length || 0), 0);
+
+const countQuestions = (topics) =>
+  topics.reduce(
+    (count, topic) =>
+      count + (topic.subTopics || []).reduce((subCount, subTopic) => subCount + (subTopic.questions?.length || 0), 0),
+    0
+  );
 
 const reorderArray = (items, startIndex, endIndex) => {
   const nextItems = Array.from(items);
@@ -37,6 +51,7 @@ export const useSheetStore = create((set, get) => ({
   loadSource: "idle",
   past: [],
   future: [],
+  limitWarning: null,
 
   loadSheets: async (token) => {
     const sheets = await listSheets(token);
@@ -45,9 +60,13 @@ export const useSheetStore = create((set, get) => ({
   },
 
   createNewSheet: async (token, title) => {
+    if (get().sheets.length >= MAX_SHEETS) {
+      set({ limitWarning: `Limit reached: sheet (${MAX_SHEETS})` });
+      return null;
+    }
     const created = await createSheet(token, title);
     const sheets = await listSheets(token);
-    set({ sheets });
+    set({ sheets, limitWarning: null });
     return created;
   },
 
@@ -59,13 +78,17 @@ export const useSheetStore = create((set, get) => ({
 
 
   duplicateSheet: async (token, sourceSheet, customTitle) => {
+    if (get().sheets.length >= MAX_SHEETS) {
+      set({ limitWarning: `Limit reached: sheet (${MAX_SHEETS})` });
+      return null;
+    }
     const created = await createSheet(token, customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`);
     await saveSheet(token, created.id, {
       title: customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`,
       topics: sourceSheet.topics || [],
     });
     const sheets = await listSheets(token);
-    set({ sheets });
+    set({ sheets, limitWarning: null });
     return created;
   },
 
@@ -130,9 +153,17 @@ export const useSheetStore = create((set, get) => ({
     set({ sheetTitle: title });
   },
 
+  clearLimitWarning: () => set({ limitWarning: null }),
+
   addTopic: async (title) => {
-    const updatedSheet = await createTopic({ topics: get().topics }, title);
+    const currentTopics = get().topics;
+    if (currentTopics.length >= MAX_TOPICS) {
+      set({ limitWarning: `Limit reached: topic (${MAX_TOPICS})` });
+      return null;
+    }
+    const updatedSheet = await createTopic({ topics: currentTopics }, title);
     set((state) => withHistory(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 
@@ -149,8 +180,14 @@ export const useSheetStore = create((set, get) => ({
   },
 
   addSubTopic: async (topicId, subTitle) => {
-    const updatedSheet = await createSubTopic({ topics: get().topics }, topicId, subTitle);
+    const currentTopics = get().topics;
+    if (countSubTopics(currentTopics) >= MAX_SUBTOPICS) {
+      set({ limitWarning: `Limit reached: subtopic (${MAX_SUBTOPICS})` });
+      return null;
+    }
+    const updatedSheet = await createSubTopic({ topics: currentTopics }, topicId, subTitle);
     set((state) => withHistory(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 
@@ -167,8 +204,14 @@ export const useSheetStore = create((set, get) => ({
   },
 
   addQuestion: async (topicId, subId, questionText) => {
-    const updatedSheet = await createQuestion({ topics: get().topics }, topicId, subId, questionText);
+    const currentTopics = get().topics;
+    if (countQuestions(currentTopics) >= MAX_QUESTIONS) {
+      set({ limitWarning: `Limit reached: question (${MAX_QUESTIONS})` });
+      return null;
+    }
+    const updatedSheet = await createQuestion({ topics: currentTopics }, topicId, subId, questionText);
     set((state) => withHistory(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 
@@ -301,7 +344,7 @@ export const useSheetStore = create((set, get) => ({
                       questions: subTopic.questions.map((question) =>
                         question.id !== questionId
                           ? question
-                          : { ...question, done: !Boolean(question.done) }
+                          : { ...question, done: !question.done }
                       ),
                     }
               ),
