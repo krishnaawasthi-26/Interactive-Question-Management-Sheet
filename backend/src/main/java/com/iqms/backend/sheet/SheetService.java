@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.iqms.backend.queue.ActionQueueService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,21 +14,25 @@ import org.springframework.web.server.ResponseStatusException;
 public class SheetService {
 
   private final SheetRepository sheetRepository;
+  private final ActionQueueService actionQueueService;
 
-  public SheetService(SheetRepository sheetRepository) {
+  public SheetService(SheetRepository sheetRepository, ActionQueueService actionQueueService) {
     this.sheetRepository = sheetRepository;
+    this.actionQueueService = actionQueueService;
   }
 
   public Sheet createSheet(String ownerId, String title) {
-    Sheet sheet = new Sheet();
-    sheet.setOwnerId(ownerId);
-    sheet.setTitle(title == null || title.isBlank() ? "Untitled Sheet" : title.trim());
-    sheet.setShareId("sheet_" + UUID.randomUUID().toString().replace("-", ""));
-    sheet.setPublic(false);
-    sheet.setArchived(false);
-    sheet.setCreatedAt(Instant.now());
-    sheet.setUpdatedAt(Instant.now());
-    return sheetRepository.save(sheet);
+    return actionQueueService.execute(() -> {
+      Sheet sheet = new Sheet();
+      sheet.setOwnerId(ownerId);
+      sheet.setTitle(title == null || title.isBlank() ? "Untitled Sheet" : title.trim());
+      sheet.setShareId("sheet_" + UUID.randomUUID().toString().replace("-", ""));
+      sheet.setPublic(false);
+      sheet.setArchived(false);
+      sheet.setCreatedAt(Instant.now());
+      sheet.setUpdatedAt(Instant.now());
+      return sheetRepository.save(sheet);
+    });
   }
 
   public List<Sheet> listSheetsForOwner(String ownerId) {
@@ -47,26 +52,31 @@ public class SheetService {
       List<Map<String, Object>> topics,
       Boolean isPublic,
       Boolean isArchived) {
-    Sheet sheet = getOwnedSheet(ownerId, sheetId);
-    if (title != null && !title.isBlank()) {
-      sheet.setTitle(title.trim());
-    }
-    if (topics != null) {
-      sheet.setTopics(topics);
-    }
-    if (isPublic != null) {
-      sheet.setPublic(isPublic);
-    }
-    if (isArchived != null) {
-      sheet.setArchived(isArchived);
-    }
-    sheet.setUpdatedAt(Instant.now());
-    return sheetRepository.save(sheet);
+    return actionQueueService.execute(() -> {
+      Sheet sheet = getOwnedSheet(ownerId, sheetId);
+      if (title != null && !title.isBlank()) {
+        sheet.setTitle(title.trim());
+      }
+      if (topics != null) {
+        sheet.setTopics(topics);
+      }
+      if (isPublic != null) {
+        sheet.setPublic(isPublic);
+      }
+      if (isArchived != null) {
+        sheet.setArchived(isArchived);
+      }
+      sheet.setUpdatedAt(Instant.now());
+      return sheetRepository.save(sheet);
+    });
   }
 
   public void deleteOwnedSheet(String ownerId, String sheetId) {
-    Sheet sheet = getOwnedSheet(ownerId, sheetId);
-    sheetRepository.delete(sheet);
+    actionQueueService.execute(() -> {
+      Sheet sheet = getOwnedSheet(ownerId, sheetId);
+      sheetRepository.delete(sheet);
+      return null;
+    });
   }
 
   public Sheet getByShareId(String shareId) {
@@ -76,36 +86,40 @@ public class SheetService {
   }
 
   public Sheet recordDownload(String sheetId, String username) {
-    Sheet sheet = sheetRepository
-        .findById(sheetId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
+    return actionQueueService.execute(() -> {
+      Sheet sheet = sheetRepository
+          .findById(sheetId)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
 
-    List<String> downloadedBy = sheet.getDownloadedByUsernames() == null
-        ? new ArrayList<>()
-        : new ArrayList<>(sheet.getDownloadedByUsernames());
-    if (!downloadedBy.contains(username)) {
-      downloadedBy.add(username);
-      sheet.setDownloadedByUsernames(downloadedBy);
-      sheet.setUpdatedAt(Instant.now());
-      return sheetRepository.save(sheet);
-    }
-    return sheet;
+      List<String> downloadedBy = sheet.getDownloadedByUsernames() == null
+          ? new ArrayList<>()
+          : new ArrayList<>(sheet.getDownloadedByUsernames());
+      if (!downloadedBy.contains(username)) {
+        downloadedBy.add(username);
+        sheet.setDownloadedByUsernames(downloadedBy);
+        sheet.setUpdatedAt(Instant.now());
+        return sheetRepository.save(sheet);
+      }
+      return sheet;
+    });
   }
 
   public Sheet recordCopy(String sheetId, String username) {
-    Sheet sheet = sheetRepository
-        .findById(sheetId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
+    return actionQueueService.execute(() -> {
+      Sheet sheet = sheetRepository
+          .findById(sheetId)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
 
-    List<String> copiedBy = sheet.getCopiedByUsernames() == null
-        ? new ArrayList<>()
-        : new ArrayList<>(sheet.getCopiedByUsernames());
-    if (!copiedBy.contains(username)) {
-      copiedBy.add(username);
-      sheet.setCopiedByUsernames(copiedBy);
-      sheet.setUpdatedAt(Instant.now());
-      return sheetRepository.save(sheet);
-    }
-    return sheet;
+      List<String> copiedBy = sheet.getCopiedByUsernames() == null
+          ? new ArrayList<>()
+          : new ArrayList<>(sheet.getCopiedByUsernames());
+      if (!copiedBy.contains(username)) {
+        copiedBy.add(username);
+        sheet.setCopiedByUsernames(copiedBy);
+        sheet.setUpdatedAt(Instant.now());
+        return sheetRepository.save(sheet);
+      }
+      return sheet;
+    });
   }
 }
