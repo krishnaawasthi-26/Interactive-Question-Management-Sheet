@@ -1,6 +1,8 @@
 package com.iqms.backend.model;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -31,6 +33,8 @@ public class User {
   private String websiteUrl;
   private String githubUrl;
   private String linkedinUrl;
+  private Set<String> followerUserIds = new LinkedHashSet<>();
+  private Set<String> followingUserIds = new LinkedHashSet<>();
 
   public String getId() {
     return id;
@@ -134,5 +138,21 @@ public class User {
 
   public void setLinkedinUrl(String linkedinUrl) {
     this.linkedinUrl = linkedinUrl;
+  }
+
+  public Set<String> getFollowerUserIds() {
+    return followerUserIds;
+  }
+
+  public void setFollowerUserIds(Set<String> followerUserIds) {
+    this.followerUserIds = followerUserIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(followerUserIds);
+  }
+
+  public Set<String> getFollowingUserIds() {
+    return followingUserIds;
+  }
+
+  public void setFollowingUserIds(Set<String> followingUserIds) {
+    this.followingUserIds = followingUserIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(followingUserIds);
   }
 }
