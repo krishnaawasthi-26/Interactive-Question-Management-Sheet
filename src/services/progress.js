@@ -9,7 +9,7 @@ export const calculateSheetProgress = (sheet) => {
       const questions = Array.isArray(subTopic?.questions) ? subTopic.questions : [];
       questions.forEach((question) => {
         totalQuestions += 1;
-        if (Boolean(question?.done)) {
+        if (question?.done) {
           completedQuestions += 1;
         }
       });

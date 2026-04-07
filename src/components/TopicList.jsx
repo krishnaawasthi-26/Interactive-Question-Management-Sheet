@@ -192,8 +192,10 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                               }
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && subInput[topic.id]) {
-                                  addSubTopic(topic.id, subInput[topic.id]);
-                                  setSubInput({ ...subInput, [topic.id]: "" });
+                                  addSubTopic(topic.id, subInput[topic.id]).then((created) => {
+                                    if (!created) return;
+                                    setSubInput((current) => ({ ...current, [topic.id]: "" }));
+                                  });
                                 }
                               }}
                             />
@@ -202,8 +204,10 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                               className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition"
                               onClick={() => {
                                 if (!subInput[topic.id]) return;
-                                addSubTopic(topic.id, subInput[topic.id]);
-                                setSubInput({ ...subInput, [topic.id]: "" });
+                                addSubTopic(topic.id, subInput[topic.id]).then((created) => {
+                                  if (!created) return;
+                                  setSubInput((current) => ({ ...current, [topic.id]: "" }));
+                                });
                               }}
                             >
                               Add Subtopic
@@ -295,8 +299,10 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                 }
                                                 onKeyDown={(e) => {
                                                   if (e.key === "Enter" && questionInput[sub.id]) {
-                                                    addQuestion(topic.id, sub.id, questionInput[sub.id]);
-                                                    setQuestionInput({ ...questionInput, [sub.id]: "" });
+                                                    addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
+                                                      if (!created) return;
+                                                      setQuestionInput((current) => ({ ...current, [sub.id]: "" }));
+                                                    });
                                                   }
                                                 }}
                                               />
@@ -304,8 +310,10 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                 className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
                                                 onClick={() => {
                                                   if (!questionInput[sub.id]) return;
-                                                  addQuestion(topic.id, sub.id, questionInput[sub.id]);
-                                                  setQuestionInput({ ...questionInput, [sub.id]: "" });
+                                                  addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
+                                                    if (!created) return;
+                                                    setQuestionInput((current) => ({ ...current, [sub.id]: "" }));
+                                                  });
                                                 }}
                                               >
                                                 Add Question
