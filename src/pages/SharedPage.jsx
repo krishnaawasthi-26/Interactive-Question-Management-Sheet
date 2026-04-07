@@ -140,7 +140,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
           </button>
         )}
       </div>
-      <TopicList isEditing={false} />
+      <TopicList isEditing={false} allowProgressToggle={false} />
     </div>
   );
 }

@@ -81,6 +81,7 @@ const createQuestionEntry = (text) => ({
   text,
   answer: "",
   link: "",
+  done: false,
 });
 
 const updateTopicById = (topics, topicId, updater) =>

@@ -274,6 +274,30 @@ export const useSheetStore = create((set, get) => ({
       return withHistory(state, topics);
     }),
 
+  toggleQuestionDone: (topicId, subId, questionId) =>
+    set((state) => {
+      const topics = state.topics.map((topic) =>
+        topic.id !== topicId
+          ? topic
+          : {
+              ...topic,
+              subTopics: topic.subTopics.map((subTopic) =>
+                subTopic.id !== subId
+                  ? subTopic
+                  : {
+                      ...subTopic,
+                      questions: subTopic.questions.map((question) =>
+                        question.id !== questionId
+                          ? question
+                          : { ...question, done: !Boolean(question.done) }
+                      ),
+                    }
+              ),
+            }
+      );
+      return withHistory(state, topics);
+    }),
+
   setReadOnlySheet: (sheet) =>
     set({
       activeSheetId: null,

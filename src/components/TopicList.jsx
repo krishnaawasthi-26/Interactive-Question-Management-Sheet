@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false }) {
+function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false, allowProgressToggle = true }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
   const addQuestion = useSheetStore((state) => state.addQuestion);
@@ -16,6 +16,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
   const reorderTopics = useSheetStore((state) => state.reorderTopics);
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
   const moveQuestion = useSheetStore((state) => state.moveQuestion);
+  const toggleQuestionDone = useSheetStore((state) => state.toggleQuestionDone);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -346,7 +347,21 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false 
                                                             </button>
                                                           </div>
                                                         ) : (
-                                                          <span className="flex-1">
+                                                          <span className="flex flex-1 items-center gap-2">
+                                                            <button
+                                                              type="button"
+                                                              disabled={!allowProgressToggle}
+                                                              onClick={() => allowProgressToggle && toggleQuestionDone(topic.id, sub.id, q.id)}
+                                                              className={`h-5 w-5 rounded border text-xs font-bold transition ${
+                                                                q.done
+                                                                  ? "border-emerald-500 bg-emerald-500 text-white"
+                                                                  : "border-zinc-500 bg-transparent text-transparent"
+                                                              } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-not-allowed opacity-70"}`}
+                                                              aria-label={q.done ? "Mark as not done" : "Mark as done"}
+                                                              title={q.done ? "Solved" : "Unsolved"}
+                                                            >
+                                                              ✓
+                                                            </button>
                                                             {q.link ? (
                                                               <a href={q.link} target="_blank" className="text-blue-500 underline">
                                                                 {q.text}
