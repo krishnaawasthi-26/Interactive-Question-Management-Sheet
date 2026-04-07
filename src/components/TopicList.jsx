@@ -124,7 +124,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="p-4 rounded-xl shadow-sm border border-gray-800 bg-[rgba(255,255,255,0.03)]"
+                    className="cursor-grab active:cursor-grabbing p-4 rounded-xl shadow-sm border border-gray-800 bg-[rgba(255,255,255,0.03)]"
                   >
                     {/* Topic */}
                     <div className="flex items-center justify-between mb-2">
@@ -225,7 +225,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
-                                      className="border-l-4 py-2 rounded-md bg-[rgba(255,255,255,0.02)] border-gray-500"
+                                      className="cursor-grab active:cursor-grabbing border-l-4 py-2 rounded-md bg-[rgba(255,255,255,0.02)] border-gray-500"
                                     >
                                       <div className="flex items-center justify-between p-3">
                                         <div className="flex items-center flex-1">
@@ -327,7 +327,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        className="flex justify-between items-center mb-1 bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.03)] borderrounded border-t-3 border-l border-r border-b border-gray-500 p-2 rounded-md"
+                                                        className="cursor-grab active:cursor-grabbing flex justify-between items-center mb-1 bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.03)] borderrounded border-t-3 border-l border-r border-b border-gray-500 p-2 rounded-md"
                                                       >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
