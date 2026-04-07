@@ -78,12 +78,12 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  updateProfile: async ({ name, email, username }) => {
+  updateProfile: async (payload) => {
     const user = get().currentUser;
     if (!user?.token) return false;
 
     try {
-      const updated = await updateProfileApi(user.token, { name, email, username });
+      const updated = await updateProfileApi(user.token, payload);
       const merged = { ...user, ...updated };
       writeCurrentUser(merged);
       set({ currentUser: merged });

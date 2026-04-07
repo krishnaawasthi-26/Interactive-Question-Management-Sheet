@@ -6,6 +6,7 @@ import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.sheet.Sheet;
 import com.iqms.backend.sheet.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -42,13 +43,9 @@ public class ProfileController {
   public ResponseEntity<Map<String, Object>> getProfile(HttpServletRequest request) {
     User user = findUser(currentUser.getUserId(request));
     List<Sheet> sheets = sheetService.listSheetsForOwner(user.getId());
-    return ResponseEntity.ok(Map.of(
-        "id", user.getId(),
-        "name", user.getName(),
-        "email", user.getEmail(),
-        "username", user.getUsername(),
-        "profileShareId", user.getProfileShareId(),
-        "sheets", sheets));
+    Map<String, Object> payload = profilePayload(user);
+    payload.put("sheets", sheets);
+    return ResponseEntity.ok(payload);
   }
 
   @PutMapping
@@ -57,6 +54,12 @@ public class ProfileController {
     String name = body.get("name");
     String email = body.get("email");
     String username = body.get("username");
+    String bio = body.get("bio");
+    String institution = body.get("institution");
+    String company = body.get("company");
+    String websiteUrl = body.get("websiteUrl");
+    String githubUrl = body.get("githubUrl");
+    String linkedinUrl = body.get("linkedinUrl");
 
     if (name != null && !name.isBlank()) {
       user.setName(name.trim());
@@ -84,13 +87,15 @@ public class ProfileController {
       user.setUsername(normalizedUsername);
     }
 
+    if (bio != null) user.setBio(normalizeOptionalValue(bio));
+    if (institution != null) user.setInstitution(normalizeOptionalValue(institution));
+    if (company != null) user.setCompany(normalizeOptionalValue(company));
+    if (websiteUrl != null) user.setWebsiteUrl(normalizeOptionalValue(websiteUrl));
+    if (githubUrl != null) user.setGithubUrl(normalizeOptionalValue(githubUrl));
+    if (linkedinUrl != null) user.setLinkedinUrl(normalizeOptionalValue(linkedinUrl));
+
     User saved = userRepository.save(user);
-    return ResponseEntity.ok(Map.of(
-        "id", saved.getId(),
-        "name", saved.getName(),
-        "email", saved.getEmail(),
-        "username", saved.getUsername(),
-        "profileShareId", saved.getProfileShareId()));
+    return ResponseEntity.ok(profilePayload(saved));
   }
 
   @GetMapping("/shared/{profileShareId}")
@@ -122,5 +127,26 @@ public class ProfileController {
           "Username can use lowercase letters, numbers, _ and - (3-30 chars).");
     }
     return normalized;
+  }
+
+  private String normalizeOptionalValue(String value) {
+    String normalized = value.trim();
+    return normalized.isBlank() ? null : normalized;
+  }
+
+  private Map<String, Object> profilePayload(User user) {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("id", user.getId());
+    payload.put("name", user.getName());
+    payload.put("email", user.getEmail());
+    payload.put("username", user.getUsername());
+    payload.put("profileShareId", user.getProfileShareId());
+    payload.put("bio", user.getBio());
+    payload.put("institution", user.getInstitution());
+    payload.put("company", user.getCompany());
+    payload.put("websiteUrl", user.getWebsiteUrl());
+    payload.put("githubUrl", user.getGithubUrl());
+    payload.put("linkedinUrl", user.getLinkedinUrl());
+    return payload;
   }
 }

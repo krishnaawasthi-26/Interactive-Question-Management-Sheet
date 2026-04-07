@@ -34,15 +34,15 @@ function ProfilePage({ onLogout }) {
         <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
           <h2 className="font-semibold">Profile details</h2>
           <p className="text-sm text-zinc-200">Name: {currentUser?.name || "-"}</p>
-          <p className="text-sm text-zinc-200">Email: {currentUser?.email || "-"}</p>
           <p className="text-sm text-zinc-200">Username: @{persistedUsername}</p>
+          <p className="text-sm text-zinc-200">Total sheets: {sheets.length}</p>
           <button
-            className="rounded bg-emerald-600 px-3 py-2"
+            className="rounded bg-indigo-600 px-3 py-2"
             onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
           >
-            Edit Profile
+            Profile Info
           </button>
-          <p className="text-xs text-zinc-400">Public links use your saved username and saved sheet names.</p>
+          <p className="text-xs text-zinc-400">Use Profile Info to add bio, institution/company, and links.</p>
           <p className="text-sm text-zinc-300 break-all">Share profile (read-only): {profileShareUrl}</p>
         </div>
 
