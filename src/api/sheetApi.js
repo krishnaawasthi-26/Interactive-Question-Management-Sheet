@@ -7,3 +7,5 @@ export const saveSheet = (token, sheetId, payload) =>
   authRequest(`/api/sheets/${sheetId}`, "PUT", payload, token);
 export const removeSheet = (token, sheetId) => authRequest(`/api/sheets/${sheetId}`, "DELETE", null, token);
 export const getSharedSheet = (shareId) => authRequest(`/api/sheets/shared/${shareId}`);
+export const trackSheetEngagement = (token, sheetId, action) =>
+  authRequest(`/api/sheets/${sheetId}/engagement`, "POST", { action }, token);

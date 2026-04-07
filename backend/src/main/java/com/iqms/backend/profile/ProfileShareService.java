@@ -37,6 +37,8 @@ public class ProfileShareService {
           sharedSheet.put("title", sheet.getTitle());
           sharedSheet.put("shareId", sheet.getShareId());
           sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
+          sharedSheet.put("downloadedByUsernames", sheet.getDownloadedByUsernames());
+          sharedSheet.put("copiedByUsernames", sheet.getCopiedByUsernames());
           return sharedSheet;
         })
         .toList();
@@ -63,6 +65,8 @@ public class ProfileShareService {
           sharedSheet.put("sheetSlug", toSlug(sheet.getTitle()));
           sharedSheet.put("shareId", sheet.getShareId());
           sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
+          sharedSheet.put("downloadedByUsernames", sheet.getDownloadedByUsernames());
+          sharedSheet.put("copiedByUsernames", sheet.getCopiedByUsernames());
           return sharedSheet;
         })
         .toList();

@@ -25,6 +25,8 @@ public class Sheet {
   private Instant updatedAt;
   private boolean isPublic;
   private boolean isArchived;
+  private List<String> downloadedByUsernames = new ArrayList<>();
+  private List<String> copiedByUsernames = new ArrayList<>();
 
   private List<Map<String, Object>> topics = new ArrayList<>();
 
@@ -46,4 +48,8 @@ public class Sheet {
   public void setArchived(boolean archived) { isArchived = archived; }
   public List<Map<String, Object>> getTopics() { return topics; }
   public void setTopics(List<Map<String, Object>> topics) { this.topics = topics; }
+  public List<String> getDownloadedByUsernames() { return downloadedByUsernames; }
+  public void setDownloadedByUsernames(List<String> downloadedByUsernames) { this.downloadedByUsernames = downloadedByUsernames; }
+  public List<String> getCopiedByUsernames() { return copiedByUsernames; }
+  public void setCopiedByUsernames(List<String> copiedByUsernames) { this.copiedByUsernames = copiedByUsernames; }
 }

@@ -18,6 +18,7 @@ function ProfilePage({ onLogout }) {
 
   const [newSheetTitle, setNewSheetTitle] = useState("");
   const [sheetTitles, setSheetTitles] = useState({});
+  const [engagementViewer, setEngagementViewer] = useState(null);
 
   useEffect(() => {
     if (!currentUser?.token) return;
@@ -31,6 +32,17 @@ function ProfilePage({ onLogout }) {
   const ongoingSheets = sheets.filter((sheet) => !sheet.isArchived);
   const archivedSheets = sheets.filter((sheet) => sheet.isArchived);
   const publicSheets = sheets.filter((sheet) => sheet.isPublic);
+  const totalDownloadCount = sheets.reduce(
+    (sum, sheet) => sum + (sheet.downloadedByUsernames?.length || 0),
+    0
+  );
+  const totalCopyCount = sheets.reduce((sum, sheet) => sum + (sheet.copiedByUsernames?.length || 0), 0);
+  const allDownloadedUsers = sheets.flatMap((sheet) =>
+    (sheet.downloadedByUsernames || []).map((username) => ({ username, sheetTitle: sheet.title }))
+  );
+  const allCopiedUsers = sheets.flatMap((sheet) =>
+    (sheet.copiedByUsernames || []).map((username) => ({ username, sheetTitle: sheet.title }))
+  );
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -47,6 +59,24 @@ function ProfilePage({ onLogout }) {
           <p className="text-sm text-zinc-200">Total sheets: {sheets.length}</p>
           <p className="text-sm text-zinc-200">Public sheets: {publicSheets.length}</p>
           <p className="text-sm text-zinc-200">Archived sheets: {archivedSheets.length}</p>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <button
+              className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"
+              type="button"
+              onClick={() =>
+                setEngagementViewer({ title: "Downloaded by", users: allDownloadedUsers })
+              }
+            >
+              Downloaded: {totalDownloadCount}
+            </button>
+            <button
+              className="rounded border border-amber-700 px-2 py-1 text-amber-200"
+              type="button"
+              onClick={() => setEngagementViewer({ title: "Copied by", users: allCopiedUsers })}
+            >
+              Copied: {totalCopyCount}
+            </button>
+          </div>
           <button
             className="rounded bg-indigo-600 px-3 py-2"
             onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
@@ -241,6 +271,34 @@ function ProfilePage({ onLogout }) {
           </div>
         </div>
       </div>
+      {engagementViewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-zinc-900 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
+              <button
+                type="button"
+                className="rounded border border-gray-700 px-2 py-1 text-xs"
+                onClick={() => setEngagementViewer(null)}
+              >
+                Close
+              </button>
+            </div>
+            {engagementViewer.users.length === 0 ? (
+              <p className="text-sm text-zinc-400">No users yet.</p>
+            ) : (
+              <div className="max-h-72 space-y-2 overflow-auto">
+                {engagementViewer.users.map((entry, index) => (
+                  <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="rounded border border-gray-700 p-2 text-sm">
+                    <p className="font-medium">@{entry.username}</p>
+                    <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

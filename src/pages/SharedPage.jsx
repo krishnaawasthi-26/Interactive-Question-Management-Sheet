@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import TopicList from "../components/TopicList";
 import { fetchPublicProfile, fetchPublicSheet, fetchSharedProfile } from "../api/profileApi";
-import { getSharedSheet } from "../api/sheetApi";
+import { getSharedSheet, trackSheetEngagement } from "../api/sheetApi";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
+import { exportSheetAsJson } from "../services/sheetExport";
 
 function SharedPage({ shareType, shareId, username, sheetSlug }) {
   const [profile, setProfile] = useState(null);
   const [sharedSheet, setSharedSheet] = useState(null);
   const [error, setError] = useState(null);
+  const [engagementViewer, setEngagementViewer] = useState(null);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
@@ -51,6 +53,26 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
   if (error) return <div className="p-6 text-red-300">{error}</div>;
 
   if (shareType === "profile" || shareType === "public-profile") {
+    const totalDownloadCount = (profile?.sheets || []).reduce(
+      (sum, sheet) => sum + (sheet.downloadedByUsernames?.length || 0),
+      0
+    );
+    const totalCopyCount = (profile?.sheets || []).reduce(
+      (sum, sheet) => sum + (sheet.copiedByUsernames?.length || 0),
+      0
+    );
+    const allDownloadedUsers = (profile?.sheets || []).flatMap((sheet) =>
+      (sheet.downloadedByUsernames || []).map((usernameEntry) => ({
+        username: usernameEntry,
+        sheetTitle: sheet.title,
+      }))
+    );
+    const allCopiedUsers = (profile?.sheets || []).flatMap((sheet) =>
+      (sheet.copiedByUsernames || []).map((usernameEntry) => ({
+        username: usernameEntry,
+        sheetTitle: sheet.title,
+      }))
+    );
     const profileLinks = [
       { label: "Website", href: profile?.websiteUrl },
       { label: "GitHub", href: profile?.githubUrl },
@@ -64,6 +86,22 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
             <h1 className="text-2xl font-semibold">{profile?.name}&apos;s profile</h1>
             <p className="mt-2 text-zinc-300">@{profile?.username}</p>
             <p className="mt-2 text-zinc-200">Total sheets: {profile?.totalSheets ?? profile?.sheets?.length ?? 0}</p>
+            <div className="mt-3 flex flex-wrap gap-2 text-sm">
+              <button
+                className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"
+                type="button"
+                onClick={() => setEngagementViewer({ title: "Downloaded by", users: allDownloadedUsers })}
+              >
+                Downloaded: {totalDownloadCount}
+              </button>
+              <button
+                className="rounded border border-amber-700 px-2 py-1 text-amber-200"
+                type="button"
+                onClick={() => setEngagementViewer({ title: "Copied by", users: allCopiedUsers })}
+              >
+                Copied: {totalCopyCount}
+              </button>
+            </div>
             {profile?.bio && <p className="mt-4 whitespace-pre-wrap text-zinc-200">{profile.bio}</p>}
 
             {(profile?.institution || profile?.company) && (
@@ -119,6 +157,39 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
           ))}
           </div>
         </div>
+        {engagementViewer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-zinc-900 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
+                <button
+                  type="button"
+                  className="rounded border border-gray-700 px-2 py-1 text-xs"
+                  onClick={() => setEngagementViewer(null)}
+                >
+                  Close
+                </button>
+              </div>
+              {engagementViewer.users.length === 0 ? (
+                <p className="text-sm text-zinc-400">No users yet.</p>
+              ) : (
+                <div className="max-h-72 space-y-2 overflow-auto">
+                  {engagementViewer.users.map((entry, index) => (
+                    <div
+                      key={`${entry.username}-${entry.sheetTitle}-${index}`}
+                      className="rounded border border-gray-700 p-2 text-sm"
+                    >
+                      <p className="font-medium">@{entry.username}</p>
+                      <p className="text-xs text-zinc-400">
+                        Sheet: {entry.sheetTitle || "Untitled Sheet"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -127,18 +198,41 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
     <div className="min-h-screen bg-zinc-900 p-6 text-white">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{sheetTitle} (Read only)</h1>
-        {currentUser?.token && sharedSheet && (
-          <button
-            type="button"
-            className="rounded border border-amber-700 px-3 py-1 text-sm text-amber-200"
-            onClick={async () => {
-              const copied = await duplicateSheet(currentUser.token, sharedSheet);
-              navigateTo(`${ROUTES.APP}/${copied.id}`);
-            }}
-          >
-            Copy to my sheets
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {currentUser?.token && sharedSheet && (
+            <button
+              type="button"
+              className="rounded border border-emerald-700 px-3 py-1 text-sm text-emerald-200"
+              onClick={async () => {
+                try {
+                  await trackSheetEngagement(currentUser.token, sharedSheet.id, "download");
+                } catch {
+                  // no-op; download should not be blocked
+                }
+                exportSheetAsJson({ sheetTitle: sharedSheet.title, topics: sharedSheet.topics || [] });
+              }}
+            >
+              Download JSON
+            </button>
+          )}
+          {currentUser?.token && sharedSheet && (
+            <button
+              type="button"
+              className="rounded border border-amber-700 px-3 py-1 text-sm text-amber-200"
+              onClick={async () => {
+                try {
+                  await trackSheetEngagement(currentUser.token, sharedSheet.id, "copy");
+                } catch {
+                  // no-op; copy should not be blocked
+                }
+                const copied = await duplicateSheet(currentUser.token, sharedSheet);
+                navigateTo(`${ROUTES.APP}/${copied.id}`);
+              }}
+            >
+              Copy to my sheets
+            </button>
+          )}
+        </div>
       </div>
       <TopicList isEditing={false} allowProgressToggle={false} />
     </div>
