@@ -3,6 +3,7 @@ import { loginUser, signUpUser } from "../api/authApi";
 import { updateProfile as updateProfileApi } from "../api/profileApi";
 
 const CURRENT_USER_KEY = "iqms-current-user";
+const LOGIN_LOCK_KEY = "iqms-login-lock";
 
 const isBrowser = typeof window !== "undefined";
 
@@ -33,10 +34,26 @@ const writeCurrentUser = (user) => {
   window.localStorage.removeItem(CURRENT_USER_KEY);
 };
 
+const readLoginLockUntil = () => {
+  if (!isBrowser) return 0;
+  const raw = Number(window.localStorage.getItem(LOGIN_LOCK_KEY) ?? 0);
+  return Number.isFinite(raw) ? raw : 0;
+};
+
+const writeLoginLockUntil = (timestamp) => {
+  if (!isBrowser) return;
+  if (timestamp > Date.now()) {
+    window.localStorage.setItem(LOGIN_LOCK_KEY, String(timestamp));
+    return;
+  }
+  window.localStorage.removeItem(LOGIN_LOCK_KEY);
+};
+
 export const useAuthStore = create((set, get) => ({
   currentUser: readCurrentUser(),
   authError: null,
   authLoading: false,
+  loginBlockedUntil: readLoginLockUntil(),
 
   clearAuthError: () => set({ authError: null }),
 
@@ -61,6 +78,15 @@ export const useAuthStore = create((set, get) => ({
   },
 
   login: async ({ identifier, password }) => {
+    const blockedUntil = get().loginBlockedUntil;
+    if (blockedUntil > Date.now()) {
+      const seconds = Math.ceil((blockedUntil - Date.now()) / 1000);
+      set({
+        authError: `Too many wrong attempts. Try after ${Math.ceil(seconds / 60)} minutes.`,
+      });
+      return false;
+    }
+
     set({ authLoading: true, authError: null });
 
     try {
@@ -70,10 +96,20 @@ export const useAuthStore = create((set, get) => ({
       });
 
       writeCurrentUser(user);
-      set({ currentUser: user, authError: null, authLoading: false });
+      writeLoginLockUntil(0);
+      set({ currentUser: user, authError: null, authLoading: false, loginBlockedUntil: 0 });
       return true;
     } catch (error) {
-      set({ authError: error.message, authLoading: false });
+      const disabledUntilEpochMs = Number(error?.disabledUntilEpochMs ?? 0);
+      const isLoginLock = error?.code === "LOGIN_LOCKED" && disabledUntilEpochMs > Date.now();
+      if (isLoginLock) {
+        writeLoginLockUntil(disabledUntilEpochMs);
+      }
+      set({
+        authError: error.message,
+        authLoading: false,
+        loginBlockedUntil: isLoginLock ? disabledUntilEpochMs : get().loginBlockedUntil,
+      });
       return false;
     }
   },
