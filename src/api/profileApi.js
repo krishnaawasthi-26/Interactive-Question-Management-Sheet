@@ -9,3 +9,7 @@ export const fetchPublicProfile = (username) =>
   authRequest(`/api/profile/public/${username}`);
 export const fetchPublicSheet = (username, sheetSlug) =>
   authRequest(`/api/profile/public/${username}/${sheetSlug}`);
+export const followUser = (token, username) =>
+  authRequest(`/api/profile/follow/${username}`, "POST", null, token);
+export const unfollowUser = (token, username) =>
+  authRequest(`/api/profile/follow/${username}`, "DELETE", null, token);

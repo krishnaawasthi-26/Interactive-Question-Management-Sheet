@@ -4,9 +4,12 @@ import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
 import com.iqms.backend.sheet.Sheet;
 import com.iqms.backend.sheet.SheetService;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -106,6 +109,32 @@ public class ProfileShareService {
     profile.put("githubUrl", user.getGithubUrl());
     profile.put("linkedinUrl", user.getLinkedinUrl());
     profile.put("totalSheets", totalSheets);
+    profile.put("followers", mapUsersById(user.getFollowerUserIds()));
+    profile.put("following", mapUsersById(user.getFollowingUserIds()));
+    profile.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
+    profile.put("followingCount", user.getFollowingUserIds() == null ? 0 : user.getFollowingUserIds().size());
     return profile;
+  }
+
+  private List<Map<String, Object>> mapUsersById(Set<String> ids) {
+    if (ids == null || ids.isEmpty()) return List.of();
+
+    List<User> users = userRepository.findAllById(ids);
+    Map<String, User> usersById = new HashMap<>();
+    for (User user : users) {
+      usersById.put(user.getId(), user);
+    }
+
+    List<Map<String, Object>> mapped = new ArrayList<>();
+    for (String id : ids) {
+      User user = usersById.get(id);
+      if (user == null) continue;
+      Map<String, Object> entry = new LinkedHashMap<>();
+      entry.put("id", user.getId());
+      entry.put("name", user.getName());
+      entry.put("username", user.getUsername());
+      mapped.add(entry);
+    }
+    return mapped;
   }
 }

@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
 import { famousDsaSheets } from "../data/famousSheets";
+import { fetchProfile } from "../api/profileApi";
 
 function ProfilePage({ onLogout }) {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -19,11 +20,21 @@ function ProfilePage({ onLogout }) {
   const [newSheetTitle, setNewSheetTitle] = useState("");
   const [sheetTitles, setSheetTitles] = useState({});
   const [engagementViewer, setEngagementViewer] = useState(null);
+  const [profileDetails, setProfileDetails] = useState(currentUser || null);
 
   useEffect(() => {
     if (!currentUser?.token) return;
     loadSheets(currentUser.token);
   }, [currentUser?.token, loadSheets]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!currentUser?.token) return;
+      const profile = await fetchProfile(currentUser.token);
+      setProfileDetails(profile);
+    };
+    loadProfile();
+  }, [currentUser?.token]);
 
   const renameSheet = useSheetStore((state) => state.renameSheet);
   const persistedUsername = (currentUser?.username || "username").trim().toLowerCase();
@@ -43,6 +54,8 @@ function ProfilePage({ onLogout }) {
   const allCopiedUsers = sheets.flatMap((sheet) =>
     (sheet.copiedByUsernames || []).map((username) => ({ username, sheetTitle: sheet.title }))
   );
+  const followers = profileDetails?.followers || [];
+  const following = profileDetails?.following || [];
 
   return (
     <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
@@ -68,6 +81,24 @@ function ProfilePage({ onLogout }) {
               }
             >
               Downloaded: {totalDownloadCount}
+            </button>
+            <button
+              className="rounded border border-sky-700 px-2 py-1 text-sky-200"
+              type="button"
+              onClick={() =>
+                setEngagementViewer({ title: "Followers", users: followers.map((entry) => ({ ...entry, sheetTitle: "" })) })
+              }
+            >
+              Followers: {profileDetails?.followersCount ?? followers.length}
+            </button>
+            <button
+              className="rounded border border-fuchsia-700 px-2 py-1 text-fuchsia-200"
+              type="button"
+              onClick={() =>
+                setEngagementViewer({ title: "Following", users: following.map((entry) => ({ ...entry, sheetTitle: "" })) })
+              }
+            >
+              Following: {profileDetails?.followingCount ?? following.length}
             </button>
             <button
               className="rounded border border-amber-700 px-2 py-1 text-amber-200"
@@ -291,7 +322,11 @@ function ProfilePage({ onLogout }) {
                 {engagementViewer.users.map((entry, index) => (
                   <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="rounded border border-gray-700 p-2 text-sm">
                     <p className="font-medium">@{entry.username}</p>
-                    <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
+                    {entry.sheetTitle ? (
+                      <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
+                    ) : (
+                      <p className="text-xs text-zinc-400">{entry.name ? entry.name : "IQMS user"}</p>
+                    )}
                   </div>
                 ))}
               </div>

@@ -6,17 +6,22 @@ import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.sheet.Sheet;
 import com.iqms.backend.sheet.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -113,6 +118,42 @@ public class ProfileController {
     return ResponseEntity.ok(profileShareService.getPublicSheet(username, sheetSlug));
   }
 
+  @PostMapping("/follow/{username}")
+  public ResponseEntity<Map<String, Object>> followUser(HttpServletRequest request, @PathVariable String username) {
+    User actor = findUser(currentUser.getUserId(request));
+    User target = userRepository
+        .findByUsername(username.toLowerCase())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+    if (actor.getId().equals(target.getId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot follow yourself.");
+    }
+
+    if (actor.getFollowingUserIds().add(target.getId())) {
+      target.getFollowerUserIds().add(actor.getId());
+      userRepository.save(actor);
+      userRepository.save(target);
+    }
+
+    return ResponseEntity.ok(buildFollowResponse(actor, target));
+  }
+
+  @DeleteMapping("/follow/{username}")
+  public ResponseEntity<Map<String, Object>> unfollowUser(HttpServletRequest request, @PathVariable String username) {
+    User actor = findUser(currentUser.getUserId(request));
+    User target = userRepository
+        .findByUsername(username.toLowerCase())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+    if (actor.getFollowingUserIds().remove(target.getId())) {
+      target.getFollowerUserIds().remove(actor.getId());
+      userRepository.save(actor);
+      userRepository.save(target);
+    }
+
+    return ResponseEntity.ok(buildFollowResponse(actor, target));
+  }
+
   private User findUser(String id) {
     return userRepository
         .findById(id)
@@ -147,6 +188,41 @@ public class ProfileController {
     payload.put("websiteUrl", user.getWebsiteUrl());
     payload.put("githubUrl", user.getGithubUrl());
     payload.put("linkedinUrl", user.getLinkedinUrl());
+    payload.put("followers", mapUsersById(user.getFollowerUserIds()));
+    payload.put("following", mapUsersById(user.getFollowingUserIds()));
+    payload.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
+    payload.put("followingCount", user.getFollowingUserIds() == null ? 0 : user.getFollowingUserIds().size());
     return payload;
+  }
+
+  private Map<String, Object> buildFollowResponse(User actor, User target) {
+    Map<String, Object> response = new LinkedHashMap<>();
+    response.put("targetUsername", target.getUsername());
+    response.put("isFollowing", actor.getFollowingUserIds().contains(target.getId()));
+    response.put("followersCount", target.getFollowerUserIds().size());
+    response.put("followingCount", target.getFollowingUserIds().size());
+    return response;
+  }
+
+  private List<Map<String, Object>> mapUsersById(Set<String> ids) {
+    if (ids == null || ids.isEmpty()) return List.of();
+
+    List<User> users = userRepository.findAllById(ids);
+    Map<String, User> usersById = new HashMap<>();
+    for (User user : users) {
+      usersById.put(user.getId(), user);
+    }
+
+    List<Map<String, Object>> mapped = new ArrayList<>();
+    for (String id : ids) {
+      User user = usersById.get(id);
+      if (user == null) continue;
+      Map<String, Object> entry = new LinkedHashMap<>();
+      entry.put("id", user.getId());
+      entry.put("name", user.getName());
+      entry.put("username", user.getUsername());
+      mapped.add(entry);
+    }
+    return mapped;
   }
 }

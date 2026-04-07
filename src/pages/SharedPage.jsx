@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import TopicList from "../components/TopicList";
-import { fetchPublicProfile, fetchPublicSheet, fetchSharedProfile } from "../api/profileApi";
+import {
+  fetchPublicProfile,
+  fetchPublicSheet,
+  fetchSharedProfile,
+  followUser,
+  unfollowUser,
+} from "../api/profileApi";
 import { getSharedSheet, trackSheetEngagement } from "../api/sheetApi";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
@@ -12,6 +18,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
   const [sharedSheet, setSharedSheet] = useState(null);
   const [error, setError] = useState(null);
   const [engagementViewer, setEngagementViewer] = useState(null);
+  const [followPending, setFollowPending] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
@@ -78,6 +85,10 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
       { label: "GitHub", href: profile?.githubUrl },
       { label: "LinkedIn", href: profile?.linkedinUrl },
     ].filter((item) => item.href);
+    const isOwnProfile = currentUser?.username === profile?.username;
+    const followers = profile?.followers || [];
+    const following = profile?.following || [];
+    const isFollowingProfile = followers.some((entry) => entry.username === currentUser?.username);
 
     return (
       <div className="min-h-screen bg-zinc-900 p-6 text-white">
@@ -87,6 +98,30 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
             <p className="mt-2 text-zinc-300">@{profile?.username}</p>
             <p className="mt-2 text-zinc-200">Total sheets: {profile?.totalSheets ?? profile?.sheets?.length ?? 0}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-sm">
+              <button
+                className="rounded border border-sky-700 px-2 py-1 text-sky-200"
+                type="button"
+                onClick={() =>
+                  setEngagementViewer({
+                    title: `Followers of @${profile?.username}`,
+                    users: followers.map((entry) => ({ ...entry, sheetTitle: "" })),
+                  })
+                }
+              >
+                Followers: {profile?.followersCount ?? followers.length}
+              </button>
+              <button
+                className="rounded border border-fuchsia-700 px-2 py-1 text-fuchsia-200"
+                type="button"
+                onClick={() =>
+                  setEngagementViewer({
+                    title: `Following by @${profile?.username}`,
+                    users: following.map((entry) => ({ ...entry, sheetTitle: "" })),
+                  })
+                }
+              >
+                Following: {profile?.followingCount ?? following.length}
+              </button>
               <button
                 className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"
                 type="button"
@@ -101,6 +136,30 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
               >
                 Copied: {totalCopyCount}
               </button>
+              {currentUser?.token && !isOwnProfile && (
+                <button
+                  className="rounded border border-indigo-700 px-2 py-1 text-indigo-200"
+                  type="button"
+                  disabled={followPending}
+                  onClick={async () => {
+                    if (!profile?.username) return;
+                    setFollowPending(true);
+                    try {
+                      if (isFollowingProfile) {
+                        await unfollowUser(currentUser.token, profile.username);
+                      } else {
+                        await followUser(currentUser.token, profile.username);
+                      }
+                      const refreshed = await fetchPublicProfile(profile.username);
+                      setProfile(refreshed);
+                    } finally {
+                      setFollowPending(false);
+                    }
+                  }}
+                >
+                  {followPending ? "Saving..." : isFollowingProfile ? "Unfollow" : "Follow"}
+                </button>
+              )}
             </div>
             {profile?.bio && <p className="mt-4 whitespace-pre-wrap text-zinc-200">{profile.bio}</p>}
 
@@ -180,9 +239,11 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
                       className="rounded border border-gray-700 p-2 text-sm"
                     >
                       <p className="font-medium">@{entry.username}</p>
-                      <p className="text-xs text-zinc-400">
-                        Sheet: {entry.sheetTitle || "Untitled Sheet"}
-                      </p>
+                      {entry.sheetTitle ? (
+                        <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
+                      ) : (
+                        <p className="text-xs text-zinc-400">{entry.name ? entry.name : "IQMS user"}</p>
+                      )}
                     </div>
                   ))}
                 </div>
