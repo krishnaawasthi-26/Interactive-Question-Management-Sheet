@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/authStore";
+import SiteNav from "../components/SiteNav";
 
 function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
@@ -15,9 +16,13 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   };
 
   return (
-    <div className="mx-auto mt-16 max-w-md rounded-xl border border-gray-800 bg-zinc-900 p-6 shadow-lg">
-      <h1 className="mb-5 text-2xl font-semibold text-white">Login</h1>
-      <form className="space-y-3" onSubmit={submit}>
+    <div className="min-h-screen bg-zinc-950 px-6 py-8 text-white">
+      <div className="mx-auto max-w-4xl">
+        <SiteNav />
+      </div>
+      <div className="mx-auto mt-8 max-w-md rounded-xl border border-gray-800 bg-zinc-900 p-6 shadow-lg">
+        <h1 className="mb-5 text-2xl font-semibold text-white">Login</h1>
+        <form className="space-y-3" onSubmit={submit}>
         <input
           type="text"
           required
@@ -50,15 +55,16 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         >
           {authLoading ? "Checking account..." : "Login"}
         </button>
-      </form>
-      <button
-        type="button"
-        disabled={authLoading}
-        onClick={onGoToSignUp}
-        className="mt-4 text-sm text-sky-300 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        Don&apos;t have an account? Sign up
-      </button>
+        </form>
+        <button
+          type="button"
+          disabled={authLoading}
+          onClick={onGoToSignUp}
+          className="mt-4 text-sm text-sky-300 hover:text-sky-200 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          Don&apos;t have an account? Sign up
+        </button>
+      </div>
     </div>
   );
 }

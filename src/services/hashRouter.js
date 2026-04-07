@@ -1,6 +1,9 @@
 export const ROUTES = {
   LOGIN: "/login",
   SIGNUP: "/signup",
+  ABOUT: "/about",
+  CONTACT: "/contact",
+  HOW_TO_USE: "/how-to-use",
   PROFILE: "/profile",
   EDIT_PROFILE: "/edit-profile",
   PUBLIC_PROFILE: "/public-profile",

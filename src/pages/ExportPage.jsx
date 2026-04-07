@@ -1,5 +1,6 @@
 import { exportSheetAsJson, exportSheetAsPdf } from "../services/sheetExport";
 import { useSheetStore } from "../store/sheetStore";
+import SiteNav from "../components/SiteNav";
 
 function ExportPage({ onBack }) {
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
@@ -7,6 +8,7 @@ function ExportPage({ onBack }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10 text-white">
+      <SiteNav />
       <h1 className="mb-4 text-2xl font-semibold">Export Sheet</h1>
       <p className="mb-6 text-sm text-zinc-300">Choose how you want to export this sheet.</p>
 
