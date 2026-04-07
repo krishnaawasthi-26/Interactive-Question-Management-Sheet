@@ -3,7 +3,9 @@ package com.iqms.backend.controller;
 import com.iqms.backend.dto.AuthResponse;
 import com.iqms.backend.dto.LoginRequest;
 import com.iqms.backend.dto.SignUpRequest;
+import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
   private final AuthService authService;
+  private final RequestFingerprintService requestFingerprintService;
 
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, RequestFingerprintService requestFingerprintService) {
     this.authService = authService;
+    this.requestFingerprintService = requestFingerprintService;
   }
 
   @PostMapping("/signup")
@@ -27,7 +31,10 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-    return ResponseEntity.ok(authService.login(request));
+  public ResponseEntity<AuthResponse> login(
+      @Valid @RequestBody LoginRequest request,
+      HttpServletRequest servletRequest) {
+    String deviceKey = requestFingerprintService.fingerprint(servletRequest);
+    return ResponseEntity.ok(authService.login(request, deviceKey));
   }
 }

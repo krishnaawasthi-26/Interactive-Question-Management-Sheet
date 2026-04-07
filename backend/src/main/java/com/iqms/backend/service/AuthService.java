@@ -18,11 +18,16 @@ public class AuthService {
 
   private final UserRepository userRepository;
   private final TokenService tokenService;
+  private final LoginAttemptService loginAttemptService;
   private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-  public AuthService(UserRepository userRepository, TokenService tokenService) {
+  public AuthService(
+      UserRepository userRepository,
+      TokenService tokenService,
+      LoginAttemptService loginAttemptService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
+    this.loginAttemptService = loginAttemptService;
   }
 
   public AuthResponse signUp(SignUpRequest request) {
@@ -50,7 +55,8 @@ public class AuthService {
     return toResponse(created);
   }
 
-  public AuthResponse login(LoginRequest request) {
+  public AuthResponse login(LoginRequest request, String deviceKey) {
+    loginAttemptService.assertLoginAllowed(deviceKey);
     String normalizedIdentifier = request.getIdentifier().trim().toLowerCase();
     String normalizedPassword = request.getPassword().trim();
 
@@ -59,13 +65,18 @@ public class AuthService {
         : userRepository.findByUsername(normalizedIdentifier).orElse(null);
 
     if (user == null) {
+      loginAttemptService.recordFailure(deviceKey);
+      loginAttemptService.assertLoginAllowed(deviceKey);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account does not exist. Please sign up first.");
     }
 
     if (!passwordEncoder.matches(normalizedPassword, user.getPassword())) {
+      loginAttemptService.recordFailure(deviceKey);
+      loginAttemptService.assertLoginAllowed(deviceKey);
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect password. Please try again.");
     }
 
+    loginAttemptService.recordSuccess(deviceKey);
     return toResponse(user);
   }
 

@@ -1,6 +1,7 @@
 package com.iqms.backend.controller;
 
 import com.iqms.backend.dto.ErrorResponse;
+import com.iqms.backend.exception.ApiRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,5 +26,14 @@ public class ApiExceptionHandler {
         .map(error -> error.getDefaultMessage())
         .orElse("Invalid request");
     return ResponseEntity.badRequest().body(new ErrorResponse(message));
+  }
+
+  @ExceptionHandler(ApiRequestException.class)
+  public ResponseEntity<ErrorResponse> handleApiRequestException(ApiRequestException exception) {
+    return ResponseEntity.status(exception.getStatus()).body(new ErrorResponse(
+        exception.getMessage(),
+        exception.getCode(),
+        exception.getRetryAfterSeconds(),
+        exception.getDisabledUntilEpochMs()));
   }
 }

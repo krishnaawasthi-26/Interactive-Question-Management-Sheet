@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import SiteNav from "../components/SiteNav";
 
@@ -6,8 +6,24 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
   const authError = useAuthStore((state) => state.authError);
   const authLoading = useAuthStore((state) => state.authLoading);
+  const loginBlockedUntil = useAuthStore((state) => state.loginBlockedUntil);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
   const [form, setForm] = useState({ identifier: "", password: "" });
+  const [now, setNow] = useState(Date.now());
+  const lockSeconds = Math.max(0, Math.ceil((loginBlockedUntil - now) / 1000));
+  const isLocked = lockSeconds > 0;
+
+  useEffect(() => {
+    if (!isLocked) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [isLocked]);
+
+  const lockMessage = useMemo(() => {
+    if (!isLocked) return "";
+    const minutes = Math.ceil(lockSeconds / 60);
+    return `Login temporarily disabled due to multiple wrong attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`;
+  }, [isLocked, lockSeconds]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -26,7 +42,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         <input
           type="text"
           required
-          disabled={authLoading}
+          disabled={authLoading || isLocked}
           value={form.identifier}
           placeholder="Email or username"
           onChange={(event) => {
@@ -38,7 +54,7 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
         <input
           type="password"
           required
-          disabled={authLoading}
+          disabled={authLoading || isLocked}
           value={form.password}
           placeholder="Password"
           onChange={(event) => {
@@ -47,13 +63,14 @@ function LoginPage({ onLoginSuccess, onGoToSignUp }) {
           }}
           className="w-full rounded-md border border-gray-700 bg-transparent px-3 py-2 text-white"
         />
+        {isLocked && <p className="text-sm text-amber-300">{lockMessage}</p>}
         {authError && <p className="text-sm text-rose-400">{authError}</p>}
         <button
           type="submit"
-          disabled={authLoading}
+          disabled={authLoading || isLocked}
           className="w-full rounded-md bg-orange-600 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {authLoading ? "Checking account..." : "Login"}
+          {isLocked ? `Try again in ${lockSeconds}s` : authLoading ? "Checking account..." : "Login"}
         </button>
         </form>
         <button

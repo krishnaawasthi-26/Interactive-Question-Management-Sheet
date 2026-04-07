@@ -1,28 +1,32 @@
-package com.iqms.backend.dto;
+package com.iqms.backend.exception;
 
-public class ErrorResponse {
-  private final String message;
+import org.springframework.http.HttpStatus;
+
+public class ApiRequestException extends RuntimeException {
+  private final HttpStatus status;
   private final String code;
   private final Long retryAfterSeconds;
   private final Long disabledUntilEpochMs;
 
-  public ErrorResponse(String message) {
-    this(message, null, null, null);
+  public ApiRequestException(HttpStatus status, String message) {
+    this(status, message, null, null, null);
   }
 
-  public ErrorResponse(
+  public ApiRequestException(
+      HttpStatus status,
       String message,
       String code,
       Long retryAfterSeconds,
       Long disabledUntilEpochMs) {
-    this.message = message;
+    super(message);
+    this.status = status;
     this.code = code;
     this.retryAfterSeconds = retryAfterSeconds;
     this.disabledUntilEpochMs = disabledUntilEpochMs;
   }
 
-  public String getMessage() {
-    return message;
+  public HttpStatus getStatus() {
+    return status;
   }
 
   public String getCode() {
