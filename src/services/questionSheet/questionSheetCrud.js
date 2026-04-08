@@ -1,8 +1,8 @@
 import sampleSheet from "../../data/sampleSheet.json";
-import { readLocalSheet, writeLocalSheet } from "./localSheetStorage";
-import { normalizeSheet, resolveSheet, generateId } from "./normalizeSheet";
-import { enqueueOperation, flushOutbox } from "./outboxSync";
-import { fetchRemoteSheetBySlug } from "./remoteSheetApi";
+import { readLocalSheet, writeLocalSheet } from "../../api/questionSheet/localSheetStorage";
+import { normalizeSheet, resolveSheet, generateId } from "../../api/questionSheet/normalizeSheet";
+import { enqueueOperation, flushOutbox } from "../../api/questionSheet/outboxSync";
+import { fetchRemoteSheetBySlug } from "../../api/questionSheet/remoteSheetApi";
 
 const createTopicEntry = (title) => ({
   id: generateId("topic"),
