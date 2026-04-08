@@ -1,11 +1,16 @@
-package com.iqms.backend.sheet;
+package com.iqms.backend.service;
 
+import com.iqms.backend.dto.sheet.SheetEngagementResponse;
+import com.iqms.backend.model.Sheet;
+import com.iqms.backend.model.User;
+import com.iqms.backend.queue.ActionQueueService;
+import com.iqms.backend.repository.SheetRepository;
+import com.iqms.backend.repository.UserRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import com.iqms.backend.queue.ActionQueueService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,10 +19,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class SheetService {
 
   private final SheetRepository sheetRepository;
+  private final UserRepository userRepository;
   private final ActionQueueService actionQueueService;
 
-  public SheetService(SheetRepository sheetRepository, ActionQueueService actionQueueService) {
+  public SheetService(
+      SheetRepository sheetRepository,
+      UserRepository userRepository,
+      ActionQueueService actionQueueService) {
     this.sheetRepository = sheetRepository;
+    this.userRepository = userRepository;
     this.actionQueueService = actionQueueService;
   }
 
@@ -83,6 +93,28 @@ public class SheetService {
     return sheetRepository
         .findByShareId(shareId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared sheet not found."));
+  }
+
+  public SheetEngagementResponse trackEngagement(String actorUserId, String sheetId, String action) {
+    User user = userRepository.findById(actorUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+    String normalizedAction = action == null ? "" : action.trim().toLowerCase();
+    Sheet sheet;
+    if ("download".equals(normalizedAction)) {
+      sheet = recordDownload(sheetId, user.getUsername());
+    } else if ("copy".equals(normalizedAction)) {
+      sheet = recordCopy(sheetId, user.getUsername());
+      if (user.getCopiedSheetIds().add(sheetId)) {
+        userRepository.save(user);
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown action.");
+    }
+
+    int downloadCount = sheet.getDownloadedByUsernames() == null ? 0 : sheet.getDownloadedByUsernames().size();
+    int copyCount = sheet.getCopiedByUsernames() == null ? 0 : sheet.getCopiedByUsernames().size();
+    return new SheetEngagementResponse(sheet.getId(), downloadCount, copyCount);
   }
 
   public Sheet recordDownload(String sheetId, String username) {

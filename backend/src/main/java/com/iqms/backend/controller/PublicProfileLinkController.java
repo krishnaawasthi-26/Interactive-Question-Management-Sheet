@@ -1,7 +1,7 @@
 package com.iqms.backend.controller;
 
 import com.iqms.backend.profile.ProfileShareService;
-import com.iqms.backend.sheet.Sheet;
+import com.iqms.backend.model.Sheet;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
