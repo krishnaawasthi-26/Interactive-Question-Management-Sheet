@@ -5,6 +5,7 @@ const primaryLinks = [
   { label: "About Us", route: ROUTES.ABOUT },
   { label: "How To Use", route: ROUTES.HOW_TO_USE },
   { label: "Contact Us", route: ROUTES.CONTACT },
+  { label: "Learning Insights", route: ROUTES.LEARNING_INSIGHTS },
 ];
 
 function SiteNav() {

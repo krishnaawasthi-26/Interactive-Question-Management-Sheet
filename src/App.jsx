@@ -12,6 +12,7 @@ import ExportPage from "./pages/ExportPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import HowToUsePage from "./pages/HowToUsePage";
+import LearningInsightsPage from "./pages/LearningInsightsPage";
 
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -86,6 +87,10 @@ function App() {
 
   if (routeState.route === ROUTES.HOW_TO_USE) {
     return <HowToUsePage />;
+  }
+
+  if (routeState.route === ROUTES.LEARNING_INSIGHTS) {
+    return <LearningInsightsPage />;
   }
 
   if (routeState.route === ROUTES.EXPORT) {

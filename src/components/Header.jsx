@@ -45,6 +45,7 @@ function Header({
               <button type="button" className="w-full rounded px-2 py-1 text-left text-sm hover:bg-zinc-800" onClick={() => navigateTo(ROUTES.ABOUT)}>About Us</button>
               <button type="button" className="w-full rounded px-2 py-1 text-left text-sm hover:bg-zinc-800" onClick={() => navigateTo(ROUTES.HOW_TO_USE)}>How To Use</button>
               <button type="button" className="w-full rounded px-2 py-1 text-left text-sm hover:bg-zinc-800" onClick={() => navigateTo(ROUTES.CONTACT)}>Contact Us</button>
+              <button type="button" className="w-full rounded px-2 py-1 text-left text-sm hover:bg-zinc-800" onClick={() => navigateTo(ROUTES.LEARNING_INSIGHTS)}>Learning Insights</button>
               <a
                 href="https://leetcode.com"
                 target="_blank"
