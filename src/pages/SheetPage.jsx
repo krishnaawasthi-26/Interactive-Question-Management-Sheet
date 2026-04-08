@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AddTopicForm from "../components/AddTopicForm";
 import Header from "../components/Header";
 import QuestionSearch from "../components/QuestionSearch";
+import SheetDashboardView from "../components/SheetDashboardView";
 import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
@@ -11,6 +12,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState("light");
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
@@ -52,9 +54,21 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     navigateTo(`${ROUTES.APP}/${created.id}`);
   };
 
+  const isDarkMode = theme === "dark";
+
   return (
-    <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className={`min-h-screen ${isDarkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-900"}`}>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setTheme((value) => (value === "light" ? "dark" : "light"))}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          >
+            {isDarkMode ? "☀️ Light mode" : "🌙 Dark mode"}
+          </button>
+        </div>
+
         <Header
           title={sheetTitle}
           isEditing={isEditing}
@@ -68,24 +82,34 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
         />
 
         {isEditing && (
-          <AddTopicForm title={title} onTitleChange={(e) => setTitle(e.target.value)} onAdd={handleAdd} />
-        )}
-        {limitWarning && (
-          <div className="mb-4 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-            <span>{limitWarning}</span>
-            <button type="button" className="rounded border border-amber-500 px-2 py-0.5 text-xs" onClick={clearLimitWarning}>
-              Dismiss
-            </button>
-          </div>
-        )}
+          <>
+            <AddTopicForm title={title} onTitleChange={(e) => setTitle(e.target.value)} onAdd={handleAdd} />
+            {limitWarning && (
+              <div className="mb-4 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+                <span>{limitWarning}</span>
+                <button
+                  type="button"
+                  className="rounded border border-amber-500 px-2 py-0.5 text-xs"
+                  onClick={clearLimitWarning}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
-        <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
+            <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
+          </>
+        )}
 
         <main>
           {(isLoading || loadError) && (
-            <p className="mb-4 text-sm text-zinc-300">{isLoading ? "Loading sheet..." : loadError}</p>
+            <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">{isLoading ? "Loading sheet..." : loadError}</p>
           )}
-          <TopicList isEditing={isEditing} searchQuery={searchQuery} />
+          {isEditing ? (
+            <TopicList isEditing searchQuery={searchQuery} />
+          ) : (
+            <SheetDashboardView title={sheetTitle || "Advanced DSA Sheet - V2"} topics={topics} />
+          )}
         </main>
       </div>
     </div>
