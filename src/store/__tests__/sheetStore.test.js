@@ -128,4 +128,34 @@ describe("sheetStore core flows", () => {
     expect(useSheetStore.getState().saveError).toBe("disk full");
     expect(useSheetStore.getState().hasPendingChanges).toBe(true);
   });
+
+  it("keeps existing title/topics when toggling visibility", async () => {
+    useSheetStore.setState({
+      sheets: [
+        {
+          id: "sheet-1",
+          title: "Sheet A",
+          topics: baseTopics,
+          isPublic: false,
+          isArchived: false,
+        },
+      ],
+      activeSheetId: null,
+    });
+    saveSheet.mockResolvedValue({ id: "sheet-1" });
+
+    await useSheetStore.getState().setSheetVisibility("token", "sheet-1", true);
+
+    expect(saveSheet).toHaveBeenCalledWith(
+      "token",
+      "sheet-1",
+      expect.objectContaining({
+        title: "Sheet A",
+        topics: baseTopics,
+        isPublic: true,
+        isArchived: false,
+      })
+    );
+    expect(useSheetStore.getState().sheets[0].isPublic).toBe(true);
+  });
 });
