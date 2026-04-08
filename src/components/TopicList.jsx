@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import AttemptLogModal from "./AttemptLogModal";
 
 function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false, allowProgressToggle = true }) {
   const topics = useSheetStore((state) => state.topics);
@@ -17,6 +18,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
   const moveQuestion = useSheetStore((state) => state.moveQuestion);
   const toggleQuestionDone = useSheetStore((state) => state.toggleQuestionDone);
+  const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -26,7 +28,8 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
   const [questionInput, setQuestionInput] = useState({});
   const [expandedTopics, setExpandedTopics] = useState({});
   const [expandedSubtopics, setExpandedSubtopics] = useState({});
- const normalizeText = (value) =>
+  const [activeAttempt, setActiveAttempt] = useState(null);
+  const normalizeText = (value) =>
     value.trim().toLowerCase().replace(/\s+/g, " ");
   const normalizedQuery = normalizeText(searchQuery);
   const shouldExpandAll = Boolean(normalizedQuery);
@@ -104,15 +107,25 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
     setEditValue("");
   };
 
+  const handleToggleProgress = (topicId, subId, question) => {
+    if (!allowProgressToggle) return;
+    if (question.done) {
+      toggleQuestionDone(topicId, subId, question.id);
+      return;
+    }
+    setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text });
+  };
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="topics" type="topic">
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="space-y-4"
-          >
+    <>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="topics" type="topic">
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="space-y-4"
+            >
             {visibleTopics.map((topic, tIndex) => (
               <Draggable
                 key={topic.id}
@@ -359,7 +372,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                             <button
                                                               type="button"
                                                               disabled={!allowProgressToggle}
-                                                              onClick={() => allowProgressToggle && toggleQuestionDone(topic.id, sub.id, q.id)}
+                                                              onClick={() => handleToggleProgress(topic.id, sub.id, q)}
                                                               className={`h-5 w-5 rounded border text-xs font-bold transition ${
                                                                 q.done
                                                                   ? "border-emerald-500 bg-emerald-500 text-white"
@@ -433,10 +446,21 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
               </Draggable>
             ))}
             {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+      {activeAttempt && (
+        <AttemptLogModal
+          questionText={activeAttempt.questionText}
+          onClose={() => setActiveAttempt(null)}
+          onSave={(attemptLog) => {
+            updateQuestionAttempt(activeAttempt.topicId, activeAttempt.subId, activeAttempt.questionId, attemptLog);
+            setActiveAttempt(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 
