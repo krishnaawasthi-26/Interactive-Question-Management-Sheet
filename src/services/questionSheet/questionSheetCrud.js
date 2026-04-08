@@ -1,7 +1,7 @@
 import sampleSheet from "../../data/sampleSheet.json";
 import { readLocalSheet, writeLocalSheet } from "../../api/questionSheet/localSheetStorage";
 import { normalizeSheet, resolveSheet, generateId } from "../../api/questionSheet/normalizeSheet";
-import { enqueueOperation, flushOutbox } from "../../api/questionSheet/outboxSync";
+import { enqueueOperation } from "../../api/questionSheet/outboxSync";
 import { fetchRemoteSheetBySlug } from "../../api/questionSheet/remoteSheetApi";
 
 const createTopicEntry = (title) => ({
@@ -40,8 +40,8 @@ const updateQuestionById = (questions, questionId, updater) =>
 
 const persistSheetWithOperation = (sheet, operationType, payload = {}) => {
   writeLocalSheet(sheet);
+  // Keep edits fully local until the user explicitly saves.
   enqueueOperation(operationType, sheet, payload);
-  flushOutbox();
   return Promise.resolve(sheet);
 };
 
