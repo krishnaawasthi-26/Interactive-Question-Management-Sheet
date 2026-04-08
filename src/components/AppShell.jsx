@@ -1,4 +1,4 @@
-import SiteNav from "./SiteNav";
+import AppSidebar from "./AppSidebar";
 import TopHeader from "./TopHeader";
 
 function AppShell({
@@ -14,7 +14,7 @@ function AppShell({
 }) {
   return (
     <div className="app-shell text-[var(--text-primary)]">
-      <SiteNav />
+      <AppSidebar />
       <div className="app-content">
         <TopHeader
           title={title}
