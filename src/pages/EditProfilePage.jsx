@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { navigateTo, ROUTES } from "../services/hashRouter";
+import { navigateTo, ROUTES } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 

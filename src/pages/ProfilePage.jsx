@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
+import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";

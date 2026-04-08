@@ -1,4 +1,4 @@
-import { getCurrentHashRoute, navigateTo, ROUTES } from "../services/hashRouter";
+import { getCurrentRoute, navigateTo, ROUTES } from "../services/routes";
 
 const primaryLinks = [
   { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
@@ -9,7 +9,7 @@ const primaryLinks = [
 ];
 
 function SiteNav() {
-  const currentRoute = getCurrentHashRoute().route;
+  const currentRoute = getCurrentRoute().route;
 
   return (
     <>

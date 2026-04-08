@@ -1,4 +1,4 @@
-import { getCurrentHashRoute, navigateTo, ROUTES } from "../services/hashRouter";
+import { getCurrentRoute, navigateTo, ROUTES } from "../services/routes";
 
 const navLinks = [
   { label: "My Sheets", route: ROUTES.PROFILE, icon: "📚" },
@@ -9,7 +9,7 @@ const navLinks = [
 ];
 
 function AppSidebar() {
-  const currentRoute = getCurrentHashRoute().route;
+  const currentRoute = getCurrentRoute().route;
 
   return (
     <>
