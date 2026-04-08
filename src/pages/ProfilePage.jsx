@@ -3,7 +3,6 @@ import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
 import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
-import { famousDsaSheets } from "../data/famousSheets";
 import { fetchProfile } from "../api/profileApi";
 import SiteNav from "../components/SiteNav";
 
@@ -14,7 +13,6 @@ function ProfilePage({ onLogout }) {
   const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const deleteSheet = useSheetStore((state) => state.deleteSheet);
   const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
-  const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
   const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
   const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
   const limitWarning = useSheetStore((state) => state.limitWarning);
@@ -294,28 +292,34 @@ function ProfilePage({ onLogout }) {
         </div>
 
         <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
-          <h2 className="font-semibold">Famous DSA sheets</h2>
-          <p className="text-xs text-zinc-400">Sample templates with 1-2 starter questions each.</p>
-          <div className="space-y-2">
-            {famousDsaSheets.map((sheet) => (
-              <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">{sheet.title}</p>
-                  <p className="text-xs text-zinc-400">{sheet.description}</p>
-                </div>
-                <button
-                  className="rounded border border-orange-700 px-2 py-1 text-sm"
-                  onClick={async () => {
-                    const copied = await duplicateSheet(currentUser.token, sheet, sheet.title);
-                    if (!copied) return;
-                    navigateTo(`${ROUTES.APP}/${copied.id}`);
-                  }}
-                >
-                  Use this sheet
-                </button>
-              </div>
-            ))}
-          </div>
+          <h2 className="font-semibold">Recently updated sheets</h2>
+          <p className="text-xs text-zinc-400">Only your own sheets appear here. No static templates are shown.</p>
+          {sheets.length === 0 ? (
+            <p className="text-sm text-zinc-400">Create your first sheet to start tracking your preparation.</p>
+          ) : (
+            <div className="space-y-2">
+              {[...sheets]
+                .slice()
+                .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+                .slice(0, 5)
+                .map((sheet) => (
+                  <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
+                      <p className="text-xs text-zinc-400">
+                        Questions: {calculateSheetProgress(sheet).completedQuestions}/{calculateSheetProgress(sheet).totalQuestions}
+                      </p>
+                    </div>
+                    <button
+                      className="rounded border border-sky-700 px-2 py-1 text-sm"
+                      onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}
+                    >
+                      Open
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       </div>
       {engagementViewer && (
