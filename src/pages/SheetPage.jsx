@@ -12,7 +12,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [theme, setTheme] = useState("light");
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
@@ -54,21 +53,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     navigateTo(`${ROUTES.APP}/${created.id}`);
   };
 
-  const isDarkMode = theme === "dark";
-
   return (
-    <div className={`min-h-screen ${isDarkMode ? "dark bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-900"}`}>
+    <div className="min-h-screen bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => setTheme((value) => (value === "light" ? "dark" : "light"))}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          >
-            {isDarkMode ? "☀️ Light mode" : "🌙 Dark mode"}
-          </button>
-        </div>
-
         <Header
           title={sheetTitle}
           isEditing={isEditing}
