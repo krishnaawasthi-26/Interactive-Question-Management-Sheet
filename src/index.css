@@ -50,15 +50,17 @@ body {
 
 /* Theme remaps for existing utility classes used throughout the app. */
 :root .bg-zinc-950,
-:root .bg-zinc-900,
 :root .dark\:bg-slate-950,
-:root .bg-slate-100,
-:root .bg-slate-50 {
+:root .bg-slate-100 {
   background-color: var(--app-bg) !important;
 }
 
+:root .bg-zinc-900,
 :root .bg-zinc-900\/60,
 :root .bg-zinc-900\/70,
+:root .bg-zinc-900\/20,
+:root .bg-slate-50,
+:root .bg-slate-50\/80,
 :root .bg-\[rgba\(255\,255\,255\,0\.03\)\],
 :root .bg-\[rgba\(255\,255\,255\,0\.02\)\],
 :root .bg-\[rgba\(255\,255\,255\,0\.05\)\],
@@ -85,6 +87,7 @@ body {
 
 :root .text-slate-600,
 :root .text-slate-500,
+:root .text-slate-400,
 :root .text-gray-400,
 :root .text-zinc-400,
 :root .dark\:text-slate-300 {
@@ -93,6 +96,7 @@ body {
 
 :root .border-gray-800,
 :root .border-gray-700,
+:root .border-gray-500,
 :root .border-slate-300,
 :root .border-zinc-800,
 :root .border-zinc-700,
@@ -105,6 +109,7 @@ body {
 }
 
 :root .hover\:bg-zinc-800:hover,
+:root .hover\:bg-zinc-900:hover,
 :root .hover\:bg-gray-800:hover,
 :root .hover\:bg-slate-100:hover,
 :root .hover\:bg-slate-50:hover {

@@ -18,8 +18,8 @@ function EditProfilePage() {
   const [linkedinUrl, setLinkedinUrl] = useState(currentUser?.linkedinUrl || "");
 
   return (
-    <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
-      <div className="mx-auto max-w-2xl px-6 py-8 space-y-6">
+    <div className="min-h-screen bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
+      <div className="mx-auto max-w-2xl space-y-6 px-6 py-8">
         <SiteNav />
         <h1 className="text-2xl font-semibold">Edit Profile</h1>
 
