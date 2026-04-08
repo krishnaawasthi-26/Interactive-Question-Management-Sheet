@@ -1,14 +1,7 @@
 import { useMemo } from "react";
 
-const DEFAULT_ROWS = [
-  { topic: "Segment Trees", primary: "Guide", video: "Watch", solution: "Solve", notes: "Notes", status: "In Progress" },
-  { topic: "Graph BFS", primary: "Guide", video: "Watch", solution: "Solve", notes: "Notes", status: "50ks" },
-  { topic: "Dynamic Programming", primary: "Guide", video: "Watch", solution: "Solve", notes: "Solved", status: "Solve!" },
-];
-
 const STATUS_STYLES = {
   "In Progress": "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
-  "50ks": "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
   "Solve!": "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
   Completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
 };
@@ -33,22 +26,22 @@ function SheetDashboardView({ title, topics = [] }) {
     return rows.slice(0, 10);
   }, [topics]);
 
-  const rows = flattenedRows.length ? flattenedRows : DEFAULT_ROWS;
+  const rows = flattenedRows;
 
   const summary = useMemo(() => {
     const allQuestions = topics.flatMap((topic) =>
       (topic.subTopics || []).flatMap((subTopic) => subTopic.questions || [])
     );
-    const tasks = allQuestions.length || 45;
-    const completed = allQuestions.filter((question) => question.done).length || 31;
-    const stuck = Math.max(tasks - completed, 5);
-    const successRate = tasks ? Math.round((completed / tasks) * 100) : 68;
+    const tasks = allQuestions.length;
+    const completed = allQuestions.filter((question) => question.done).length;
+    const stuck = Math.max(tasks - completed, 0);
+    const successRate = tasks ? Math.round((completed / tasks) * 100) : 0;
     return {
       tasks,
       completed,
       stuck,
-      avgTime: "1h 20m",
-      successRate: `${successRate || 68}%`,
+      avgTime: "-",
+      successRate: `${successRate}%`,
     };
   }, [topics]);
 
@@ -59,7 +52,7 @@ function SheetDashboardView({ title, topics = [] }) {
           <div className="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500" />
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              {title || "Advanced DSA Sheet - V2"}
+              {title || "Question Sheet"}
               <span className="ml-2 text-sm text-slate-400">✎</span>
             </h2>
           </div>
@@ -75,11 +68,7 @@ function SheetDashboardView({ title, topics = [] }) {
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        {[
-          "Algorithms",
-          "Difficulty: Hard",
-          "Updated 2 days ago",
-        ].map((tag) => (
+        {["Read only", `Topics: ${topics.length}`].map((tag) => (
           <span
             key={tag}
             className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
@@ -108,24 +97,32 @@ function SheetDashboardView({ title, topics = [] }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800 dark:text-slate-200">
-              {rows.map((row) => (
-                <tr key={`${row.topic}-${row.status}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/60">
-                  <td className="px-3 py-3 font-medium">{row.topic}</td>
-                  <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.primary}</td>
-                  <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.video}</td>
-                  <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.solution}</td>
-                  <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.notes}</td>
-                  <td className="px-3 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        STATUS_STYLES[row.status] || STATUS_STYLES["In Progress"]
-                      }`}
-                    >
-                      {row.status}
-                    </span>
+              {rows.length > 0 ? (
+                rows.map((row) => (
+                  <tr key={`${row.topic}-${row.status}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/60">
+                    <td className="px-3 py-3 font-medium">{row.topic}</td>
+                    <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.primary}</td>
+                    <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.video}</td>
+                    <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.solution}</td>
+                    <td className="px-3 py-3 text-blue-600 dark:text-blue-400">{row.notes}</td>
+                    <td className="px-3 py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          STATUS_STYLES[row.status] || STATUS_STYLES["In Progress"]
+                        }`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-3 py-6 text-sm text-slate-500 dark:text-slate-400" colSpan={6}>
+                    No questions available in this sheet yet.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -144,13 +141,9 @@ function SheetDashboardView({ title, topics = [] }) {
 
           <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
             <h3 className="mb-3 font-semibold text-slate-900 dark:text-slate-100">Popular Resources</h3>
-            <ul className="space-y-2 text-sm text-blue-600 dark:text-blue-400">
-              {["Segment Trees Explained", "BFS in Depth", "DP Tips & Tricks"].map((resource) => (
-                <li key={resource}>
-                  <a href="#" className="hover:underline">{resource}</a>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Resources will appear here once questions include links.
+            </p>
           </div>
         </div>
       </div>
