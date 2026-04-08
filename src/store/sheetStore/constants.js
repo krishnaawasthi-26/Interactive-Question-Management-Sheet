@@ -1,5 +1,5 @@
 // Shared limits/config for the sheet store modules.
-const UNBOUNDED_LIMIT = Number.MAX_SAFE_INTEGER;
+const UNBOUNDED_LIMIT = 2_147_483_647;
 
 export const HISTORY_LIMIT = UNBOUNDED_LIMIT;
 export const MAX_SHEETS = UNBOUNDED_LIMIT;
