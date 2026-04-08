@@ -10,7 +10,7 @@ import {
 import { getSharedSheet, trackSheetEngagement } from "../api/sheetApi";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
-import { navigateTo, ROUTES, slugifySegment } from "../services/hashRouter";
+import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
 
 function SharedPage({ shareType, shareId, username, sheetSlug }) {

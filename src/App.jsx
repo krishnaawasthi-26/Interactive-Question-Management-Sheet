@@ -1,64 +1,85 @@
 import { useEffect, useState } from "react";
-import ImportPage from "./pages/ImportPage";
-import LoginPage from "./pages/LoginPage";
-import SheetPage from "./pages/SheetPage";
-import SignUpPage from "./pages/SignUpPage";
-import { getCurrentHashRoute, navigateTo, ROUTES } from "./services/hashRouter";
-import { useAuthStore } from "./store/authStore";
-import ProfilePage from "./pages/ProfilePage";
-import EditProfilePage from "./pages/EditProfilePage";
-import SharedPage from "./pages/SharedPage";
-import ExportPage from "./pages/ExportPage";
+import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import EditProfilePage from "./pages/EditProfilePage";
+import ExportPage from "./pages/ExportPage";
 import HowToUsePage from "./pages/HowToUsePage";
+import ImportPage from "./pages/ImportPage";
 import LearningInsightsPage from "./pages/LearningInsightsPage";
+import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
+import SharedPage from "./pages/SharedPage";
+import SheetPage from "./pages/SheetPage";
+import SignUpPage from "./pages/SignUpPage";
+import { ProtectedRoute, PublicOnlyRoute } from "./components/routing/ProtectedRoute";
+import { ROUTES } from "./services/routes";
+import { useAuthStore } from "./store/authStore";
 
 const THEME_STORAGE_KEY = "iqms-theme";
 const THEMES = ["light", "dark", "night"];
 
+function LoginRoute({ theme, onThemeChange }) {
+  const navigate = useNavigate();
+  return <LoginPage theme={theme} onThemeChange={onThemeChange} onLoginSuccess={() => navigate(ROUTES.PROFILE)} onGoToSignUp={() => navigate(ROUTES.SIGNUP)} />;
+}
+
+function SignupRoute({ theme, onThemeChange }) {
+  const navigate = useNavigate();
+  return <SignUpPage theme={theme} onThemeChange={onThemeChange} onSignUpSuccess={() => navigate(ROUTES.PROFILE)} onGoToLogin={() => navigate(ROUTES.LOGIN)} />;
+}
+
+function SheetRoute({ theme, onThemeChange }) {
+  const navigate = useNavigate();
+  const { sheetId } = useParams();
+
+  return (
+    <SheetPage
+      sheetId={sheetId}
+      theme={theme}
+      onThemeChange={onThemeChange}
+      onOpenImport={() => navigate(`${ROUTES.IMPORT}/${sheetId || ""}`)}
+      onOpenExport={() => navigate(`${ROUTES.EXPORT}/${sheetId || ""}`)}
+    />
+  );
+}
+
+function ImportRoute({ theme, onThemeChange }) {
+  const navigate = useNavigate();
+  const { sheetId } = useParams();
+
+  return <ImportPage theme={theme} onThemeChange={onThemeChange} onBack={() => navigate(`${ROUTES.APP}/${sheetId || ""}`)} />;
+}
+
+function ExportRoute({ theme, onThemeChange }) {
+  const navigate = useNavigate();
+  const { sheetId } = useParams();
+
+  return <ExportPage theme={theme} onThemeChange={onThemeChange} onBack={() => navigate(`${ROUTES.APP}/${sheetId || ""}`)} />;
+}
+
+function SharedRoute() {
+  const { shareType, shareId } = useParams();
+  return <SharedPage shareType={shareType} shareId={shareId} />;
+}
+
+function PublicProfileRoute() {
+  const { username } = useParams();
+  return <SharedPage shareType="public-profile" username={username} />;
+}
+
+function PublicSheetRoute() {
+  const { username, sheetSlug } = useParams();
+  return <SharedPage shareType="public-sheet" username={username} sheetSlug={sheetSlug} />;
+}
+
 function App() {
-  const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
-  const [routeState, setRouteState] = useState(getCurrentHashRoute());
   const [theme, setTheme] = useState(() => {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (storedTheme && THEMES.includes(storedTheme)) return storedTheme;
     return "dark";
   });
-  const isAuthenticated = Boolean(currentUser?.token);
-
-  useEffect(() => {
-    const syncHashRoute = () => setRouteState(getCurrentHashRoute());
-    window.addEventListener("hashchange", syncHashRoute);
-    window.addEventListener("popstate", syncHashRoute);
-    syncHashRoute();
-    return () => {
-      window.removeEventListener("hashchange", syncHashRoute);
-      window.removeEventListener("popstate", syncHashRoute);
-    };
-  }, []);
-
-  useEffect(() => {
-    const route = routeState.route;
-    if (route === ROUTES.SHARED_PREFIX || route === ROUTES.PUBLIC_PROFILE || route === ROUTES.PUBLIC_SHEET) return;
-
-    if (
-      !isAuthenticated &&
-      route !== ROUTES.LOGIN &&
-      route !== ROUTES.SIGNUP &&
-      route !== ROUTES.ABOUT &&
-      route !== ROUTES.CONTACT &&
-      route !== ROUTES.HOW_TO_USE
-    ) {
-      navigateTo(ROUTES.LOGIN);
-      return;
-    }
-
-    if (isAuthenticated && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP)) {
-      navigateTo(ROUTES.PROFILE);
-    }
-  }, [isAuthenticated, routeState]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -67,76 +88,44 @@ function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
-  if (routeState.route === ROUTES.SIGNUP) {
-    return <SignUpPage theme={theme} onThemeChange={setTheme} onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)} onGoToLogin={() => navigateTo(ROUTES.LOGIN)} />;
-  }
+  return (
+    <Routes>
+      <Route element={<PublicOnlyRoute />}>
+        <Route path={ROUTES.LOGIN} element={<LoginRoute theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.SIGNUP} element={<SignupRoute theme={theme} onThemeChange={setTheme} />} />
+      </Route>
 
-  if (routeState.route === ROUTES.SHARED_PREFIX) {
-    return <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />;
-  }
+      <Route path={ROUTES.ABOUT} element={<AboutPage theme={theme} onThemeChange={setTheme} />} />
+      <Route path={ROUTES.CONTACT} element={<ContactPage theme={theme} onThemeChange={setTheme} />} />
+      <Route path={ROUTES.HOW_TO_USE} element={<HowToUsePage theme={theme} onThemeChange={setTheme} />} />
 
-  if (routeState.route === ROUTES.PUBLIC_PROFILE) {
-    return <SharedPage shareType="public-profile" username={routeState.username} />;
-  }
+      <Route path={`${ROUTES.SHARED_PREFIX}/:shareType/:shareId`} element={<SharedRoute />} />
+      <Route path={`${ROUTES.PROFILE}/:username/:sheetSlug`} element={<PublicSheetRoute />} />
+      <Route path={`${ROUTES.PROFILE}/:username`} element={<PublicProfileRoute />} />
 
-  if (routeState.route === ROUTES.PUBLIC_SHEET) {
-    return <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />;
-  }
+      <Route element={<ProtectedRoute />}>
+        <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route
+          path={ROUTES.PROFILE}
+          element={(
+            <ProfilePage
+              theme={theme}
+              onThemeChange={setTheme}
+              onLogout={() => {
+                logout();
+              }}
+            />
+          )}
+        />
+        <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={`${ROUTES.APP}/:sheetId?`} element={<SheetRoute theme={theme} onThemeChange={setTheme} />} />
+        <Route path={`${ROUTES.IMPORT}/:sheetId?`} element={<ImportRoute theme={theme} onThemeChange={setTheme} />} />
+        <Route path={`${ROUTES.EXPORT}/:sheetId?`} element={<ExportRoute theme={theme} onThemeChange={setTheme} />} />
+      </Route>
 
-  if (routeState.route === ROUTES.IMPORT) {
-    return <ImportPage theme={theme} onThemeChange={setTheme} onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
-  }
-
-  if (routeState.route === ROUTES.ABOUT) {
-    return <AboutPage theme={theme} onThemeChange={setTheme} />;
-  }
-
-  if (routeState.route === ROUTES.CONTACT) {
-    return <ContactPage theme={theme} onThemeChange={setTheme} />;
-  }
-
-  if (routeState.route === ROUTES.HOW_TO_USE) {
-    return <HowToUsePage theme={theme} onThemeChange={setTheme} />;
-  }
-
-  if (routeState.route === ROUTES.LEARNING_INSIGHTS) {
-    return <LearningInsightsPage theme={theme} onThemeChange={setTheme} />;
-  }
-
-  if (routeState.route === ROUTES.EXPORT) {
-    return <ExportPage theme={theme} onThemeChange={setTheme} onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
-  }
-
-  if (routeState.route === ROUTES.PROFILE) {
-    return (
-      <ProfilePage
-        theme={theme}
-        onThemeChange={setTheme}
-        onLogout={() => {
-          logout();
-          navigateTo(ROUTES.LOGIN);
-        }}
-      />
-    );
-  }
-
-  if (routeState.route === ROUTES.EDIT_PROFILE) {
-    return <EditProfilePage theme={theme} onThemeChange={setTheme} />;
-  }
-
-  if (routeState.route === ROUTES.APP) {
-    return (
-      <SheetPage
-        sheetId={routeState.sheetId}
-        theme={theme}
-        onThemeChange={setTheme}
-        onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
-        onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
-      />
-    );
-  }
-
-  return <LoginPage theme={theme} onThemeChange={setTheme} onLoginSuccess={() => navigateTo(ROUTES.PROFILE)} onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)} />;
+      <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+    </Routes>
+  );
 }
 
 export default App;
