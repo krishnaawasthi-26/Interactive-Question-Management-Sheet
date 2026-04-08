@@ -8,7 +8,7 @@ import {
   updateQuestion,
   updateSubTopic,
   updateTopic,
-} from "../../api/questionSheetApi";
+} from "../../api/questionSheet";
 import { MAX_QUESTIONS, MAX_SUBTOPICS, MAX_TOPICS } from "./constants";
 import { countQuestions, countSubTopics } from "./helpers";
 import { updateQuestionById } from "./sheetSelectors";
