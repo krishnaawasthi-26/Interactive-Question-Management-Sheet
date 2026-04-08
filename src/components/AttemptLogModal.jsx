@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const RESULT_OPTIONS = [
-  { key: "solved", label: "Solved", icon: "✓", className: "bg-emerald-500 hover:bg-emerald-600" },
-  { key: "partially_solved", label: "Partially Solved", icon: "✓", className: "bg-amber-500 hover:bg-amber-600" },
-  { key: "failed", label: "Failed", icon: "✕", className: "bg-rose-500 hover:bg-rose-600" },
+  { key: "solved", label: "Solved" },
+  { key: "partially_solved", label: "Partially Solved" },
+  { key: "failed", label: "Failed" },
 ];
 
 const MISTAKES = [
@@ -16,177 +16,222 @@ const MISTAKES = [
 ];
 
 const CONFIDENCE_LEVELS = ["Low", "Medium", "High"];
-const REVISION_OPTIONS = ["Tomorrow", "In 2 Days", "In 1 Week", "In 2 Weeks"];
+const REVISION_OPTIONS = ["Today", "Tomorrow", "In 2 Days", "In 1 Week", "In 2 Weeks"];
+const DIFFICULTY_OPTIONS = ["Unspecified", "Easy", "Medium", "Hard"];
 
-function AttemptLogModal({ questionText, onClose, onSave }) {
+const getPlatformFromLink = (link) => {
+  if (!link) return "LeetCode";
+  if (link.includes("leetcode")) return "LeetCode";
+  if (link.includes("codeforces")) return "Codeforces";
+  if (link.includes("hackerrank")) return "HackerRank";
+  if (link.includes("geeksforgeeks")) return "GeeksforGeeks";
+  return "Other";
+};
+
+const toRevisionDate = (revisionTiming) => {
+  const offsetDays = {
+    Today: 0,
+    Tomorrow: 1,
+    "In 2 Days": 2,
+    "In 1 Week": 7,
+    "In 2 Weeks": 14,
+  };
+  const date = new Date();
+  date.setDate(date.getDate() + (offsetDays[revisionTiming] ?? 2));
+  return date.toISOString();
+};
+
+const sectionClass = "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4";
+
+export function AttemptOutcomeSection({ result, setResult, timeSpent, setTimeSpent, confidence, setConfidence }) {
+  return (
+    <section className={sectionClass}>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Outcome</h3>
+      <div className="mt-3 grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <p className="mb-2 text-sm text-[var(--text-secondary)]">Result</p>
+          <div className="flex flex-wrap gap-2">
+            {RESULT_OPTIONS.map((option) => (
+              <button key={option.key} type="button" onClick={() => setResult(option.key)} className={`rounded-md border px-3 py-2 text-sm ${result === option.key ? "border-[var(--accent-primary)]" : "border-[var(--border-subtle)]"}`} style={result === option.key ? { background: "color-mix(in srgb, var(--accent-primary) 18%, var(--surface-elevated))" } : undefined}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <label className="space-y-2">
+          <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
+          <input type="number" min="1" step="1" value={timeSpent} onChange={(event) => setTimeSpent(event.target.value)} className="field-base w-full" />
+        </label>
+      </div>
+      <div className="mt-4">
+        <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
+        <div className="inline-flex overflow-hidden rounded-md border border-[var(--border-subtle)]">
+          {CONFIDENCE_LEVELS.map((level) => (
+            <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-black" : "bg-transparent text-[var(--text-primary)]"}`}>
+              {level}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function MistakeAnalysisSection({ mistakes, setMistakes, notes, setNotes, hintUsed, setHintUsed, editorialUsed, setEditorialUsed }) {
+  const toggleMistake = (mistake) => {
+    setMistakes((current) => (current.includes(mistake) ? current.filter((item) => item !== mistake) : [...current, mistake]));
+  };
+
+  return (
+    <section className={sectionClass}>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Mistake Analysis</h3>
+      <div className="mt-3 grid gap-4 lg:grid-cols-2">
+        <div>
+          <p className="mb-2 text-sm text-[var(--text-secondary)]">Mistake tags</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {MISTAKES.map((mistake) => (
+              <label key={mistake} className="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] px-2 py-2 text-sm">
+                <input type="checkbox" checked={mistakes.includes(mistake)} onChange={() => toggleMistake(mistake)} />
+                <span>{mistake}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3">
+          <label className="block space-y-2">
+            <span className="text-sm text-[var(--text-secondary)]">Notes</span>
+            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={5} className="field-base w-full" placeholder="What blocked you, and what will you do next time?" />
+          </label>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Hint used</span><select value={hintUsed} onChange={(e) => setHintUsed(e.target.value)} className="field-base mt-1 w-full"><option>No</option><option>Yes</option></select></label>
+            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Editorial used</span><select value={editorialUsed} onChange={(e) => setEditorialUsed(e.target.value)} className="field-base mt-1 w-full"><option>No</option><option>Yes</option></select></label>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function RevisionPlanningSection({ revisionTiming, setRevisionTiming, solvedWithHelp, setSolvedWithHelp, attemptNumber, setAttemptNumber, submissions, setSubmissions }) {
+  return (
+    <section className={sectionClass}>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Revision Planning</h3>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Revision timing</span><select value={revisionTiming} onChange={(event) => setRevisionTiming(event.target.value)} className="field-base w-full">{REVISION_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Solved independently</span><select value={solvedWithHelp} onChange={(event) => setSolvedWithHelp(event.target.value)} className="field-base w-full"><option value="independent">Independent</option><option value="with_help">With help</option></select></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Attempt number</span><input type="number" min="1" step="1" value={attemptNumber} onChange={(event) => setAttemptNumber(event.target.value)} className="field-base w-full" /></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]"># submissions</span><input type="number" min="1" step="1" value={submissions} onChange={(event) => setSubmissions(event.target.value)} className="field-base w-full" /></label>
+      </div>
+    </section>
+  );
+}
+
+function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSave }) {
   const [result, setResult] = useState("partially_solved");
-  const [timeSpent, setTimeSpent] = useState("40 minutes");
+  const [timeSpent, setTimeSpent] = useState("40");
   const [mistakes, setMistakes] = useState(["Off by One Error"]);
   const [notes, setNotes] = useState("");
   const [confidence, setConfidence] = useState("Medium");
-  const [revision, setRevision] = useState("In 2 Days");
+  const [revisionTiming, setRevisionTiming] = useState("In 2 Days");
 
-  const splitMistakes = useMemo(() => ({
-    left: MISTAKES.slice(0, 3),
-    right: MISTAKES.slice(3),
-  }), []);
+  const [platform, setPlatform] = useState(getPlatformFromLink(questionLink));
+  const [difficulty, setDifficulty] = useState("Unspecified");
+  const [hintUsed, setHintUsed] = useState("No");
+  const [editorialUsed, setEditorialUsed] = useState("No");
+  const [attemptNumber, setAttemptNumber] = useState("1");
+  const [solvedWithHelp, setSolvedWithHelp] = useState("independent");
+  const [submissions, setSubmissions] = useState("1");
 
-  const toggleMistake = (mistake) => {
-    setMistakes((current) =>
-      current.includes(mistake)
-        ? current.filter((item) => item !== mistake)
-        : [...current, mistake]
-    );
-  };
+  const [problemName] = useState(questionText);
+  const [topic, setTopic] = useState(topicName || "General");
 
   const handleSave = () => {
     onSave({
+      problemName,
+      platform,
       result,
-      timeSpent,
+      timeSpent: `${timeSpent} minutes`,
       mistakes,
       notes,
       confidence,
-      revision,
+      revision: revisionTiming,
+      revisionTiming,
+      revisionDate: toRevisionDate(revisionTiming),
+      topic,
+      difficulty,
+      hintUsed: hintUsed === "Yes",
+      editorialUsed: editorialUsed === "Yes",
+      attemptNumber: Number(attemptNumber) || 1,
+      solvedWithHelp,
+      submissions: Number(submissions) || 1,
       loggedAt: new Date().toISOString(),
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-3xl rounded-xl border border-slate-200 bg-white text-slate-800 shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h2 className="text-2xl font-semibold">Log Your Attempt</h2>
-          <button type="button" className="text-2xl text-slate-400 hover:text-slate-600" onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
-        <div className="h-px bg-slate-200" />
-
-        <div className="space-y-5 px-6 py-5">
-          <div className="space-y-1 text-sm">
-            <p><span className="font-semibold">Problem:</span> {questionText}</p>
-            <p><span className="font-semibold">Platform:</span> LeetCode</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="panel w-full max-w-5xl rounded-2xl border shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Log Attempt</h2>
+            <p className="text-sm text-[var(--text-secondary)]">Capture attempt quality, learning signals, and revision planning.</p>
           </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">Result:</p>
-            <div className="flex flex-wrap gap-2">
-              {RESULT_OPTIONS.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => setResult(option.key)}
-                  className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition ${option.className} ${
-                    result === option.key ? "ring-2 ring-offset-2 ring-slate-300" : "opacity-80"
-                  }`}
-                >
-                  <span className="mr-2">{option.icon}</span>
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">Time Spent</p>
-            <div className="relative max-w-xs">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">🕒</span>
-              <select
-                value={timeSpent}
-                onChange={(event) => setTimeSpent(event.target.value)}
-                className="w-full appearance-none rounded-md border border-slate-300 bg-white py-2 pl-9 pr-8 text-sm outline-none focus:border-blue-500"
-              >
-                <option>20 minutes</option>
-                <option>30 minutes</option>
-                <option>40 minutes</option>
-                <option>60 minutes</option>
-                <option>90 minutes</option>
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">▾</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">What mistakes did you make?</p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {[splitMistakes.left, splitMistakes.right].map((column, columnIndex) => (
-                <div key={columnIndex} className="space-y-2">
-                  {column.map((mistake) => (
-                    <label key={mistake} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={mistakes.includes(mistake)}
-                        onChange={() => toggleMistake(mistake)}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span>{mistake}</span>
-                    </label>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">Notes:</p>
-            <textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={3}
-              placeholder="e.g. Forgot to shrink the window, struggled with deque implementation."
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">Confidence Level:</p>
-            <div className="inline-flex overflow-hidden rounded-md border border-slate-300">
-              {CONFIDENCE_LEVELS.map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setConfidence(level)}
-                  className={`px-4 py-2 text-sm font-medium ${
-                    confidence === level
-                      ? "bg-amber-500 text-white"
-                      : "bg-white text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">Add to Revision:</p>
-            <div className="relative max-w-xs">
-              <select
-                value={revision}
-                onChange={(event) => setRevision(event.target.value)}
-                className="w-full appearance-none rounded-md border border-slate-300 bg-white px-3 py-2 pr-8 text-sm outline-none focus:border-blue-500"
-              >
-                {REVISION_OPTIONS.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">▾</span>
-            </div>
-          </div>
+          <button type="button" className="text-xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        <div className="h-px bg-slate-200" />
-        <div className="flex justify-end gap-2 px-6 py-4">
-          <button type="button" onClick={onClose} className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
-            Cancel
-          </button>
-          <button type="button" onClick={handleSave} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-            Save Attempt
-          </button>
+        <div className="max-h-[75vh] space-y-4 overflow-y-auto px-6 py-5">
+          <section className={sectionClass}>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Attempt Summary</h3>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="space-y-1 text-sm lg:col-span-2"><span className="text-[var(--text-secondary)]">Problem</span><input value={problemName} disabled className="field-base w-full opacity-80" /></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Platform</span><input value={platform} onChange={(event) => setPlatform(event.target.value)} className="field-base w-full" /></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Topic (optional)</span><input value={topic} onChange={(event) => setTopic(event.target.value)} className="field-base w-full" /></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Difficulty (optional)</span><select value={difficulty} onChange={(event) => setDifficulty(event.target.value)} className="field-base w-full">{DIFFICULTY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
+            </div>
+          </section>
+
+          <AttemptOutcomeSection
+            result={result}
+            setResult={setResult}
+            timeSpent={timeSpent}
+            setTimeSpent={setTimeSpent}
+            confidence={confidence}
+            setConfidence={setConfidence}
+          />
+
+          <MistakeAnalysisSection
+            mistakes={mistakes}
+            setMistakes={setMistakes}
+            notes={notes}
+            setNotes={setNotes}
+            hintUsed={hintUsed}
+            setHintUsed={setHintUsed}
+            editorialUsed={editorialUsed}
+            setEditorialUsed={setEditorialUsed}
+          />
+
+          <RevisionPlanningSection
+            revisionTiming={revisionTiming}
+            setRevisionTiming={setRevisionTiming}
+            solvedWithHelp={solvedWithHelp}
+            setSolvedWithHelp={setSolvedWithHelp}
+            attemptNumber={attemptNumber}
+            setAttemptNumber={setAttemptNumber}
+            submissions={submissions}
+            setSubmissions={setSubmissions}
+          />
         </div>
+
+        <footer className="flex items-center justify-between border-t border-[var(--border-subtle)] px-6 py-4">
+          <p className="text-xs text-[var(--text-tertiary)]">This attempt will update learning analytics and revision alerts.</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="btn-base btn-neutral">Cancel</button>
+            <button type="button" onClick={handleSave} className="btn-base btn-primary">Save Attempt</button>
+          </div>
+        </footer>
       </div>
     </div>
   );
 }
 
-export default AttemptLogModal;
+export default LogAttemptModal;
