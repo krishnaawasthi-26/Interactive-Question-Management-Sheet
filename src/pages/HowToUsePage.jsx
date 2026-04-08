@@ -2,10 +2,10 @@ import SiteNav from "../components/SiteNav";
 
 function HowToUsePage() {
   return (
-    <div className="min-h-screen bg-zinc-950 px-6 py-8 text-white">
-      <div className="mx-auto max-w-4xl">
+    <div className="app-shell text-[var(--text-primary)]">
+      <div className="app-content">
         <SiteNav />
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
           <h1 className="mb-4 text-3xl font-semibold">How To Use</h1>
           <ol className="list-decimal space-y-2 pl-5 text-zinc-200">
             <li>Login or sign up, then open your profile.</li>

@@ -7,8 +7,9 @@ function ExportPage({ onBack }) {
   const topics = useSheetStore((state) => state.topics);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10 text-white">
+    <div className="app-shell text-[var(--text-primary)]">
       <SiteNav />
+      <div className="app-content rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/80 p-6">
       <h1 className="mb-4 text-2xl font-semibold">Export Sheet</h1>
       <p className="mb-6 text-sm text-zinc-300">Choose how you want to export this sheet.</p>
 
@@ -39,6 +40,7 @@ function ExportPage({ onBack }) {
       >
         Back to Sheet
       </button>
+      </div>
     </div>
   );
 }

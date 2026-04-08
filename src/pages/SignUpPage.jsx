@@ -16,11 +16,11 @@ function SignUpPage({ onSignUpSuccess, onGoToLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-6 py-8 text-white">
-      <div className="mx-auto max-w-4xl">
+    <div className="app-shell text-[var(--text-primary)]">
+      <div className="app-content">
         <SiteNav />
       </div>
-      <div className="mx-auto mt-8 max-w-md rounded-xl border border-gray-800 bg-zinc-900 p-6 shadow-lg">
+      <div className="mt-6 w-full max-w-xl rounded-xl border border-gray-800 bg-zinc-900 p-6 shadow-lg">
         <h1 className="mb-5 text-2xl font-semibold text-white">Sign up</h1>
         <form className="space-y-3" onSubmit={submit}>
         <input
