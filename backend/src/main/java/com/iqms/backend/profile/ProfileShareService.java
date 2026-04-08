@@ -113,6 +113,7 @@ public class ProfileShareService {
     profile.put("following", mapUsersById(user.getFollowingUserIds()));
     profile.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
     profile.put("followingCount", user.getFollowingUserIds() == null ? 0 : user.getFollowingUserIds().size());
+    profile.put("copiedSheetsCount", user.getCopiedSheetIds() == null ? 0 : user.getCopiedSheetIds().size());
     return profile;
   }
 

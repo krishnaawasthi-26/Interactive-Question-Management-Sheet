@@ -192,6 +192,7 @@ public class ProfileController {
     payload.put("following", mapUsersById(user.getFollowingUserIds()));
     payload.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
     payload.put("followingCount", user.getFollowingUserIds() == null ? 0 : user.getFollowingUserIds().size());
+    payload.put("copiedSheetsCount", user.getCopiedSheetIds() == null ? 0 : user.getCopiedSheetIds().size());
     return payload;
   }
 

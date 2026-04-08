@@ -76,6 +76,7 @@ function ProfilePage({ onLogout }) {
           <p className="text-sm text-zinc-200">Total sheets: {sheets.length}</p>
           <p className="text-sm text-zinc-200">Public sheets: {publicSheets.length}</p>
           <p className="text-sm text-zinc-200">Archived sheets: {archivedSheets.length}</p>
+          <p className="text-sm text-zinc-200">Sheets copied by you: {profileDetails?.copiedSheetsCount ?? 0}</p>
           <div className="flex flex-wrap gap-2 text-sm">
             <button
               className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"

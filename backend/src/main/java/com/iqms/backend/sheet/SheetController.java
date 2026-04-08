@@ -105,6 +105,9 @@ public class SheetController {
       sheet = sheetService.recordDownload(sheetId, username);
     } else if ("copy".equals(action)) {
       sheet = sheetService.recordCopy(sheetId, username);
+      if (user.getCopiedSheetIds().add(sheetId)) {
+        userRepository.save(user);
+      }
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown action.");
     }
