@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import AddTopicForm from "../components/AddTopicForm";
-import Header from "../components/Header";
 import QuestionSearch from "../components/QuestionSearch";
 import SheetDashboardView from "../components/SheetDashboardView";
 import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
-import SiteNav from "../components/SiteNav";
+import AppShell from "../components/AppShell";
 import EditorActionPanel from "../components/EditorActionPanel";
 
 function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }) {
@@ -25,7 +24,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const saveError = useSheetStore((state) => state.saveError);
   const hasPendingChanges = useSheetStore((state) => state.hasPendingChanges);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
-  const setSheetTitle = useSheetStore((state) => state.setSheetTitle);
   const topics = useSheetStore((state) => state.topics);
   const limitWarning = useSheetStore((state) => state.limitWarning);
   const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
@@ -136,7 +134,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     { key: "discard", label: "Discard", onClick: handleCancelChanges, disabled: !hasPendingChanges || isSaving },
     {
       key: "import",
-      label: "Import",
+      label: "Import JSON",
       onClick: () => {
         void handleNavigateWithUnsavedChanges(onOpenImport);
       },
@@ -154,57 +152,39 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   ];
 
   return (
-    <div className="app-shell bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
-      <SiteNav />
-      <div className="app-content">
-        <Header
-          title={sheetTitle}
-          onTitleChange={(nextTitle) => setSheetTitle(nextTitle)}
-          theme={theme}
-          onThemeChange={onThemeChange}
-          userLabel={currentUser?.fullName || currentUser?.email || "Account"}
-        />
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="min-w-0 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/80 p-4 shadow-xl sm:p-5">
-            {isEditing && (
-              <>
-                <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
-                {limitWarning && (
-                  <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-500/45 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
-                    <span>{limitWarning}</span>
-                    <button
-                      type="button"
-                      className="rounded-md border border-amber-500/70 px-2 py-0.5 text-xs"
-                      onClick={clearLimitWarning}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
-
-                <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
-              </>
+    <AppShell
+      title={sheetTitle || "Untitled Sheet"}
+      subtitle="Draft • Last edited just now"
+      theme={theme}
+      onThemeChange={onThemeChange}
+      userLabel={currentUser?.fullName || currentUser?.email || "Account"}
+      rightPanel={<EditorActionPanel actions={sheetActionButtons} />}
+    >
+      <div className="panel rounded-3xl p-4 sm:p-5">
+        {isEditing && (
+          <>
+            <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
+            {limitWarning && (
+              <div className="mb-4 flex items-center justify-between rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--surface-elevated))] px-3 py-2 text-sm text-[var(--text-primary)]">
+                <span>{limitWarning}</span>
+                <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>
+                  Dismiss
+                </button>
+              </div>
             )}
 
-            <main>
-              {(isLoading || loadError || saveError) && (
-                <p className="mb-4 text-sm text-[var(--text-muted)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
-              )}
-              {isEditing ? (
-                <TopicList isEditing searchQuery={searchQuery} />
-              ) : (
-                <SheetDashboardView title={sheetTitle} topics={topics} />
-              )}
-            </main>
-          </div>
+            <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
+          </>
+        )}
 
-          <div className="xl:sticky xl:top-6 xl:h-fit">
-            <EditorActionPanel actions={sheetActionButtons} />
-          </div>
-        </div>
+        <main>
+          {(isLoading || loadError || saveError) && (
+            <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
+          )}
+          {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} />}
+        </main>
       </div>
-    </div>
+    </AppShell>
   );
 }
 

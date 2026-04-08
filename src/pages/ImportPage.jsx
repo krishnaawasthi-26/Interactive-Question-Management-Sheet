@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { validateSheetJson } from "../services/importValidation";
 import { useSheetStore } from "../store/sheetStore";
-import SiteNav from "../components/SiteNav";
+import AppShell from "../components/AppShell";
 
-function ImportPage({ onBack }) {
+function ImportPage({ theme, onThemeChange, onBack }) {
   const setFullSheet = useSheetStore((state) => state.setFullSheet);
   const [errors, setErrors] = useState([]);
   const [message, setMessage] = useState("");
@@ -11,25 +11,20 @@ function ImportPage({ onBack }) {
   const onFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!file.name.toLowerCase().endsWith(".json")) {
       setErrors(["Only JSON files are allowed for import."]);
       setMessage("");
       return;
     }
-
     const content = await file.text();
-
     try {
       const parsed = JSON.parse(content);
       const validation = validateSheetJson(parsed);
-
       if (!validation.valid) {
         setErrors(validation.errors);
         setMessage("");
         return;
       }
-
       await setFullSheet(validation.normalized);
       setErrors([]);
       setMessage("Sheet imported successfully.");
@@ -40,48 +35,16 @@ function ImportPage({ onBack }) {
   };
 
   return (
-    <div className="app-shell text-[var(--text-primary)]">
-      <SiteNav />
-      <div className="app-content rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/80 p-6">
-      <h1 className="mb-4 text-2xl font-semibold">Import Sheet JSON</h1>
-      <p className="mb-3 text-sm text-zinc-300">
-        Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, each
-        topic needs <code>title</code>, each subtopic needs <code>title</code>, and each question
-        needs <code>text</code>.
-      </p>
-      <a
-        href="/sample-import-sheet.json"
-        download
-        className="mb-4 inline-block rounded-md border border-amber-600 px-3 py-2 text-sm text-amber-200"
-      >
-        Download sample JSON file
-      </a>
-
-      <input
-        type="file"
-        accept="application/json,.json"
-        onChange={onFileChange}
-        className="mb-4 block w-full rounded-md border border-gray-700 p-3"
-      />
-
-      {message && <p className="mb-3 text-emerald-300">{message}</p>}
-      {errors.length > 0 && (
-        <ul className="mb-4 list-disc space-y-1 rounded-md border border-rose-800 bg-rose-950/30 p-4 pl-8 text-sm text-rose-200">
-          {errors.map((error) => (
-            <li key={error}>{error}</li>
-          ))}
-        </ul>
-      )}
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="rounded-md border border-gray-700 px-4 py-2 text-sm"
-      >
-        Back to App
-      </button>
+    <AppShell title="Import Sheet JSON" subtitle="Upload validated JSON data into the current sheet" theme={theme} onThemeChange={onThemeChange}>
+      <div className="panel p-6">
+        <p className="mb-3 text-sm text-[var(--text-secondary)]">Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, topic <code>title</code>, subtopic <code>title</code>, question <code>text</code>.</p>
+        <a href="/sample-import-sheet.json" download className="btn-base btn-neutral mb-4 inline-block">Download sample JSON file</a>
+        <input type="file" accept="application/json,.json" onChange={onFileChange} className="field-base mb-4 block w-full" />
+        {message && <p className="mb-3 text-[var(--accent-success)]">{message}</p>}
+        {errors.length > 0 && <ul className="mb-4 list-disc space-y-1 rounded-md border border-[color-mix(in_srgb,var(--accent-danger)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-danger)_11%,var(--surface-elevated))] p-4 pl-8 text-sm text-[#ffc9c9]">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
+        <button type="button" onClick={onBack} className="btn-base btn-neutral">Back to App</button>
       </div>
-    </div>
+    </AppShell>
   );
 }
 

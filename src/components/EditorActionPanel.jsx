@@ -1,8 +1,9 @@
 function ActionButton({ action, variant = "neutral" }) {
   const variants = {
-    primary: "bg-[var(--btn-accent-primary)] text-white hover:opacity-95",
-    danger: "border border-[var(--danger-color)]/45 text-[var(--danger-color)] hover:bg-[var(--danger-color)]/10",
-    neutral: "border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]",
+    primary: "btn-primary",
+    success: "btn-success",
+    danger: "btn-danger",
+    neutral: "btn-neutral",
   };
 
   return (
@@ -10,7 +11,7 @@ function ActionButton({ action, variant = "neutral" }) {
       type="button"
       onClick={action.onClick}
       disabled={action.disabled}
-      className={`w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]}`}
+      className={`btn-base w-full text-left disabled:cursor-not-allowed disabled:opacity-45 ${variants[variant]}`}
     >
       {action.label}
     </button>
@@ -25,29 +26,25 @@ function EditorActionPanel({ actions }) {
   const transfers = [getAction("import"), getAction("export"), getAction("view-only")].filter(Boolean);
 
   return (
-    <aside className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)]/95 p-4 shadow-lg">
-      <h2 className="text-sm font-semibold text-[var(--text-primary)]">Editor Tools</h2>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">Contextual actions for this sheet.</p>
+    <aside className="panel p-4">
+      <h2 className="text-sm font-semibold">Editor Tools</h2>
+      <p className="mt-1 text-xs text-[var(--text-tertiary)]">Contextual sheet actions.</p>
 
       <section className="mt-4 space-y-2">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">History</p>
-        {history.map((action) => (
-          <ActionButton key={action.key} action={action} />
-        ))}
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-tertiary)]">History</p>
+        {history.map((action) => <ActionButton key={action.key} action={action} />)}
       </section>
 
       <section className="mt-5 space-y-2 border-t border-[var(--border-subtle)] pt-4">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">Publish</p>
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-tertiary)]">Save Controls</p>
         {commit.map((action) => (
-          <ActionButton key={action.key} action={action} variant={action.key === "save" ? "primary" : "danger"} />
+          <ActionButton key={action.key} action={action} variant={action.key === "save" ? "success" : "danger"} />
         ))}
       </section>
 
       <section className="mt-5 space-y-2 border-t border-[var(--border-subtle)] pt-4">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-muted)]">Data & mode</p>
-        {transfers.map((action) => (
-          <ActionButton key={action.key} action={action} />
-        ))}
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-tertiary)]">Sheet Actions</p>
+        {transfers.map((action) => <ActionButton key={action.key} action={action} />)}
       </section>
     </aside>
   );

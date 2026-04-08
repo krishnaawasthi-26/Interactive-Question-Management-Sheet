@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import SiteNav from "../components/SiteNav";
+import AppShell from "../components/AppShell";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 
@@ -25,7 +25,7 @@ const parseMinutes = (timeLabel) => {
   return match ? Number(match[1]) : 0;
 };
 
-function LearningInsightsPage() {
+function LearningInsightsPage({ theme, onThemeChange }) {
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
@@ -117,124 +117,61 @@ function LearningInsightsPage() {
   }, [sheets]);
 
   return (
-    <div className="app-shell text-[var(--text-primary)]">
-      <div className="app-content space-y-5 px-4 py-6 sm:px-6 sm:py-8">
-        <SiteNav />
+    <AppShell title="Learning Insights" subtitle="Private analytics from your sheets" theme={theme} onThemeChange={onThemeChange}>
+      <div className="panel rounded-3xl p-4 sm:p-6">
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <div className="panel-elevated px-3 py-2"><p className="text-xs text-[var(--text-tertiary)]">Solved Questions</p><p className="text-lg font-semibold">{insights.solvedCount}/{insights.totalQuestions}</p></div>
+          <div className="panel-elevated px-3 py-2"><p className="text-xs text-[var(--text-tertiary)]">Attempts Logged</p><p className="text-lg font-semibold">{insights.attemptCount}</p></div>
+          <div className="panel-elevated px-3 py-2"><p className="text-xs text-[var(--text-tertiary)]">Practice Time</p><p className="text-lg font-semibold">{insights.totalMinutesSpent} min</p></div>
+        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">Learning Insights</h1>
-            <p className="text-xs text-slate-500 sm:text-sm">Private dashboard · based on your own sheets</p>
-          </div>
-
-          <div className="mb-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-xs text-slate-500">Solved Questions</p>
-              <p className="text-lg font-semibold text-slate-900">{insights.solvedCount}/{insights.totalQuestions}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-xs text-slate-500">Attempts Logged</p>
-              <p className="text-lg font-semibold text-slate-900">{insights.attemptCount}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-xs text-slate-500">Practice Time</p>
-              <p className="text-lg font-semibold text-slate-900">{insights.totalMinutesSpent} min</p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-            <aside className="space-y-4">
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900">Weak Areas</h2>
-                {insights.weakAreas.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-500">Add and solve questions in your sheets to generate weak areas.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {insights.weakAreas.map((topic) => (
-                      <li key={topic.topic} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                        <div className="flex items-center justify-between gap-2">
-                          <span>{topic.topic}</span>
-                          <span className="text-xs text-slate-500">{topic.completionRate}%</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900">Revision Alerts</h2>
-                {insights.dependencyAlerts.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-500">Save attempt logs to see upcoming revision buckets.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {insights.dependencyAlerts.map((item) => (
-                      <li key={item.revision} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                        <div className="flex items-center justify-between gap-2">
-                          <span>{item.revision}</span>
-                          <span className="text-xs text-slate-500">{item.count} items</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </aside>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <h2 className="mb-3 text-lg font-semibold text-slate-900">Concept map (from your topics)</h2>
-              {insights.graphNodes.length === 0 ? (
-                <p className="text-sm text-slate-500">Create topics in any sheet to build your concept map.</p>
-              ) : (
-                <div className="relative min-h-[440px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                  <svg
-                    viewBox="0 0 1000 500"
-                    className="absolute inset-0 h-full w-full"
-                    xmlns="http://www.w3.org/2000/svg"
-                    role="img"
-                    aria-label="Topic dependency graph"
-                  >
-                    <defs>
-                      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8" />
-                      </marker>
-                    </defs>
-                    {insights.graphNodes.slice(1).map((node, index) => {
-                      const previous = insights.graphNodes[index];
-                      const x1 = previous.column * 280 + 150;
-                      const y1 = previous.row * 170 + 90;
-                      const x2 = node.column * 280 + 150;
-                      const y2 = node.row * 170 + 90;
-                      return (
-                        <path
-                          key={`${previous.id}-${node.id}`}
-                          d={`M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1 - 40}, ${(x1 + x2) / 2} ${y2 + 40}, ${x2} ${y2}`}
-                          fill="none"
-                          stroke="#1d4ed8"
-                          strokeWidth="2"
-                          markerEnd="url(#arrow)"
-                        />
-                      );
-                    })}
-                  </svg>
-
-                  {insights.graphNodes.map((node) => (
-                    <div
-                      key={node.id}
-                      className="absolute rounded-xl border border-blue-900 bg-blue-950 px-3 py-2 text-center text-xs font-medium text-blue-50 shadow-lg sm:text-sm"
-                      style={{ left: node.x, top: node.y, width: `${NODE_WIDTH}px`, minHeight: `${NODE_HEIGHT}px` }}
-                    >
-                      {node.label}
-                    </div>
-                  ))}
-                </div>
+        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+          <aside className="space-y-4">
+            <section className="panel p-4">
+              <h2 className="text-lg font-semibold">Weak Areas</h2>
+              {insights.weakAreas.length === 0 ? <p className="mt-3 text-sm text-[var(--text-secondary)]">Add and solve questions to generate weak areas.</p> : (
+                <ul className="mt-3 space-y-2">{insights.weakAreas.map((topic) => (
+                  <li key={topic.topic} className="panel-elevated px-3 py-2 text-sm"><div className="flex items-center justify-between gap-2"><span>{topic.topic}</span><span className="text-xs text-[var(--text-tertiary)]">{topic.completionRate}%</span></div></li>
+                ))}</ul>
               )}
             </section>
-          </div>
+
+            <section className="panel p-4">
+              <h2 className="text-lg font-semibold">Revision Alerts</h2>
+              {insights.dependencyAlerts.length === 0 ? <p className="mt-3 text-sm text-[var(--text-secondary)]">Save attempt logs to see upcoming revisions.</p> : (
+                <ul className="mt-3 space-y-2">{insights.dependencyAlerts.map((item) => (
+                  <li key={item.revision} className="panel-elevated px-3 py-2 text-sm"><div className="flex items-center justify-between gap-2"><span>{item.revision}</span><span className="text-xs text-[var(--text-tertiary)]">{item.count} items</span></div></li>
+                ))}</ul>
+              )}
+            </section>
+          </aside>
+
+          <section className="panel p-4 sm:p-6">
+            <h2 className="mb-3 text-lg font-semibold">Concept map (from your topics)</h2>
+            {insights.graphNodes.length === 0 ? (
+              <p className="text-sm text-[var(--text-secondary)]">Create topics in any sheet to build your concept map.</p>
+            ) : (
+              <div className="relative min-h-[440px] overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+                <svg viewBox="0 0 1000 500" className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Topic dependency graph">
+                  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-info)" /></marker></defs>
+                  {insights.graphNodes.slice(1).map((node, index) => {
+                    const previous = insights.graphNodes[index];
+                    const x1 = previous.column * 280 + 150;
+                    const y1 = previous.row * 170 + 90;
+                    const x2 = node.column * 280 + 150;
+                    const y2 = node.row * 170 + 90;
+                    return <path key={`${previous.id}-${node.id}`} d={`M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1 - 40}, ${(x1 + x2) / 2} ${y2 + 40}, ${x2} ${y2}`} fill="none" stroke="var(--accent-info)" strokeWidth="2" markerEnd="url(#arrow)" />;
+                  })}
+                </svg>
+                {insights.graphNodes.map((node) => (
+                  <div key={node.id} className="absolute rounded-xl border px-3 py-2 text-center text-xs font-medium sm:text-sm" style={{ left: node.x, top: node.y, width: `${NODE_WIDTH}px`, minHeight: `${NODE_HEIGHT}px`, borderColor: 'color-mix(in srgb, var(--accent-primary) 45%, transparent)', background: 'color-mix(in srgb, var(--accent-primary) 16%, var(--surface-elevated))', color: 'var(--text-primary)' }}>{node.label}</div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
-    </div>
-  );
-}
+    </AppShell>
+  );}
 
 export default LearningInsightsPage;

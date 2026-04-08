@@ -1,17 +1,13 @@
-import SiteNav from "../components/SiteNav";
+import AppShell from "../components/AppShell";
 
-function ContactPage() {
+function ContactPage({ theme, onThemeChange }) {
   return (
-    <div className="app-shell text-[var(--text-primary)]">
-      <div className="app-content">
-        <SiteNav />
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
-          <h1 className="mb-4 text-3xl font-semibold">Contact Us</h1>
-          <p className="mb-2 text-zinc-200">For support or feedback, reach us at:</p>
-          <p className="text-lg font-medium text-amber-300">abc@gamil.com</p>
-        </div>
-      </div>
-    </div>
+    <AppShell title="Contact Us" subtitle="Support and feedback" theme={theme} onThemeChange={onThemeChange}>
+      <section className="panel rounded-3xl p-6">
+        <p className="mb-2 text-[var(--text-secondary)]">For support or feedback, reach us at:</p>
+        <p className="text-lg font-medium text-[var(--accent-primary)]">abc@gamil.com</p>
+      </section>
+    </AppShell>
   );
 }
 
