@@ -14,6 +14,36 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 
+const sanitizeUrl = (value = "") => {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.toString();
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const buildQuestionMarkup = (question) => {
+  const safeQuestionText = escapeHtml(question.text || "");
+  const safeLink = sanitizeUrl(question.link);
+
+  if (!safeLink) {
+    return `<li>${safeQuestionText}</li>`;
+  }
+
+  return `<li>${safeQuestionText} <a href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer">(Open link)</a></li>`;
+};
+
 const buildPrintableDocument = ({ sheetTitle, topics }) => {
   const safeSheetTitle = escapeHtml(sheetTitle || "Question Sheet");
   const content = topics
@@ -26,9 +56,7 @@ const buildPrintableDocument = ({ sheetTitle, topics }) => {
               (subTopic) => `
                 <h3>${escapeHtml(subTopic.title || "Untitled subtopic")}</h3>
                 <ol>
-                  ${(subTopic.questions || [])
-                    .map((question) => `<li>${escapeHtml(question.text || "")}</li>`)
-                    .join("")}
+                  ${(subTopic.questions || []).map((question) => buildQuestionMarkup(question)).join("")}
                 </ol>
               `
             )
@@ -39,15 +67,20 @@ const buildPrintableDocument = ({ sheetTitle, topics }) => {
     .join("");
 
   return `
+    <!doctype html>
     <html>
       <head>
+        <meta charset="utf-8" />
         <title>${safeSheetTitle}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-          h1 { margin-bottom: 24px; }
-          h2 { margin-top: 20px; margin-bottom: 8px; }
-          h3 { margin-top: 12px; margin-bottom: 6px; font-size: 16px; }
-          li { margin-bottom: 4px; }
+          @page { margin: 16mm; }
+          body { font-family: Arial, sans-serif; padding: 0; color: #111; line-height: 1.45; }
+          h1 { margin-bottom: 24px; font-size: 28px; }
+          h2 { margin-top: 20px; margin-bottom: 8px; font-size: 20px; page-break-after: avoid; }
+          h3 { margin-top: 12px; margin-bottom: 6px; font-size: 16px; page-break-after: avoid; }
+          ol { margin-top: 8px; }
+          li { margin-bottom: 6px; }
+          a { color: #1d4ed8; text-decoration: underline; word-break: break-word; }
         </style>
       </head>
       <body>
@@ -56,6 +89,31 @@ const buildPrintableDocument = ({ sheetTitle, topics }) => {
       </body>
     </html>
   `;
+};
+
+const triggerPrint = async (printWindow) => {
+  const readyStatePromise = new Promise((resolve) => {
+    if (printWindow.document.readyState === "complete") {
+      resolve();
+      return;
+    }
+
+    printWindow.addEventListener("load", resolve, { once: true });
+    setTimeout(resolve, 300);
+  });
+
+  await readyStatePromise;
+
+  if (printWindow.document.fonts?.ready) {
+    try {
+      await printWindow.document.fonts.ready;
+    } catch {
+      // Ignore font readiness errors and still attempt to print.
+    }
+  }
+
+  printWindow.focus();
+  printWindow.print();
 };
 
 export const exportSheetAsJson = ({ sheetTitle, topics }) => {
@@ -73,13 +131,14 @@ export const exportSheetAsJson = ({ sheetTitle, topics }) => {
 
 export const exportSheetAsPdf = ({ sheetTitle, topics }) => {
   const printableDocument = buildPrintableDocument({ sheetTitle, topics });
-  const printWindow = window.open("", "_blank", "noopener,noreferrer");
+  const printWindow = window.open("", "_blank");
 
   if (printWindow) {
+    printWindow.document.open();
     printWindow.document.write(printableDocument);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+
+    triggerPrint(printWindow);
     return;
   }
 
@@ -103,10 +162,9 @@ export const exportSheetAsPdf = ({ sheetTitle, topics }) => {
       return;
     }
 
-    frameWindow.focus();
-    frameWindow.print();
+    triggerPrint(frameWindow);
     frameWindow.onafterprint = cleanup;
-    setTimeout(cleanup, 1000);
+    setTimeout(cleanup, 1500);
   };
 
   document.body.appendChild(iframe);
