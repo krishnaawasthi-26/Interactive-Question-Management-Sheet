@@ -12,11 +12,12 @@ import {
 } from "../api/questionSheetApi";
 import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../api/sheetApi";
 
-const HISTORY_LIMIT = 20;
-const MAX_SHEETS = 5;
-const MAX_TOPICS = 50;
-const MAX_SUBTOPICS = 100;
-const MAX_QUESTIONS = 200;
+const UNBOUNDED_LIMIT = Number.MAX_SAFE_INTEGER;
+const HISTORY_LIMIT = UNBOUNDED_LIMIT;
+const MAX_SHEETS = UNBOUNDED_LIMIT;
+const MAX_TOPICS = UNBOUNDED_LIMIT;
+const MAX_SUBTOPICS = UNBOUNDED_LIMIT;
+const MAX_QUESTIONS = UNBOUNDED_LIMIT;
 const lastPersistedSignatureBySheet = new Map();
 const inFlightPersistBySheet = new Map();
 const lastSavedSheetStateById = new Map();
