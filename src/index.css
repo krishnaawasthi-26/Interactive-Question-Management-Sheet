@@ -110,3 +110,22 @@ body {
 :root .hover\:bg-slate-50:hover {
   background-color: var(--surface-elevated) !important;
 }
+
+/* Normalize light-tone hover backgrounds so text contrast stays readable across themes. */
+:root .hover\:bg-blue-50:hover,
+:root .hover\:bg-blue-100:hover,
+:root .hover\:bg-sky-50:hover,
+:root .hover\:bg-slate-50\/80:hover {
+  background-color: var(--surface-elevated) !important;
+}
+
+/* Keep link hover states legible in light mode (avoid near-white on near-white). */
+:root[data-theme="light"] .hover\:text-sky-200:hover {
+  color: #0369a1 !important;
+}
+
+/* Keep link hover states legible in dark/night modes (avoid washed-out colors). */
+:root[data-theme="dark"] .hover\:text-sky-200:hover,
+:root[data-theme="night"] .hover\:text-sky-200:hover {
+  color: #7dd3fc !important;
+}
