@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddTopicForm from "../components/AddTopicForm";
 import QuestionSearch from "../components/QuestionSearch";
 import SheetDashboardView from "../components/SheetDashboardView";
@@ -7,11 +7,34 @@ import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 import EditorActionPanel from "../components/EditorActionPanel";
+import ConfirmationModal from "../components/ConfirmationModal";
+
+const formatRelativeTime = (isoValue) => {
+  if (!isoValue) return "Not saved yet";
+
+  const elapsedMs = Date.now() - new Date(isoValue).getTime();
+  if (Number.isNaN(elapsedMs)) return "Not saved yet";
+
+  const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
+  if (elapsedSeconds < 5) return "just now";
+  if (elapsedSeconds < 60) return `${elapsedSeconds}s ago`;
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) return `${elapsedMinutes}m ago`;
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return `${elapsedHours}h ago`;
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  return `${elapsedDays}d ago`;
+};
 
 function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }) {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeDialog, setActiveDialog] = useState(null);
+  const [, setNowTick] = useState(0);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
@@ -23,6 +46,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const loadError = useSheetStore((state) => state.loadError);
   const saveError = useSheetStore((state) => state.saveError);
   const hasPendingChanges = useSheetStore((state) => state.hasPendingChanges);
+  const lastSavedAt = useSheetStore((state) => state.lastSavedAt);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const topics = useSheetStore((state) => state.topics);
   const limitWarning = useSheetStore((state) => state.limitWarning);
@@ -44,6 +68,75 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   }, []);
 
   useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNowTick((tick) => tick + 1);
+    }, 30_000);
+
+    return () => window.clearInterval(interval);
+  }, [lastSavedAt]);
+
+  const closeDialog = useCallback(() => setActiveDialog(null), []);
+
+  const handleSaveChanges = useCallback(async () => {
+    if (!currentUser?.token || !sheetId) return false;
+    return saveCurrentSheetDraft(currentUser.token);
+  }, [currentUser, saveCurrentSheetDraft, sheetId]);
+
+  const handleDiscardChanges = useCallback(() => {
+    discardUnsavedChanges();
+    closeDialog();
+  }, [closeDialog, discardUnsavedChanges]);
+
+  const openDiscardDialog = useCallback(() => {
+    setActiveDialog({
+      key: "discard",
+      title: "Discard unsaved changes?",
+      message: "This will remove all edits made since your last successful save.",
+      actions: [
+        { key: "cancel", label: "Cancel", variant: "neutral", onClick: closeDialog },
+        { key: "discard", label: "Discard", variant: "danger", onClick: handleDiscardChanges },
+      ],
+    });
+  }, [closeDialog, handleDiscardChanges]);
+
+  const requestNavigation = useCallback((navigateAction, destinationLabel) => {
+    if (!hasPendingChanges) {
+      navigateAction();
+      return;
+    }
+
+    setActiveDialog({
+      key: "unsaved-navigation",
+      title: "You have unsaved changes",
+      message: `Save or discard your edits before you ${destinationLabel}.`,
+      actions: [
+        { key: "stay", label: "Stay", variant: "neutral", onClick: closeDialog },
+        {
+          key: "discard",
+          label: "Discard & Continue",
+          variant: "danger",
+          onClick: () => {
+            discardUnsavedChanges();
+            closeDialog();
+            navigateAction();
+          },
+        },
+        {
+          key: "save",
+          label: "Save & Continue",
+          variant: "success",
+          onClick: async () => {
+            const wasSaved = await handleSaveChanges();
+            if (!wasSaved) return;
+            closeDialog();
+            navigateAction();
+          },
+        },
+      ],
+    });
+  }, [closeDialog, discardUnsavedChanges, handleSaveChanges, hasPendingChanges]);
+
+  useEffect(() => {
     const onBeforeUnload = (event) => {
       if (!hasPendingChanges) return;
       event.preventDefault();
@@ -57,18 +150,23 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         return;
       }
 
+      const nextHash = window.location.hash;
       if (!hasPendingChanges) {
-        previousHashRef.current = window.location.hash;
+        previousHashRef.current = nextHash;
         return;
       }
 
-      const shouldLeave = window.confirm("You have unsaved changes. Save or cancel your edits before leaving this page.");
-      if (!shouldLeave) {
-        suppressHashGuardRef.current = true;
-        window.location.hash = previousHashRef.current;
-        return;
-      }
-      previousHashRef.current = window.location.hash;
+      suppressHashGuardRef.current = true;
+      window.location.hash = previousHashRef.current;
+
+      requestNavigation(
+        () => {
+          suppressHashGuardRef.current = true;
+          window.location.hash = nextHash;
+          previousHashRef.current = nextHash;
+        },
+        "leave this page"
+      );
     };
 
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -78,19 +176,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("hashchange", onHashChange);
     };
-  }, [hasPendingChanges]);
-
-  const handleSaveChanges = async () => {
-    if (!currentUser?.token || !sheetId) return;
-    await saveCurrentSheetDraft(currentUser.token);
-  };
-
-  const handleCancelChanges = () => {
-    if (!hasPendingChanges) return;
-    const confirmed = window.confirm("Discard all unsaved changes?");
-    if (!confirmed) return;
-    discardUnsavedChanges();
-  };
+  }, [hasPendingChanges, requestNavigation]);
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -99,92 +185,91 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     });
   };
 
-  const handleNavigateWithUnsavedChanges = async (navigateAction) => {
-    if (!hasPendingChanges) {
-      navigateAction();
-      return;
-    }
-
-    const shouldSave = window.confirm(
-      "You have unsaved changes. Click OK to save before leaving, or Cancel to choose discard."
-    );
-
-    if (shouldSave) {
-      if (!currentUser?.token || !sheetId) return;
-      const wasSaved = await saveCurrentSheetDraft(currentUser.token);
-      if (!wasSaved) {
-        window.alert("Could not save your changes. Please try again.");
-        return;
-      }
-      navigateAction();
-      return;
-    }
-
-    const shouldDiscard = window.confirm("Discard unsaved changes and continue?");
-    if (!shouldDiscard) return;
-
-    discardUnsavedChanges();
-    navigateAction();
-  };
+  const saveStatusLabel = isSaving
+    ? "Saving..."
+    : saveError
+      ? "Save failed"
+      : hasPendingChanges
+        ? "Unsaved changes"
+        : "Saved";
 
   const sheetActionButtons = [
     { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
     { key: "redo", label: "Redo", onClick: redo, disabled: !canRedo },
-    { key: "save", label: isSaving ? "Saving..." : "Save", onClick: handleSaveChanges, disabled: !hasPendingChanges || isSaving },
-    { key: "discard", label: "Discard", onClick: handleCancelChanges, disabled: !hasPendingChanges || isSaving },
+    {
+      key: "save",
+      label: isSaving ? "Saving..." : "Save",
+      onClick: () => {
+        void handleSaveChanges();
+      },
+      disabled: !hasPendingChanges || isSaving,
+    },
+    {
+      key: "discard",
+      label: "Discard",
+      onClick: openDiscardDialog,
+      disabled: !hasPendingChanges || isSaving,
+    },
     {
       key: "import",
       label: "Import JSON",
-      onClick: () => {
-        void handleNavigateWithUnsavedChanges(onOpenImport);
-      },
+      onClick: () => requestNavigation(onOpenImport, "open import"),
       disabled: false,
     },
     {
       key: "export",
       label: "Export",
-      onClick: () => {
-        void handleNavigateWithUnsavedChanges(onOpenExport);
-      },
+      onClick: () => requestNavigation(onOpenExport, "open export"),
       disabled: false,
     },
     { key: "view-only", label: isEditing ? "View Only" : "Edit Sheet", onClick: () => setIsEditing((value) => !value), disabled: false },
   ];
 
   return (
-    <AppShell
-      title={sheetTitle || "Untitled Sheet"}
-      subtitle="Draft • Last edited just now"
-      theme={theme}
-      onThemeChange={onThemeChange}
-      userLabel={currentUser?.fullName || currentUser?.email || "Account"}
-      rightPanel={isEditing ? <EditorActionPanel actions={sheetActionButtons} /> : null}
-    >
-      <div className="panel rounded-3xl p-4 sm:p-5">
-        {isEditing && (
-          <>
-            <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
-            {limitWarning && (
-              <div className="mb-4 flex items-center justify-between rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--surface-elevated))] px-3 py-2 text-sm text-[var(--text-primary)]">
-                <span>{limitWarning}</span>
-                <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>
-                  Dismiss
-                </button>
-              </div>
-            )}
+    <>
+      <AppShell
+        title={sheetTitle || "Untitled Sheet"}
+        subtitle={`${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}`}
+        theme={theme}
+        onThemeChange={onThemeChange}
+        userLabel={currentUser?.fullName || currentUser?.email || "Account"}
+        rightPanel={isEditing ? <EditorActionPanel actions={sheetActionButtons} /> : null}
+      >
+        <div className="panel rounded-3xl p-4 sm:p-5">
+          {isEditing && (
+            <>
+              <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
+              {limitWarning && (
+                <div className="mb-4 flex items-center justify-between rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--surface-elevated))] px-3 py-2 text-sm text-[var(--text-primary)]">
+                  <span>{limitWarning}</span>
+                  <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>
+                    Dismiss
+                  </button>
+                </div>
+              )}
 
-            <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
-          </>
-        )}
-
-        <main>
-          {(isLoading || loadError || saveError) && (
-            <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
+              <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
+            </>
           )}
-          {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} onOpenEdit={() => setIsEditing(true)} />}
-        </main>
-      </div>
-    </AppShell>
+
+          <main>
+            {(isLoading || loadError || saveError) && (
+              <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
+            )}
+            {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} onOpenEdit={() => setIsEditing(true)} />}
+          </main>
+        </div>
+      </AppShell>
+
+      <ConfirmationModal
+        isOpen={Boolean(activeDialog)}
+        title={activeDialog?.title}
+        message={activeDialog?.message}
+        actions={activeDialog?.actions}
+        onClose={closeDialog}
+        isBusy={isSaving}
+      />
+    </>
   );
 }
 

@@ -18,6 +18,7 @@ const initialState = {
   hasPendingChanges: false,
   isSaving: false,
   saveError: null,
+  lastSavedAt: null,
 };
 
 // Composition root: wire all focused modules into a single public Zustand store API.

@@ -71,6 +71,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         activeSheetId: sheet.id,
         topics,
         sheetTitle: title,
+        lastSavedAt: sheet.updatedAt || new Date().toISOString(),
         isLoading: false,
         past: [],
         future: [],
@@ -125,7 +126,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       const signature = buildSheetSignature(sheetTitle, topics);
       internals.lastPersistedSignatureBySheet.set(activeSheetId, signature);
       internals.lastSavedSheetStateById.set(activeSheetId, { title: sheetTitle, topics: cloneDeep(topics) });
-      set({ hasPendingChanges: false, isSaving: false });
+      set({ hasPendingChanges: false, isSaving: false, lastSavedAt: new Date().toISOString() });
       return true;
     } catch (error) {
       set({ isSaving: false, saveError: error.message || "Unable to save sheet changes." });
@@ -180,5 +181,6 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       future: [],
       hasPendingChanges: false,
       saveError: null,
+      lastSavedAt: null,
     }),
 });
