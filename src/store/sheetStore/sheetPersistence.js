@@ -2,6 +2,26 @@ import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../..
 import { MAX_SHEETS } from "./constants";
 import { buildSheetSignature, cloneDeep, computeDirtyState, updateSheetInCollection } from "./helpers";
 
+const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideFields }) => {
+  const state = getState();
+  const listedSheet = state.sheets.find((sheet) => sheet.id === sheetId);
+  const activeSheetData = state.activeSheetId === sheetId
+    ? { title: state.sheetTitle, topics: state.topics }
+    : null;
+
+  const fallbackSheet = listedSheet || (await getSheet(token, sheetId));
+  const fallbackTitle = fallbackSheet?.title || "Untitled Sheet";
+  const fallbackTopics = fallbackSheet?.topics || [];
+
+  return {
+    title: activeSheetData?.title ?? fallbackTitle,
+    topics: activeSheetData?.topics ?? fallbackTopics,
+    isPublic: fallbackSheet?.isPublic ?? false,
+    isArchived: fallbackSheet?.isArchived ?? false,
+    ...overrideFields,
+  };
+};
+
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
 export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   loadSheets: async (token) => {
@@ -152,17 +172,35 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   renameSheet: async (token, sheetId, title) => {
-    await saveSheet(token, sheetId, { title });
+    const payload = await buildSafeSheetUpdatePayload({
+      token,
+      sheetId,
+      getState: get,
+      overrideFields: { title },
+    });
+    await saveSheet(token, sheetId, payload);
     set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { title }) }));
   },
 
   setSheetVisibility: async (token, sheetId, isPublic) => {
-    await saveSheet(token, sheetId, { isPublic });
+    const payload = await buildSafeSheetUpdatePayload({
+      token,
+      sheetId,
+      getState: get,
+      overrideFields: { isPublic },
+    });
+    await saveSheet(token, sheetId, payload);
     set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isPublic }) }));
   },
 
   setSheetArchived: async (token, sheetId, isArchived) => {
-    await saveSheet(token, sheetId, { isArchived });
+    const payload = await buildSafeSheetUpdatePayload({
+      token,
+      sheetId,
+      getState: get,
+      overrideFields: { isArchived },
+    });
+    await saveSheet(token, sheetId, payload);
     set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isArchived }) }));
   },
 
