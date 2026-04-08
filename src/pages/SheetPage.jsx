@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddTopicForm from "../components/AddTopicForm";
 import QuestionSearch from "../components/QuestionSearch";
-import SheetDashboardView from "../components/SheetDashboardView";
 import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
@@ -38,6 +37,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const [activeDialog, setActiveDialog] = useState(null);
   const [sortBy, setSortBy] = useState("edited");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [sheetTitles, setSheetTitles] = useState({});
   const [, setNowTick] = useState(0);
 
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -46,6 +46,11 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const loadSheets = useSheetStore((state) => state.loadSheets);
   const sheets = useSheetStore((state) => state.sheets);
   const saveCurrentSheetDraft = useSheetStore((state) => state.saveCurrentSheetDraft);
+  const renameSheet = useSheetStore((state) => state.renameSheet);
+  const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
+  const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
+  const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
+  const deleteSheet = useSheetStore((state) => state.deleteSheet);
   const discardUnsavedChanges = useSheetStore((state) => state.discardUnsavedChanges);
   const isLoading = useSheetStore((state) => state.isLoading);
   const isSaving = useSheetStore((state) => state.isSaving);
@@ -73,6 +78,18 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     if (sheetId || !currentUser?.token) return;
     loadSheets(currentUser.token);
   }, [sheetId, currentUser?.token, loadSheets]);
+
+  useEffect(() => {
+    setSheetTitles((current) => {
+      const next = { ...current };
+      sheets.forEach((sheet) => {
+        if (!(sheet.id in next)) {
+          next[sheet.id] = sheet.title || "Untitled Sheet";
+        }
+      });
+      return next;
+    });
+  }, [sheets]);
 
   useEffect(() => {
     previousHashRef.current = window.location.hash;
@@ -231,6 +248,65 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
     });
 
+  const groupedSheetActionsById = useMemo(
+    () =>
+      Object.fromEntries(
+        filteredAndSortedSheets.map((sheet) => [
+          sheet.id,
+          [
+            {
+              key: "save-name",
+              label: "Save Name",
+              className: "btn-success",
+              onClick: async () => {
+                const nextTitle = (sheetTitles[sheet.id] || "").trim();
+                if (!nextTitle) return;
+                await renameSheet(currentUser.token, sheet.id, nextTitle);
+              },
+            },
+            {
+              key: "open",
+              label: "Open",
+              className: "btn-neutral",
+              onClick: () => navigateTo(`${ROUTES.APP}/${sheet.id}`),
+            },
+            {
+              key: "visibility",
+              label: sheet.isPublic ? "Make Private" : "Make Public",
+              className: "btn-neutral",
+              onClick: () => setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic),
+            },
+            {
+              key: "archive",
+              label: sheet.isArchived ? "Restore" : "Archive",
+              className: "btn-neutral",
+              onClick: () => setSheetArchived(currentUser.token, sheet.id, !sheet.isArchived),
+            },
+            {
+              key: "copy",
+              label: "Copy",
+              className: "btn-neutral",
+              onClick: async () => {
+                const copied = await duplicateSheetById(currentUser.token, sheet.id);
+                if (!copied) return;
+                navigateTo(`${ROUTES.APP}/${copied.id}`);
+              },
+            },
+            {
+              key: "delete",
+              label: "Delete",
+              className: "btn-danger",
+              onClick: async () => {
+                if (!window.confirm("Are you sure to delete this sheet?")) return;
+                await deleteSheet(currentUser.token, sheet.id);
+              },
+            },
+          ],
+        ])
+      ),
+    [currentUser?.token, deleteSheet, duplicateSheetById, filteredAndSortedSheets, renameSheet, setSheetArchived, setSheetVisibility, sheetTitles]
+  );
+
   const sheetActionButtons = [
     { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
     { key: "redo", label: "Redo", onClick: redo, disabled: !canRedo },
@@ -309,20 +385,31 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                     const progress = calculateSheetProgress(sheet);
                     return (
                       <div key={sheet.id} className="panel-elevated flex items-center justify-between gap-4 rounded-lg p-3">
-                        <div className="space-y-1">
-                          <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
+                        <div className="w-full max-w-lg space-y-2">
+                          <input
+                            className="w-full field-base px-2 py-1 font-medium"
+                            value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
+                            onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
+                          />
                           <p className="text-xs text-[var(--text-secondary)]">
                             {sheet.isPublic ? "Public" : "Private"}
                             {sheet.isArchived ? " • Archived" : ""} • Progress {progress.percent}% ({progress.completedQuestions}/{progress.totalQuestions})
                           </p>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-700">
+                            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progress.percent}%` }} />
+                          </div>
                           <p className="text-xs text-[var(--text-secondary)]">
                             Created: {sheet.createdAt ? new Date(sheet.createdAt).toLocaleDateString() : "Unknown"} •
                             Updated: {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleString() : "Unknown"}
                           </p>
                         </div>
-                        <button type="button" className="btn-base btn-neutral px-3 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>
-                          Open
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {(groupedSheetActionsById[sheet.id] || []).map((action) => (
+                            <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
+                              {action.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
@@ -342,7 +429,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             {(isLoading || loadError || saveError) && (
               <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
             )}
-            {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} onOpenEdit={() => setIsEditing(true)} />}
+            <TopicList isEditing={isEditing} searchQuery={searchQuery} allowProgressToggle={isEditing} />
           </main>
             </>
           )}
