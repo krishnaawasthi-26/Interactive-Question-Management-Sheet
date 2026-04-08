@@ -228,26 +228,19 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   return (
     <>
       <AppShell
-        title={sheetTitle || "Untitled Sheet"}
-        subtitle={`${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}`}
+        title={isEditing ? sheetTitle || "Untitled Sheet" : null}
+        subtitle={isEditing ? `${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}` : null}
         theme={theme}
         onThemeChange={onThemeChange}
         userLabel={currentUser?.fullName || currentUser?.email || "Account"}
         rightPanel={isEditing ? <EditorActionPanel actions={sheetActionButtons} /> : null}
+        alert={limitWarning}
+        onDismissAlert={clearLimitWarning}
       >
         <div className="panel rounded-3xl p-4 sm:p-5">
           {isEditing && (
             <>
               <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
-              {limitWarning && (
-                <div className="mb-4 flex items-center justify-between rounded-lg border border-[color-mix(in_srgb,var(--accent-primary)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--surface-elevated))] px-3 py-2 text-sm text-[var(--text-primary)]">
-                  <span>{limitWarning}</span>
-                  <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>
-                    Dismiss
-                  </button>
-                </div>
-              )}
-
               <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
             </>
           )}
