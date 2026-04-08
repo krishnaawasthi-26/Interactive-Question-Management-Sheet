@@ -383,6 +383,30 @@ export const useSheetStore = create((set, get) => ({
       return withHistory(state, topics);
     }),
 
+  updateQuestionAttempt: (topicId, subId, questionId, attemptLog) =>
+    set((state) => {
+      const topics = state.topics.map((topic) =>
+        topic.id !== topicId
+          ? topic
+          : {
+              ...topic,
+              subTopics: topic.subTopics.map((subTopic) =>
+                subTopic.id !== subId
+                  ? subTopic
+                  : {
+                      ...subTopic,
+                      questions: subTopic.questions.map((question) =>
+                        question.id !== questionId
+                          ? question
+                          : { ...question, done: true, attemptLog }
+                      ),
+                    }
+              ),
+            }
+      );
+      return withHistory(state, topics);
+    }),
+
   setReadOnlySheet: (sheet) =>
     set({
       activeSheetId: null,
