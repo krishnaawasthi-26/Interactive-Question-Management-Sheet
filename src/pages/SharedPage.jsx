@@ -139,16 +139,65 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
     const following = profile?.following || [];
     const isFollowingProfile = followers.some((entry) => entry.username === currentUser?.username);
 
+    const featuredSheets = [
+      "System Design Mastery",
+      "SQL Quick Revision",
+      "Frontend Interview Prep",
+    ];
+    const publicSheets = profile?.sheets || [];
+    const displayedFeaturedSheets = [...featuredSheets];
+    publicSheets.forEach((sheet) => {
+      if (displayedFeaturedSheets.length < 3 && !displayedFeaturedSheets.includes(sheet.title)) {
+        displayedFeaturedSheets.push(sheet.title);
+      }
+    });
+    const profileName = profile?.name || "Alex Johnson";
+    const tabs = ["Sheets", "Activity", "Portfolio", "Stats"];
+
     return (
-      <div className="min-h-screen bg-zinc-900 p-6 text-white">
-        <div className="mx-auto max-w-4xl space-y-6">
-          <div className="rounded-xl border border-gray-800 bg-[rgba(255,255,255,0.03)] p-5">
-            <h1 className="text-2xl font-semibold">{profile?.name}&apos;s profile</h1>
-            <p className="mt-2 text-zinc-300">@{profile?.username}</p>
-            <p className="mt-2 text-zinc-200">Total sheets: {profile?.totalSheets ?? profile?.sheets?.length ?? 0}</p>
-            <div className="mt-3 flex flex-wrap gap-2 text-sm">
+      <div className="min-h-screen bg-slate-50 px-4 py-6 text-slate-800 md:px-6">
+        <div className="mx-auto max-w-6xl space-y-5">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-xl font-semibold text-sky-700">
+                  {profileName
+                    .split(" ")
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("")}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-slate-900">{profileName}</h1>
+                    <button
+                      type="button"
+                      className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                      aria-label="Edit profile"
+                    >
+                      ✎
+                    </button>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-500">Aspiring · Software Engineer</p>
+                  <p className="mt-2 text-sm text-slate-600">@{profile?.username}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {["♡", "🟦", "💬", "🔖", "🔔", "☰"].map((icon) => (
+                  <button
+                    key={icon}
+                    type="button"
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-600 hover:border-sky-300 hover:text-sky-700"
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
               <button
-                className="rounded border border-sky-700 px-2 py-1 text-sky-200"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
                 type="button"
                 onClick={() =>
                   setEngagementViewer({
@@ -160,7 +209,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
                 Followers: {profile?.followersCount ?? followers.length}
               </button>
               <button
-                className="rounded border border-fuchsia-700 px-2 py-1 text-fuchsia-200"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
                 type="button"
                 onClick={() =>
                   setEngagementViewer({
@@ -172,14 +221,14 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
                 Following: {profile?.followingCount ?? following.length}
               </button>
               <button
-                className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
                 type="button"
                 onClick={() => setEngagementViewer({ title: "Downloaded by", users: allDownloadedUsers })}
               >
                 Downloaded: {totalDownloadCount}
               </button>
               <button
-                className="rounded border border-amber-700 px-2 py-1 text-amber-200"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
                 type="button"
                 onClick={() => setEngagementViewer({ title: "Copied by", users: allCopiedUsers })}
               >
@@ -187,7 +236,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
               </button>
               {currentUser?.token && !isOwnProfile && (
                 <button
-                  className="rounded border border-indigo-700 px-2 py-1 text-indigo-200"
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-left text-blue-700 hover:bg-blue-100"
                   type="button"
                   disabled={followPending}
                   onClick={async () => {
@@ -210,60 +259,133 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
                 </button>
               )}
             </div>
-            {profile?.bio && <p className="mt-4 whitespace-pre-wrap text-zinc-200">{profile.bio}</p>}
 
-            {(profile?.institution || profile?.company) && (
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {profile?.institution && (
-                  <div className="rounded-md border border-gray-700 px-3 py-2">
-                    <p className="text-xs uppercase tracking-wide text-zinc-400">Institution</p>
-                    <p className="text-zinc-200">{profile.institution}</p>
-                  </div>
-                )}
-                {profile?.company && (
-                  <div className="rounded-md border border-gray-700 px-3 py-2">
-                    <p className="text-xs uppercase tracking-wide text-zinc-400">Company</p>
-                    <p className="text-zinc-200">{profile.company}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {profileLinks.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {profileLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded border border-sky-700 px-3 py-1 text-sm text-sky-200 hover:bg-sky-900/30"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Public sheets</h2>
-          {profile?.sheets?.map((sheet) => (
-            <div className="flex items-center justify-between rounded border border-gray-700 p-3" key={sheet.id}>
-              <a href={`#/shared/sheet/${sheet.shareId}`} className="font-medium underline-offset-2 hover:underline">
-                {sheet.title}
-              </a>
-              {profile?.username && (
-                <a
-                  href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
-                  className="text-sm text-zinc-300 underline-offset-2 hover:underline"
+            <div className="mt-5 flex gap-2 border-t border-slate-200 pt-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                    tab === "Sheets" ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                  }`}
                 >
-                  Open clean URL
-                </a>
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="grid gap-5 lg:grid-cols-[2fr_1fr]">
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900">Featured Sheets</h2>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  {displayedFeaturedSheets.slice(0, 3).map((title) => (
+                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="font-medium text-slate-800">{title}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900">My Progress</h2>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Streak</p>
+                    <p className="mt-2 font-semibold text-blue-900">Consistent Streak 12 Days</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recently Solved</p>
+                    <p className="mt-2 font-medium text-slate-800">Practiced graph algorithms & shortest path sets</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Mastered Topics</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                      <li>Dynamic Programming</li>
+                      <li>Tree Traversal</li>
+                      <li>System Design</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Recent Categories</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                      <li>Graph Algorithms</li>
+                      <li>System Design</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-900">Public sheets</h2>
+                <div className="mt-4 space-y-2">
+                  {publicSheets.map((sheet) => (
+                    <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3" key={sheet.id}>
+                      <a href={`#/shared/sheet/${sheet.shareId}`} className="font-medium text-slate-800 underline-offset-2 hover:underline">
+                        {sheet.title}
+                      </a>
+                      {profile?.username && (
+                        <a
+                          href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
+                          className="text-sm text-slate-500 underline-offset-2 hover:text-blue-600 hover:underline"
+                        >
+                          Open clean URL
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {(profile?.bio || profile?.institution || profile?.company || profileLinks.length > 0) && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  {profile?.bio && <p className="whitespace-pre-wrap text-sm text-slate-700">{profile.bio}</p>}
+                  {(profile?.institution || profile?.company) && (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {profile?.institution && (
+                        <div className="rounded-md border border-slate-200 px-3 py-2">
+                          <p className="text-xs uppercase tracking-wide text-slate-500">Institution</p>
+                          <p className="text-slate-700">{profile.institution}</p>
+                        </div>
+                      )}
+                      {profile?.company && (
+                        <div className="rounded-md border border-slate-200 px-3 py-2">
+                          <p className="text-xs uppercase tracking-wide text-slate-500">Company</p>
+                          <p className="text-slate-700">{profile.company}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {profileLinks.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {profileLinks.map((link) => (
+                        <a
+                          key={link.label}
+                          href={link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-slate-200 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          ))}
-          </div>
+
+            <aside>
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-sky-100 p-5 shadow-sm">
+                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-blue-200 bg-white text-5xl">
+                  🧑‍💻
+                </div>
+                <p className="mt-4 text-center text-lg font-semibold text-slate-900">Top Contributor</p>
+                <p className="mt-2 text-center text-amber-500">★★★★★</p>
+              </div>
+            </aside>
+          </section>
         </div>
         {engagementViewer && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
