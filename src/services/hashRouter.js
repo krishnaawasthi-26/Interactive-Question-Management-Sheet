@@ -4,6 +4,7 @@ export const ROUTES = {
   ABOUT: "/about",
   CONTACT: "/contact",
   HOW_TO_USE: "/how-to-use",
+  LEARNING_INSIGHTS: "/learning-insights",
   PROFILE: "/profile",
   EDIT_PROFILE: "/edit-profile",
   PUBLIC_PROFILE: "/public-profile",
