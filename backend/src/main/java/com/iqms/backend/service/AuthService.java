@@ -9,7 +9,7 @@ import com.iqms.backend.security.TokenService;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,22 +19,23 @@ public class AuthService {
   private final UserRepository userRepository;
   private final TokenService tokenService;
   private final LoginAttemptService loginAttemptService;
-  private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  private final PasswordEncoder passwordEncoder;
 
   public AuthService(
       UserRepository userRepository,
       TokenService tokenService,
-      LoginAttemptService loginAttemptService) {
+      LoginAttemptService loginAttemptService,
+      PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.loginAttemptService = loginAttemptService;
+    this.passwordEncoder = passwordEncoder;
   }
 
   public AuthResponse signUp(SignUpRequest request) {
     String normalizedName = request.getName().trim();
     String normalizedEmail = request.getEmail().trim().toLowerCase();
     String normalizedUsername = normalizeUsername(request.getUsername());
-    String normalizedPassword = request.getPassword().trim();
 
     if (userRepository.findByEmail(normalizedEmail).isPresent()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists. Please login.");
@@ -47,7 +48,7 @@ public class AuthService {
     user.setName(normalizedName);
     user.setEmail(normalizedEmail);
     user.setUsername(normalizedUsername);
-    user.setPassword(passwordEncoder.encode(normalizedPassword));
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setProfileShareId("profile_" + UUID.randomUUID().toString().replace("-", ""));
     user.setCreatedAt(Instant.now());
 
@@ -58,7 +59,6 @@ public class AuthService {
   public AuthResponse login(LoginRequest request, String deviceKey) {
     loginAttemptService.assertLoginAllowed(deviceKey);
     String normalizedIdentifier = request.getIdentifier().trim().toLowerCase();
-    String normalizedPassword = request.getPassword().trim();
 
     User user = normalizedIdentifier.contains("@")
         ? userRepository.findByEmail(normalizedIdentifier).orElse(null)
@@ -70,7 +70,7 @@ public class AuthService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account does not exist. Please sign up first.");
     }
 
-    if (!passwordEncoder.matches(normalizedPassword, user.getPassword())) {
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
       loginAttemptService.recordFailure(deviceKey);
       loginAttemptService.assertLoginAllowed(deviceKey);
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect password. Please try again.");
