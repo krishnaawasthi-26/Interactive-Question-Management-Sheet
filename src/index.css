@@ -49,61 +49,64 @@ body {
 }
 
 /* Theme remaps for existing utility classes used throughout the app. */
-:root[data-theme="light"] .bg-zinc-950,
-:root[data-theme="light"] .bg-zinc-900,
-:root[data-theme="light"] .dark\:bg-slate-950 {
+:root .bg-zinc-950,
+:root .bg-zinc-900,
+:root .dark\:bg-slate-950,
+:root .bg-slate-100,
+:root .bg-slate-50 {
   background-color: var(--app-bg) !important;
 }
 
-:root[data-theme="light"] .bg-zinc-900\/60,
-:root[data-theme="light"] .bg-zinc-900\/70,
-:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.03\)\],
-:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.02\)\],
-:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.05\)\],
-:root[data-theme="light"] .bg-transparent {
+:root .bg-zinc-900\/60,
+:root .bg-zinc-900\/70,
+:root .bg-\[rgba\(255\,255\,255\,0\.03\)\],
+:root .bg-\[rgba\(255\,255\,255\,0\.02\)\],
+:root .bg-\[rgba\(255\,255\,255\,0\.05\)\],
+:root .bg-transparent,
+:root .bg-white,
+:root .bg-white\/95,
+:root .dark\:bg-slate-900,
+:root .dark\:bg-slate-950\/80 {
   background-color: var(--surface) !important;
 }
 
-:root[data-theme="light"] .bg-white,
-:root[data-theme="light"] .dark\:bg-slate-900,
-:root[data-theme="light"] .dark\:bg-slate-950\/80 {
-  background-color: var(--surface) !important;
-}
-
-:root[data-theme="light"] .bg-slate-100,
-:root[data-theme="light"] .bg-slate-50 {
-  background-color: var(--app-bg) !important;
-}
-
-:root[data-theme="light"] .text-white,
-:root[data-theme="light"] .text-slate-100,
-:root[data-theme="light"] .text-zinc-200,
-:root[data-theme="light"] .text-gray-200,
-:root[data-theme="light"] .dark\:text-slate-100 {
+:root .text-white,
+:root .text-slate-100,
+:root .text-slate-900,
+:root .text-slate-800,
+:root .text-slate-700,
+:root .text-zinc-200,
+:root .text-zinc-300,
+:root .text-zinc-100,
+:root .text-gray-200,
+:root .dark\:text-slate-100 {
   color: var(--text-primary) !important;
 }
 
-:root[data-theme="light"] .text-slate-500,
-:root[data-theme="light"] .text-gray-400,
-:root[data-theme="light"] .text-zinc-400,
-:root[data-theme="light"] .dark\:text-slate-300 {
+:root .text-slate-600,
+:root .text-slate-500,
+:root .text-gray-400,
+:root .text-zinc-400,
+:root .dark\:text-slate-300 {
   color: var(--text-muted) !important;
 }
 
-:root[data-theme="light"] .border-gray-800,
-:root[data-theme="light"] .border-gray-700,
-:root[data-theme="light"] .border-zinc-800,
-:root[data-theme="light"] .border-zinc-700,
-:root[data-theme="light"] .border-zinc-600,
-:root[data-theme="light"] .border-slate-200,
-:root[data-theme="light"] .dark\:border-slate-700,
-:root[data-theme="light"] .dark\:border-slate-800 {
+:root .border-gray-800,
+:root .border-gray-700,
+:root .border-slate-300,
+:root .border-zinc-800,
+:root .border-zinc-700,
+:root .border-zinc-600,
+:root .border-slate-200,
+:root .border-slate-100,
+:root .dark\:border-slate-700,
+:root .dark\:border-slate-800 {
   border-color: var(--border-subtle) !important;
 }
 
-:root[data-theme="light"] .hover\:bg-zinc-800:hover,
-:root[data-theme="light"] .hover\:bg-gray-800:hover,
-:root[data-theme="light"] .hover\:bg-slate-100:hover,
-:root[data-theme="light"] .hover\:bg-slate-50:hover {
+:root .hover\:bg-zinc-800:hover,
+:root .hover\:bg-gray-800:hover,
+:root .hover\:bg-slate-100:hover,
+:root .hover\:bg-slate-50:hover {
   background-color: var(--surface-elevated) !important;
 }
