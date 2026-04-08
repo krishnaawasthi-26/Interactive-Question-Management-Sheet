@@ -109,6 +109,34 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     navigateTo(`${ROUTES.APP}/${created.id}`);
   };
 
+  const handleNavigateWithUnsavedChanges = async (navigateAction) => {
+    if (!hasPendingChanges) {
+      navigateAction();
+      return;
+    }
+
+    const shouldSave = window.confirm(
+      "You have unsaved changes. Click OK to save before leaving, or Cancel to choose discard."
+    );
+
+    if (shouldSave) {
+      if (!currentUser?.token || !sheetId) return;
+      const wasSaved = await saveCurrentSheetDraft(currentUser.token);
+      if (!wasSaved) {
+        window.alert("Could not save your changes. Please try again.");
+        return;
+      }
+      navigateAction();
+      return;
+    }
+
+    const shouldDiscard = window.confirm("Discard unsaved changes and continue?");
+    if (!shouldDiscard) return;
+
+    discardUnsavedChanges();
+    navigateAction();
+  };
+
   return (
     <div className="app-shell bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
       <SiteNav />
@@ -192,14 +220,18 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
 
           <button
             type="button"
-            onClick={onOpenImport}
+            onClick={() => {
+              void handleNavigateWithUnsavedChanges(onOpenImport);
+            }}
             className="rounded-md border border-sky-600 bg-sky-700/20 px-3 py-2 text-left text-sky-200"
           >
             Import JSON
           </button>
           <button
             type="button"
-            onClick={onOpenExport}
+            onClick={() => {
+              void handleNavigateWithUnsavedChanges(onOpenExport);
+            }}
             className="rounded-md border border-emerald-600 bg-emerald-700/20 px-3 py-2 text-left text-emerald-200"
           >
             Export
@@ -214,7 +246,13 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
 
           <div className="my-1 h-px bg-zinc-700" />
 
-          <button type="button" onClick={onBackProfile} className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200">
+          <button
+            type="button"
+            onClick={() => {
+              void handleNavigateWithUnsavedChanges(onBackProfile);
+            }}
+            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
+          >
             Profile
           </button>
           <button type="button" onClick={handleCreateNewSheet} className="rounded-md border border-orange-600 px-3 py-2 text-left text-orange-200">
