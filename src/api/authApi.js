@@ -13,12 +13,25 @@ const safeParse = (value, fallback) => {
   }
 };
 
+const normalizeRateLimitState = (rawState) => {
+  const state = rawState && typeof rawState === "object" ? rawState : {};
+  const timestamps = Array.isArray(state.timestamps)
+    ? state.timestamps.filter((timestamp) => Number.isFinite(timestamp))
+    : [];
+  const disabledUntilEpochMs = Number.isFinite(state.disabledUntilEpochMs)
+    ? state.disabledUntilEpochMs
+    : 0;
+
+  return { timestamps, disabledUntilEpochMs };
+};
+
 const readRateLimitState = () => {
   if (!isBrowser) return { timestamps: [], disabledUntilEpochMs: 0 };
-  return safeParse(window.localStorage.getItem(CLIENT_RATE_LIMIT_KEY), {
+  const parsed = safeParse(window.localStorage.getItem(CLIENT_RATE_LIMIT_KEY), {
     timestamps: [],
     disabledUntilEpochMs: 0,
   });
+  return normalizeRateLimitState(parsed);
 };
 
 const writeRateLimitState = (state) => {
