@@ -10,6 +10,17 @@
   --text-primary: #e6edf5;
   --text-muted: #a2afc2;
   --border-subtle: rgba(255, 255, 255, 0.14);
+  --btn-accent-primary: #3730a3;
+  --btn-accent-primary-hover: #312e81;
+  --btn-accent-warm: #9a3412;
+  --btn-accent-warm-hover: #7c2d12;
+  --accent-emerald: #6ee7b7;
+  --accent-sky: #7dd3fc;
+  --accent-fuchsia: #f0abfc;
+  --accent-amber: #fcd34d;
+  --accent-rose: #fda4af;
+  --accent-violet: #c4b5fd;
+  --accent-red: #fca5a5;
 }
 
 :root[data-theme="night"] {
@@ -21,6 +32,17 @@
   --text-primary: #dde7ff;
   --text-muted: #9ab0d9;
   --border-subtle: rgba(125, 166, 255, 0.3);
+  --btn-accent-primary: #312e81;
+  --btn-accent-primary-hover: #1e1b4b;
+  --btn-accent-warm: #7c2d12;
+  --btn-accent-warm-hover: #5b1f0d;
+  --accent-emerald: #6ee7b7;
+  --accent-sky: #7dd3fc;
+  --accent-fuchsia: #f5d0fe;
+  --accent-amber: #fcd34d;
+  --accent-rose: #fda4af;
+  --accent-violet: #c4b5fd;
+  --accent-red: #fca5a5;
 }
 
 :root[data-theme="light"] {
@@ -32,6 +54,17 @@
   --text-primary: #0f172a;
   --text-muted: #475569;
   --border-subtle: rgba(15, 23, 42, 0.14);
+  --btn-accent-primary: #312e81;
+  --btn-accent-primary-hover: #1e1b4b;
+  --btn-accent-warm: #9a3412;
+  --btn-accent-warm-hover: #7c2d12;
+  --accent-emerald: #047857;
+  --accent-sky: #0369a1;
+  --accent-fuchsia: #a21caf;
+  --accent-amber: #b45309;
+  --accent-rose: #be123c;
+  --accent-violet: #6d28d9;
+  --accent-red: #b91c1c;
 }
 
 html,
@@ -134,3 +167,34 @@ body {
 :root[data-theme="night"] .hover\:text-sky-200:hover {
   color: #7dd3fc !important;
 }
+
+/* Keep accent action colors readable and consistently dark across pages/themes. */
+:root .bg-indigo-600 {
+  background-color: var(--btn-accent-primary) !important;
+}
+
+:root .hover\:bg-indigo-700:hover {
+  background-color: var(--btn-accent-primary-hover) !important;
+}
+
+:root .bg-orange-600 {
+  background-color: var(--btn-accent-warm) !important;
+}
+
+:root .hover\:bg-orange-700:hover {
+  background-color: var(--btn-accent-warm-hover) !important;
+}
+
+:root .text-emerald-200 { color: var(--accent-emerald) !important; }
+:root .text-sky-200 { color: var(--accent-sky) !important; }
+:root .text-fuchsia-200 { color: var(--accent-fuchsia) !important; }
+:root .text-amber-200 { color: var(--accent-amber) !important; }
+:root .text-rose-200 { color: var(--accent-rose) !important; }
+
+:root .border-emerald-700 { border-color: color-mix(in srgb, var(--accent-emerald) 55%, transparent) !important; }
+:root .border-sky-700 { border-color: color-mix(in srgb, var(--accent-sky) 55%, transparent) !important; }
+:root .border-fuchsia-700 { border-color: color-mix(in srgb, var(--accent-fuchsia) 55%, transparent) !important; }
+:root .border-amber-700 { border-color: color-mix(in srgb, var(--accent-amber) 55%, transparent) !important; }
+:root .border-rose-700 { border-color: color-mix(in srgb, var(--accent-rose) 55%, transparent) !important; }
+:root .border-violet-700 { border-color: color-mix(in srgb, var(--accent-violet) 55%, transparent) !important; }
+:root .border-red-700 { border-color: color-mix(in srgb, var(--accent-red) 55%, transparent) !important; }
