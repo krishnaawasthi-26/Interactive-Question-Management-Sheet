@@ -6,17 +6,16 @@ import SheetDashboardView from "../components/SheetDashboardView";
 import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
-import { navigateTo, ROUTES } from "../services/hashRouter";
 import SiteNav from "../components/SiteNav";
 
-function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfile }) {
+function SheetPage({ sheetId, onOpenImport, onOpenExport }) {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSidebarActions, setShowSidebarActions] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
-  const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const loadSheetById = useSheetStore((state) => state.loadSheetById);
   const saveCurrentSheetDraft = useSheetStore((state) => state.saveCurrentSheetDraft);
   const discardUnsavedChanges = useSheetStore((state) => state.discardUnsavedChanges);
@@ -83,6 +82,16 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     };
   }, [hasPendingChanges]);
 
+  useEffect(() => {
+    const onScroll = () => {
+      setShowSidebarActions(window.scrollY > 180);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const handleSaveChanges = async () => {
     if (!currentUser?.token || !sheetId) return;
     await saveCurrentSheetDraft(currentUser.token);
@@ -100,13 +109,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     addTopic(title).then((created) => {
       if (created) setTitle("");
     });
-  };
-
-  const handleCreateNewSheet = async () => {
-    if (!currentUser?.token) return;
-    const created = await createNewSheet(currentUser.token, "Untitled Sheet");
-    if (!created) return;
-    navigateTo(`${ROUTES.APP}/${created.id}`);
   };
 
   const handleNavigateWithUnsavedChanges = async (navigateAction) => {
@@ -137,11 +139,51 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
     navigateAction();
   };
 
+  const sheetActionButtons = [
+    { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
+    { key: "redo", label: "Redo", onClick: redo, disabled: !canRedo },
+    { key: "save", label: isSaving ? "Saving..." : "Save", onClick: handleSaveChanges, disabled: !hasPendingChanges || isSaving },
+    { key: "discard", label: "Discard", onClick: handleCancelChanges, disabled: !hasPendingChanges || isSaving },
+    {
+      key: "import",
+      label: "Import",
+      onClick: () => {
+        void handleNavigateWithUnsavedChanges(onOpenImport);
+      },
+      disabled: false,
+    },
+    {
+      key: "export",
+      label: "Export",
+      onClick: () => {
+        void handleNavigateWithUnsavedChanges(onOpenExport);
+      },
+      disabled: false,
+    },
+    { key: "view-only", label: isEditing ? "View Only" : "Edit Sheet", onClick: () => setIsEditing((value) => !value), disabled: false },
+  ];
+
   return (
     <div className="app-shell bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
-      <SiteNav />
+      <SiteNav actionButtons={sheetActionButtons} showSidebarActions={showSidebarActions} />
       <div className="app-content rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 p-4 shadow-2xl sm:p-6">
         <Header title={sheetTitle} onTitleChange={(nextTitle) => setSheetTitle(nextTitle)} />
+
+        <div className="mb-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-3 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            {sheetActionButtons.map((action) => (
+              <button
+                key={action.key}
+                type="button"
+                onClick={action.onClick}
+                disabled={action.disabled}
+                className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {isEditing && (
           <>
@@ -176,133 +218,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
           )}
         </main>
       </div>
-
-
-      <aside className="fixed right-3 top-24 z-50 hidden w-52 rounded-2xl border border-zinc-700 bg-zinc-900/90 p-3 shadow-2xl backdrop-blur lg:block">
-        <div className="flex flex-col gap-2 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={undo}
-            disabled={!canUndo}
-            className="rounded-md border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-left text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            onClick={redo}
-            disabled={!canRedo}
-            className="rounded-md border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-left text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Redo
-          </button>
-
-          <div className="my-1 h-px bg-zinc-700" />
-
-          <button
-            type="button"
-            onClick={handleSaveChanges}
-            disabled={!hasPendingChanges || isSaving}
-            className="rounded-md border border-emerald-600 bg-emerald-700/30 px-3 py-2 text-left text-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSaving ? "Saving..." : "Save"}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancelChanges}
-            disabled={!hasPendingChanges || isSaving}
-            className="rounded-md border border-rose-600 bg-rose-700/30 px-3 py-2 text-left text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Discard
-          </button>
-
-          <div className="my-1 h-px bg-zinc-700" />
-
-          <button
-            type="button"
-            onClick={() => {
-              void handleNavigateWithUnsavedChanges(onOpenImport);
-            }}
-            className="rounded-md border border-sky-600 bg-sky-700/20 px-3 py-2 text-left text-sky-200"
-          >
-            Import JSON
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void handleNavigateWithUnsavedChanges(onOpenExport);
-            }}
-            className="rounded-md border border-emerald-600 bg-emerald-700/20 px-3 py-2 text-left text-emerald-200"
-          >
-            Export
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsEditing((value) => !value)}
-            className="rounded-md border border-gray-700 px-3 py-2 text-left text-gray-200"
-          >
-            {isEditing ? "View Only" : "Edit Sheet"}
-          </button>
-
-          <div className="my-1 h-px bg-zinc-700" />
-
-          <button
-            type="button"
-            onClick={() => {
-              void handleNavigateWithUnsavedChanges(onBackProfile);
-            }}
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
-          >
-            Profile
-          </button>
-          <button type="button" onClick={handleCreateNewSheet} className="rounded-md border border-orange-600 px-3 py-2 text-left text-orange-200">
-            New Sheet
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateTo(ROUTES.ABOUT)}
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
-          >
-            About Us
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateTo(ROUTES.HOW_TO_USE)}
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
-          >
-            How To Use
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateTo(ROUTES.CONTACT)}
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
-          >
-            Contact Us
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateTo(ROUTES.LEARNING_INSIGHTS)}
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-zinc-200"
-          >
-            Learning Insights
-          </button>
-          <a
-            href="https://leetcode.com"
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-md border border-zinc-700 px-3 py-2 text-left text-amber-300"
-          >
-            LeetCode
-          </a>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-md border border-rose-700 px-3 py-2 text-left text-rose-200"
-          >
-            Logout
-          </button>
-        </div>
-      </aside>
     </div>
   );
 }
