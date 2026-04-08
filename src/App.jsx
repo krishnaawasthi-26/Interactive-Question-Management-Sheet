@@ -14,10 +14,18 @@ import ContactPage from "./pages/ContactPage";
 import HowToUsePage from "./pages/HowToUsePage";
 import LearningInsightsPage from "./pages/LearningInsightsPage";
 
+const THEME_STORAGE_KEY = "iqms-theme";
+const THEMES = ["light", "dark", "night"];
+
 function App() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
   const [routeState, setRouteState] = useState(getCurrentHashRoute());
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme && THEMES.includes(storedTheme)) return storedTheme;
+    return "dark";
+  });
   const isAuthenticated = Boolean(currentUser?.token);
 
   useEffect(() => {
@@ -52,86 +60,173 @@ function App() {
     }
   }, [isAuthenticated, routeState]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const prefersDarkClass = theme === "dark" || theme === "night";
+    document.documentElement.classList.toggle("dark", prefersDarkClass);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  const themeSelector = (
+    <div className="fixed right-4 top-4 z-[70] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/90 p-2 shadow-lg backdrop-blur">
+      <label htmlFor="theme-select" className="mr-2 text-xs font-medium text-[var(--text-muted)]">
+        Theme
+      </label>
+      <select
+        id="theme-select"
+        value={theme}
+        onChange={(event) => setTheme(event.target.value)}
+        className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-sm text-[var(--text-primary)]"
+      >
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="night">Night</option>
+      </select>
+    </div>
+  );
+
   if (routeState.route === ROUTES.SIGNUP) {
     return (
-      <SignUpPage
-        onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)}
-        onGoToLogin={() => navigateTo(ROUTES.LOGIN)}
-      />
+      <>
+        {themeSelector}
+        <SignUpPage
+          onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)}
+          onGoToLogin={() => navigateTo(ROUTES.LOGIN)}
+        />
+      </>
     );
   }
 
   if (routeState.route === ROUTES.SHARED_PREFIX) {
-    return <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />;
+    return (
+      <>
+        {themeSelector}
+        <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.PUBLIC_PROFILE) {
-    return <SharedPage shareType="public-profile" username={routeState.username} />;
+    return (
+      <>
+        {themeSelector}
+        <SharedPage shareType="public-profile" username={routeState.username} />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.PUBLIC_SHEET) {
-    return <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />;
+    return (
+      <>
+        {themeSelector}
+        <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.IMPORT) {
-    return <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
+    return (
+      <>
+        {themeSelector}
+        <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.ABOUT) {
-    return <AboutPage />;
+    return (
+      <>
+        {themeSelector}
+        <AboutPage />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.CONTACT) {
-    return <ContactPage />;
+    return (
+      <>
+        {themeSelector}
+        <ContactPage />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.HOW_TO_USE) {
-    return <HowToUsePage />;
+    return (
+      <>
+        {themeSelector}
+        <HowToUsePage />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.LEARNING_INSIGHTS) {
-    return <LearningInsightsPage />;
+    return (
+      <>
+        {themeSelector}
+        <LearningInsightsPage />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.EXPORT) {
-    return <ExportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
+    return (
+      <>
+        {themeSelector}
+        <ExportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.PROFILE) {
     return (
-      <ProfilePage
-        onLogout={() => {
-          logout();
-          navigateTo(ROUTES.LOGIN);
-        }}
-      />
+      <>
+        {themeSelector}
+        <ProfilePage
+          onLogout={() => {
+            logout();
+            navigateTo(ROUTES.LOGIN);
+          }}
+        />
+      </>
     );
   }
 
   if (routeState.route === ROUTES.EDIT_PROFILE) {
-    return <EditProfilePage />;
+    return (
+      <>
+        {themeSelector}
+        <EditProfilePage />
+      </>
+    );
   }
 
   if (routeState.route === ROUTES.APP) {
     return (
-      <SheetPage
-        sheetId={routeState.sheetId}
-        onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
-        onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
-        onBackProfile={() => navigateTo(ROUTES.PROFILE)}
-        onLogout={() => {
-          logout();
-          navigateTo(ROUTES.LOGIN);
-        }}
-      />
+      <>
+        {themeSelector}
+        <SheetPage
+          sheetId={routeState.sheetId}
+          onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
+          onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
+          onBackProfile={() => navigateTo(ROUTES.PROFILE)}
+          onLogout={() => {
+            logout();
+            navigateTo(ROUTES.LOGIN);
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <LoginPage
-      onLoginSuccess={() => navigateTo(ROUTES.PROFILE)}
-      onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)}
-    />
+    <>
+      {themeSelector}
+      <LoginPage
+        onLoginSuccess={() => navigateTo(ROUTES.PROFILE)}
+        onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)}
+      />
+    </>
   );
 }
 

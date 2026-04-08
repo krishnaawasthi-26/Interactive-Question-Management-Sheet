@@ -1,34 +1,109 @@
 @import "tailwindcss";
 
-/* ---- Theme tweaks & utility variables ---- */
-:root{
-  --bg: 24 24 27;          /* rgb components for convenience */
-  --card-bg: 17 19 23;     /* darker card */
-  --muted: 148 163 184;    /* muted text */
-  --accent: 255 122 0;     /* orange */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0f1117;
+  --surface: #151a23;
+  --surface-elevated: #1c2330;
+  --surface-soft: rgba(255, 255, 255, 0.04);
+  --text-primary: #e6edf5;
+  --text-muted: #a2afc2;
+  --border-subtle: rgba(255, 255, 255, 0.14);
 }
 
-/* Subtle global body tweaks */
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --app-bg: #05070f;
+  --surface: #0c1220;
+  --surface-elevated: #111a2d;
+  --surface-soft: rgba(148, 163, 184, 0.11);
+  --text-primary: #dde7ff;
+  --text-muted: #9ab0d9;
+  --border-subtle: rgba(125, 166, 255, 0.3);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --app-bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-elevated: #f8fafc;
+  --surface-soft: rgba(15, 23, 42, 0.04);
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --border-subtle: rgba(15, 23, 42, 0.14);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
-  background-color: rgb(var(--bg));
-  color: #fff;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 180ms ease, color 180ms ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Small card utility (use className "card" if you want) */
-.card {
-  background-color: rgba(var(--card-bg), 0.7);
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+/* Theme remaps for existing utility classes used throughout the app. */
+:root[data-theme="light"] .bg-zinc-950,
+:root[data-theme="light"] .bg-zinc-900,
+:root[data-theme="light"] .dark\:bg-slate-950 {
+  background-color: var(--app-bg) !important;
 }
 
-/* input subtle inner glow on focus */
-:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(var(--accent),0.08);
+:root[data-theme="light"] .bg-zinc-900\/60,
+:root[data-theme="light"] .bg-zinc-900\/70,
+:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.03\)\],
+:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.02\)\],
+:root[data-theme="light"] .bg-\[rgba\(255\,255\,255\,0\.05\)\],
+:root[data-theme="light"] .bg-transparent {
+  background-color: var(--surface) !important;
 }
 
-/* small helper for muted text */
-.text-muted { color: rgba(var(--muted), 0.9); }
+:root[data-theme="light"] .bg-white,
+:root[data-theme="light"] .dark\:bg-slate-900,
+:root[data-theme="light"] .dark\:bg-slate-950\/80 {
+  background-color: var(--surface) !important;
+}
+
+:root[data-theme="light"] .bg-slate-100,
+:root[data-theme="light"] .bg-slate-50 {
+  background-color: var(--app-bg) !important;
+}
+
+:root[data-theme="light"] .text-white,
+:root[data-theme="light"] .text-slate-100,
+:root[data-theme="light"] .text-zinc-200,
+:root[data-theme="light"] .text-gray-200,
+:root[data-theme="light"] .dark\:text-slate-100 {
+  color: var(--text-primary) !important;
+}
+
+:root[data-theme="light"] .text-slate-500,
+:root[data-theme="light"] .text-gray-400,
+:root[data-theme="light"] .text-zinc-400,
+:root[data-theme="light"] .dark\:text-slate-300 {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme="light"] .border-gray-800,
+:root[data-theme="light"] .border-gray-700,
+:root[data-theme="light"] .border-zinc-800,
+:root[data-theme="light"] .border-zinc-700,
+:root[data-theme="light"] .border-zinc-600,
+:root[data-theme="light"] .border-slate-200,
+:root[data-theme="light"] .dark\:border-slate-700,
+:root[data-theme="light"] .dark\:border-slate-800 {
+  border-color: var(--border-subtle) !important;
+}
+
+:root[data-theme="light"] .hover\:bg-zinc-800:hover,
+:root[data-theme="light"] .hover\:bg-gray-800:hover,
+:root[data-theme="light"] .hover\:bg-slate-100:hover,
+:root[data-theme="light"] .hover\:bg-slate-50:hover {
+  background-color: var(--surface-elevated) !important;
+}
