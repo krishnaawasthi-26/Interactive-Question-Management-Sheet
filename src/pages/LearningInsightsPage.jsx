@@ -157,11 +157,10 @@ function LearningInsightsPage({ theme, onThemeChange }) {
       else if (diffDays <= 7) revisions.thisWeek += 1;
     });
 
-    const consistencyMap = new Map();
+    const dailyAttemptsMap = new Map();
     filteredAttempts.forEach((item) => {
-      const d = new Date(item.loggedAt);
-      const key = `${d.getDay()}-${Math.floor(d.getHours() / 4)}`;
-      consistencyMap.set(key, (consistencyMap.get(key) || 0) + 1);
+      const key = dayKey(item.loggedAt);
+      dailyAttemptsMap.set(key, (dailyAttemptsMap.get(key) || 0) + 1);
     });
 
     const timeByResult = ["solved", "partially_solved", "failed"].map((result) => {
@@ -179,10 +178,35 @@ function LearningInsightsPage({ theme, onThemeChange }) {
       };
     });
 
-    const recentMistakes = filteredAttempts
-      .flatMap((item) => (item.mistakes || []).map((mistake) => ({ id: `${item.loggedAt}-${mistake}`, name: mistake, topic: item.topic, when: new Date(item.loggedAt).toLocaleDateString() })))
-      .slice(-6)
-      .reverse();
+    const groupedRecentMistakes = new Map();
+    filteredAttempts.forEach((item) => {
+      const dateLabel = new Date(item.loggedAt).toLocaleDateString();
+      (item.mistakes || []).forEach((mistake) => {
+        const key = `${mistake}__${item.topic || "General"}`;
+        const existing = groupedRecentMistakes.get(key);
+        if (!existing) {
+          groupedRecentMistakes.set(key, {
+            id: key,
+            name: mistake,
+            topic: item.topic || "General",
+            count: 1,
+            latestAt: item.loggedAt,
+            when: dateLabel,
+          });
+          return;
+        }
+        existing.count += 1;
+        if (new Date(item.loggedAt) > new Date(existing.latestAt)) {
+          existing.latestAt = item.loggedAt;
+          existing.when = dateLabel;
+        }
+      });
+    });
+
+    const recentMistakes = Array.from(groupedRecentMistakes.values())
+      .sort((a, b) => new Date(b.latestAt) - new Date(a.latestAt))
+      .slice(0, 6)
+      .map((mistake) => ({ ...mistake, summary: `${mistake.name} in ${mistake.topic} • ${mistake.count} ${mistake.count === 1 ? "time" : "times"}` }));
 
     const practiceDays = [...new Set(filteredAttempts.map((item) => dayKey(item.loggedAt)))].sort();
     let streak = 0;
@@ -246,7 +270,7 @@ function LearningInsightsPage({ theme, onThemeChange }) {
         { label: "This week", count: revisions.thisWeek },
       ],
       confidenceVsResult,
-      consistencyMap,
+      dailyAttemptsMap,
       timeByResult,
     };
   }, [sheets, filters]);
@@ -310,14 +334,53 @@ function LearningInsightsPage({ theme, onThemeChange }) {
 
         <section className="panel rounded-2xl p-4">
           <h3 className="text-base font-semibold">Practice consistency heatmap</h3>
-          <div className="mt-4 grid grid-cols-6 gap-2 sm:grid-cols-7 lg:grid-cols-14">
-            {Array.from({ length: 42 }).map((_, index) => {
-              const date = new Date();
-              date.setDate(date.getDate() - (41 - index));
-              const key = `${date.getDay()}-${Math.floor(date.getHours() / 4)}`;
-              const count = dashboardData.consistencyMap.get(key) || 0;
-              return <div key={index} className="aspect-square rounded-md border border-[var(--border-subtle)]" style={{ background: `color-mix(in srgb, var(--accent-info) ${Math.min(85, count * 25)}%, var(--surface-elevated))` }} title={`${date.toDateString()} • ${count} attempts`} />;
-            })}
+          <div className="mt-4 overflow-x-auto">
+            <div className="inline-flex gap-2">
+              <div className="mt-6 grid grid-rows-7 gap-1 text-[10px] text-[var(--text-tertiary)]">
+                {["Mon", "", "Wed", "", "Fri", "", ""].map((label, index) => (
+                  <span key={`${label}-${index}`} className="h-3 leading-3">{label}</span>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <div className="flex gap-1 text-[10px] text-[var(--text-tertiary)]">
+                  {Array.from({ length: 20 }).map((_, weekIndex) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (140 - weekIndex * 7));
+                    const label = date.getDate() <= 7 ? date.toLocaleString(undefined, { month: "short" }) : "";
+                    return <span key={weekIndex} className="w-3">{label}</span>;
+                  })}
+                </div>
+                <div className="flex gap-1">
+                  {Array.from({ length: 20 }).map((_, weekIndex) => (
+                    <div key={weekIndex} className="grid grid-rows-7 gap-1">
+                      {Array.from({ length: 7 }).map((_, dayIndex) => {
+                        const date = new Date();
+                        const offset = 139 - (weekIndex * 7 + dayIndex);
+                        date.setDate(date.getDate() - offset);
+                        const key = dayKey(date);
+                        const count = dashboardData.dailyAttemptsMap.get(key) || 0;
+                        const intensity = count === 0 ? 0 : count >= 4 ? 4 : count >= 3 ? 3 : count >= 2 ? 2 : 1;
+                        const backgrounds = [
+                          "var(--surface-soft)",
+                          "color-mix(in srgb, var(--accent-success) 25%, var(--surface-soft))",
+                          "color-mix(in srgb, var(--accent-success) 45%, var(--surface-soft))",
+                          "color-mix(in srgb, var(--accent-success) 65%, var(--surface-soft))",
+                          "color-mix(in srgb, var(--accent-success) 85%, var(--surface-soft))",
+                        ];
+                        return (
+                          <div
+                            key={`${weekIndex}-${dayIndex}`}
+                            className="h-3 w-3 rounded-[3px] border border-[var(--border-subtle)]"
+                            style={{ background: backgrounds[intensity] }}
+                            title={`${date.toDateString()} • ${count} ${count === 1 ? "attempt" : "attempts"}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
