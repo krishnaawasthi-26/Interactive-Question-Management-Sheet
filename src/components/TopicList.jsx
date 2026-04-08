@@ -13,7 +13,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
   const deleteSubTopic = useSheetStore((state) => state.deleteSubTopic);
   const editQuestion = useSheetStore((state) => state.editQuestion);
   const deleteQuestion = useSheetStore((state) => state.deleteQuestion);
-  const addLinkToQuestion = useSheetStore((state) => state.addLinkToQuestion);
+  const updateQuestionResources = useSheetStore((state) => state.updateQuestionResources);
   const reorderTopics = useSheetStore((state) => state.reorderTopics);
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
   const moveQuestion = useSheetStore((state) => state.moveQuestion);
@@ -29,6 +29,9 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
   const [expandedTopics, setExpandedTopics] = useState({});
   const [expandedSubtopics, setExpandedSubtopics] = useState({});
   const [activeAttempt, setActiveAttempt] = useState(null);
+  const [resourceEditorByQuestion, setResourceEditorByQuestion] = useState({});
+  const [resourceDraftByQuestion, setResourceDraftByQuestion] = useState({});
+  const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
   const normalizeText = (value) =>
     value.trim().toLowerCase().replace(/\s+/g, " ");
   const normalizedQuery = normalizeText(searchQuery);
@@ -114,6 +117,27 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
       return;
     }
     setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text });
+  };
+
+  const startResourceEdit = (question) => {
+    setResourceEditorByQuestion((current) => ({ ...current, [question.id]: true }));
+    setResourceDraftByQuestion((current) => ({
+      ...current,
+      [question.id]: {
+        link: question.link || "",
+        articleLink: question.articleLink || "",
+        videoLink: question.videoLink || "",
+        notes: question.notes || "",
+      },
+    }));
+  };
+
+  const saveResourceEdit = (topicId, subId, questionId) => {
+    const draft = resourceDraftByQuestion[questionId];
+    if (!draft) return;
+    updateQuestionResources(topicId, subId, questionId, draft);
+    setResourceEditorByQuestion((current) => ({ ...current, [questionId]: false }));
+    setMobileActionQuestionId(null);
   };
 
   return (
@@ -348,7 +372,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        className="cursor-grab active:cursor-grabbing flex justify-between items-center mb-1 bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.03)] borderrounded border-t-3 border-l border-r border-b border-gray-500 p-2 rounded-md"
+                                                        className="cursor-grab active:cursor-grabbing mb-2 rounded-lg border border-gray-600 bg-[rgba(255,255,255,0.02)] p-3 hover:bg-[rgba(255,255,255,0.03)]"
                                                       >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
@@ -368,57 +392,167 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                             </button>
                                                           </div>
                                                         ) : (
-                                                          <span className="flex flex-1 items-center gap-2">
-                                                            <button
-                                                              type="button"
-                                                              disabled={!allowProgressToggle}
-                                                              onClick={() => handleToggleProgress(topic.id, sub.id, q)}
-                                                              className={`h-5 w-5 rounded border text-xs font-bold transition ${
-                                                                q.done
-                                                                  ? "border-emerald-500 bg-emerald-500 text-white"
-                                                                  : "border-zinc-500 bg-transparent text-transparent"
-                                                              } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-not-allowed opacity-70"}`}
-                                                              aria-label={q.done ? "Mark as not done" : "Mark as done"}
-                                                              title={q.done ? "Solved" : "Unsolved"}
-                                                            >
-                                                              ✓
-                                                            </button>
-                                                            {q.link ? (
-                                                              <a href={q.link} target="_blank" className="text-blue-500 underline">
-                                                                {q.text}
-                                                              </a>
-                                                            ) : (
-                                                              q.text
-                                                            )}
-                                                          </span>
-                                                        )}
+                                                          <div className="w-full">
+                                                            <div className="flex items-start justify-between gap-2">
+                                                              <span className="flex flex-1 items-start gap-2">
+                                                                <button
+                                                                  type="button"
+                                                                  disabled={!allowProgressToggle}
+                                                                  onClick={() => handleToggleProgress(topic.id, sub.id, q)}
+                                                                  className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${
+                                                                    q.done
+                                                                      ? "border-emerald-500 bg-emerald-500 text-white"
+                                                                      : "border-zinc-500 bg-transparent text-transparent"
+                                                                  } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-not-allowed opacity-70"}`}
+                                                                  aria-label={q.done ? "Mark as not done" : "Mark as done"}
+                                                                  title={q.done ? "Solved" : "Unsolved"}
+                                                                >
+                                                                  ✓
+                                                                </button>
+                                                                <span className="leading-6">{q.text}</span>
+                                                              </span>
+                                                              {isEditing && (
+                                                                <>
+                                                                  <div className="hidden items-center gap-1 sm:flex">
+                                                                    <button
+                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      onClick={() => {
+                                                                        setEditingQuestionId(q.id);
+                                                                        setEditValue(q.text);
+                                                                      }}
+                                                                    >
+                                                                      Edit
+                                                                    </button>
+                                                                    <button
+                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      onClick={() => deleteQuestion(topic.id, sub.id, q.id)}
+                                                                    >
+                                                                      Delete
+                                                                    </button>
+                                                                    <button
+                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      onClick={() => startResourceEdit(q)}
+                                                                    >
+                                                                      Resources
+                                                                    </button>
+                                                                  </div>
+                                                                  <button
+                                                                    type="button"
+                                                                    className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 sm:hidden"
+                                                                    onClick={() =>
+                                                                      setMobileActionQuestionId((current) => (current === q.id ? null : q.id))
+                                                                    }
+                                                                  >
+                                                                    Menu
+                                                                  </button>
+                                                                </>
+                                                              )}
+                                                            </div>
 
-                                                        {isEditing && (
-                                                          <div className="flex gap-1">
-                                                            <button
-                                                              className="px-2 py-0.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-sm transition"
-                                                              onClick={() => {
-                                                                setEditingQuestionId(q.id);
-                                                                setEditValue(q.text);
-                                                              }}
-                                                            >
-                                                              Edit
-                                                            </button>
-                                                            <button
-                                                              className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition"
-                                                              onClick={() => deleteQuestion(topic.id, sub.id, q.id)}
-                                                            >
-                                                              Delete
-                                                            </button>
-                                                            <button
-                                                              className="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition"
-                                                              onClick={() => {
-                                                                const link = prompt("Enter link:", q.link || "");
-                                                                if (link !== null) addLinkToQuestion(topic.id, sub.id, q.id, link);
-                                                              }}
-                                                            >
-                                                              Add Link
-                                                            </button>
+                                                            {(q.link || q.articleLink || q.videoLink || q.notes) && (
+                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-7 text-xs">
+                                                                {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Link</a>}
+                                                                {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Article</a>}
+                                                                {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Video</a>}
+                                                                {q.notes && <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-200">Notes added</span>}
+                                                              </div>
+                                                            )}
+
+                                                            {isEditing && mobileActionQuestionId === q.id && (
+                                                              <div className="mt-2 flex flex-wrap gap-1 pl-7 sm:hidden">
+                                                                <button
+                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  onClick={() => {
+                                                                    setEditingQuestionId(q.id);
+                                                                    setEditValue(q.text);
+                                                                    setMobileActionQuestionId(null);
+                                                                  }}
+                                                                >
+                                                                  Edit
+                                                                </button>
+                                                                <button
+                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  onClick={() => {
+                                                                    deleteQuestion(topic.id, sub.id, q.id);
+                                                                    setMobileActionQuestionId(null);
+                                                                  }}
+                                                                >
+                                                                  Delete
+                                                                </button>
+                                                                <button
+                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  onClick={() => startResourceEdit(q)}
+                                                                >
+                                                                  Resources
+                                                                </button>
+                                                              </div>
+                                                            )}
+
+                                                            {isEditing && resourceEditorByQuestion[q.id] && (
+                                                              <div className="mt-3 space-y-2 rounded-md border border-zinc-700 bg-[rgba(0,0,0,0.2)] p-3 pl-7">
+                                                                <input
+                                                                  value={resourceDraftByQuestion[q.id]?.link || ""}
+                                                                  onChange={(event) =>
+                                                                    setResourceDraftByQuestion((current) => ({
+                                                                      ...current,
+                                                                      [q.id]: { ...current[q.id], link: event.target.value },
+                                                                    }))
+                                                                  }
+                                                                  placeholder="Problem link"
+                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                />
+                                                                <input
+                                                                  value={resourceDraftByQuestion[q.id]?.articleLink || ""}
+                                                                  onChange={(event) =>
+                                                                    setResourceDraftByQuestion((current) => ({
+                                                                      ...current,
+                                                                      [q.id]: { ...current[q.id], articleLink: event.target.value },
+                                                                    }))
+                                                                  }
+                                                                  placeholder="Article link"
+                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                />
+                                                                <input
+                                                                  value={resourceDraftByQuestion[q.id]?.videoLink || ""}
+                                                                  onChange={(event) =>
+                                                                    setResourceDraftByQuestion((current) => ({
+                                                                      ...current,
+                                                                      [q.id]: { ...current[q.id], videoLink: event.target.value },
+                                                                    }))
+                                                                  }
+                                                                  placeholder="Video link"
+                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                />
+                                                                <textarea
+                                                                  value={resourceDraftByQuestion[q.id]?.notes || ""}
+                                                                  onChange={(event) =>
+                                                                    setResourceDraftByQuestion((current) => ({
+                                                                      ...current,
+                                                                      [q.id]: { ...current[q.id], notes: event.target.value },
+                                                                    }))
+                                                                  }
+                                                                  placeholder="Notes"
+                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                  rows={3}
+                                                                />
+                                                                <div className="flex gap-2">
+                                                                  <button
+                                                                    className="rounded-md bg-green-600 px-2 py-1 text-xs text-white"
+                                                                    onClick={() => saveResourceEdit(topic.id, sub.id, q.id)}
+                                                                  >
+                                                                    Save resources
+                                                                  </button>
+                                                                  <button
+                                                                    className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                    onClick={() =>
+                                                                      setResourceEditorByQuestion((current) => ({ ...current, [q.id]: false }))
+                                                                    }
+                                                                  >
+                                                                    Cancel
+                                                                  </button>
+                                                                </div>
+                                                              </div>
+                                                            )}
                                                           </div>
                                                         )}
                                                       </li>

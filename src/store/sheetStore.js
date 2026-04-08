@@ -372,6 +372,31 @@ export const useSheetStore = create((set, get) => ({
       return { ...nextState, hasPendingChanges };
     }),
 
+  updateQuestionResources: (topicId, subId, questionId, resources) =>
+    set((state) => {
+      const topics = state.topics.map((topic) =>
+        topic.id !== topicId
+          ? topic
+          : {
+              ...topic,
+              subTopics: topic.subTopics.map((subTopic) =>
+                subTopic.id !== subId
+                  ? subTopic
+                  : {
+                      ...subTopic,
+                      questions: subTopic.questions.map((question) =>
+                        question.id !== questionId ? question : { ...question, ...resources }
+                      ),
+                    }
+              ),
+            }
+      );
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    }),
+
   undo: () =>
     set((state) => {
       if (state.past.length === 0) return state;

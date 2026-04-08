@@ -15,6 +15,9 @@ export const createQuestion = (text) => ({
   id: Date.now(),
   text,
   link: "",
+  articleLink: "",
+  videoLink: "",
+  notes: "",
 });
 
 export const updateTopicById = (topics, topicId, updater) =>

@@ -81,6 +81,9 @@ const createQuestionEntry = (text) => ({
   text,
   answer: "",
   link: "",
+  articleLink: "",
+  videoLink: "",
+  notes: "",
   done: false,
 });
 
