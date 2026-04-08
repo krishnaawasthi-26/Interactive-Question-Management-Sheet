@@ -186,7 +186,13 @@ function ProfilePage({ onLogout }) {
                           style={{ width: `${progress.percent}%` }}
                         />
                       </div>
-                      <p className="text-xs text-zinc-400 break-all">Share: {`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}</p>
+                      {sheet.isPublic ? (
+                        <p className="text-xs text-zinc-400 break-all">
+                          Share: {`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-zinc-500">Share link is hidden while this sheet is private.</p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <button

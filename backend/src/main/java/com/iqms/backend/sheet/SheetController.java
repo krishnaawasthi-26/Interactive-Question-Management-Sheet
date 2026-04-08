@@ -56,7 +56,7 @@ public class SheetController {
       @PathVariable String sheetId,
       @RequestBody Map<String, Object> body) {
     String title = body.get("title") == null ? null : body.get("title").toString();
-    List<Map<String, Object>> topics = parseTopics(body.get("topics"));
+    List<Map<String, Object>> topics = body.containsKey("topics") ? parseTopics(body.get("topics")) : null;
     Boolean isPublic = parseBoolean(body.get("isPublic"));
     Boolean isArchived = parseBoolean(body.get("isArchived"));
     return ResponseEntity.ok(
@@ -64,6 +64,9 @@ public class SheetController {
   }
 
   private List<Map<String, Object>> parseTopics(Object topicsValue) {
+    if (topicsValue == null) {
+      return null;
+    }
     if (!(topicsValue instanceof List<?> rawTopics)) {
       return Collections.emptyList();
     }
