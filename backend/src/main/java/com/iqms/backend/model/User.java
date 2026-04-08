@@ -35,6 +35,7 @@ public class User {
   private String linkedinUrl;
   private Set<String> followerUserIds = new LinkedHashSet<>();
   private Set<String> followingUserIds = new LinkedHashSet<>();
+  private Set<String> copiedSheetIds = new LinkedHashSet<>();
 
   public String getId() {
     return id;
@@ -154,5 +155,13 @@ public class User {
 
   public void setFollowingUserIds(Set<String> followingUserIds) {
     this.followingUserIds = followingUserIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(followingUserIds);
+  }
+
+  public Set<String> getCopiedSheetIds() {
+    return copiedSheetIds;
+  }
+
+  public void setCopiedSheetIds(Set<String> copiedSheetIds) {
+    this.copiedSheetIds = copiedSheetIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(copiedSheetIds);
   }
 }

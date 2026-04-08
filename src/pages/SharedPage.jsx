@@ -19,11 +19,60 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
   const [error, setError] = useState(null);
   const [engagementViewer, setEngagementViewer] = useState(null);
   const [followPending, setFollowPending] = useState(false);
+  const [showRemixModal, setShowRemixModal] = useState(false);
+  const [remixTitle, setRemixTitle] = useState("My Web Dev Roadmap");
+  const [includeLinks, setIncludeLinks] = useState(true);
+  const [includeNotes, setIncludeNotes] = useState(true);
+  const [keepAttribution, setKeepAttribution] = useState(true);
+  const [copyPending, setCopyPending] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const setReadOnlySheet = useSheetStore((state) => state.setReadOnlySheet);
   const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
+
+  const removeKeysRecursively = (value, disallowedKeys) => {
+    if (Array.isArray(value)) {
+      return value.map((entry) => removeKeysRecursively(entry, disallowedKeys));
+    }
+
+    if (!value || typeof value !== "object") {
+      return value;
+    }
+
+    return Object.entries(value).reduce((acc, [key, entry]) => {
+      if (disallowedKeys.has(key)) return acc;
+      acc[key] = removeKeysRecursively(entry, disallowedKeys);
+      return acc;
+    }, {});
+  };
+
+  const getRemixTopics = () => {
+    const disallowedKeys = new Set();
+    if (!includeLinks) {
+      disallowedKeys.add("link");
+      disallowedKeys.add("links");
+      disallowedKeys.add("resource");
+      disallowedKeys.add("resources");
+      disallowedKeys.add("resourceUrl");
+      disallowedKeys.add("resourceUrls");
+      disallowedKeys.add("url");
+      disallowedKeys.add("urls");
+    }
+    if (!includeNotes) {
+      disallowedKeys.add("note");
+      disallowedKeys.add("notes");
+      disallowedKeys.add("personalNote");
+      disallowedKeys.add("personalNotes");
+      disallowedKeys.add("description");
+    }
+
+    if (disallowedKeys.size === 0) {
+      return sharedSheet?.topics || [];
+    }
+
+    return removeKeysRecursively(sharedSheet?.topics || [], disallowedKeys);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -280,15 +329,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
             <button
               type="button"
               className="rounded border border-amber-700 px-3 py-1 text-sm text-amber-200"
-              onClick={async () => {
-                try {
-                  await trackSheetEngagement(currentUser.token, sharedSheet.id, "copy");
-                } catch {
-                  // no-op; copy should not be blocked
-                }
-                const copied = await duplicateSheet(currentUser.token, sharedSheet);
-                navigateTo(`${ROUTES.APP}/${copied.id}`);
-              }}
+              onClick={() => setShowRemixModal(true)}
             >
               Copy to my sheets
             </button>
@@ -296,6 +337,87 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
         </div>
       </div>
       <TopicList isEditing={false} allowProgressToggle={false} />
+      {showRemixModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100/65 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4">
+              <h2 className="text-xl font-semibold text-slate-900">Remix Sheet</h2>
+              <button
+                type="button"
+                className="rounded-md border border-slate-200 px-2 py-1 text-slate-600 hover:bg-slate-50"
+                onClick={() => setShowRemixModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="border-t border-slate-200" />
+            <div className="space-y-5 px-6 py-5 text-slate-800">
+              <label className="block text-sm font-medium" htmlFor="remix-title-input">
+                New Title:
+              </label>
+              <input
+                id="remix-title-input"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none ring-0 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                value={remixTitle}
+                onChange={(event) => setRemixTitle(event.target.value)}
+              />
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={includeLinks} onChange={(event) => setIncludeLinks(event.target.checked)} />
+                  Include Links &amp; Resources
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={includeNotes} onChange={(event) => setIncludeNotes(event.target.checked)} />
+                  Include Personal Notes
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={keepAttribution}
+                    onChange={(event) => setKeepAttribution(event.target.checked)}
+                  />
+                  Keep Original Creator Attribution
+                </label>
+              </div>
+            </div>
+            <div className="border-t border-slate-200" />
+            <div className="flex justify-end px-6 py-4">
+              <button
+                type="button"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                disabled={copyPending}
+                onClick={async () => {
+                  if (!currentUser?.token || !sharedSheet) return;
+                  setCopyPending(true);
+                  try {
+                    try {
+                      await trackSheetEngagement(currentUser.token, sharedSheet.id, "copy");
+                    } catch {
+                      // no-op; copy should not be blocked
+                    }
+                    const computedTitle = remixTitle.trim() || "My Web Dev Roadmap";
+                    const copied = await duplicateSheet(
+                      currentUser.token,
+                      {
+                        ...sharedSheet,
+                        topics: getRemixTopics(),
+                      },
+                      `${computedTitle}${keepAttribution && username ? ` (Remix of @${username})` : ""}`
+                    );
+                    if (!copied) return;
+                    setShowRemixModal(false);
+                    navigateTo(`${ROUTES.APP}/${copied.id}`);
+                  } finally {
+                    setCopyPending(false);
+                  }
+                }}
+              >
+                {copyPending ? "Creating..." : "Create Remix"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
