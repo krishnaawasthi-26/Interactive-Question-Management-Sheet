@@ -61,9 +61,9 @@ class AuthServiceTest {
 
     AuthResponse response = authService.signUp(signUpRequest);
 
-    assertThat(response.id()).isEqualTo("user-1");
-    assertThat(response.token()).isEqualTo("token-1");
-    assertThat(response.email()).isEqualTo("jane@example.com");
+    assertThat(response.getId()).isEqualTo("user-1");
+    assertThat(response.getToken()).isEqualTo("token-1");
+    assertThat(response.getEmail()).isEqualTo("jane@example.com");
   }
 
   @Test
@@ -95,7 +95,7 @@ class AuthServiceTest {
 
     AuthResponse response = authService.login(request, "device-1");
 
-    assertThat(response.token()).isEqualTo("token-1");
+    assertThat(response.getToken()).isEqualTo("token-1");
     verify(loginAttemptService).recordSuccess("device-1");
   }
 
