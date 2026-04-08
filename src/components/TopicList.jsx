@@ -216,7 +216,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                       )}
                     </div>
 
-                    {(expandedTopics[topic.id] || shouldExpandAll) && (
+                    {(expandedTopics[topic.id] || shouldExpandAll || !isEditing) && (
                       <>
                         {isEditing && (
                           <div className="mb-2 mt-2 flex gap-2">
@@ -320,7 +320,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                         )}
                                       </div>
 
-                                      {(expandedSubtopics[sub.id] || shouldExpandAll) && (
+                                      {(expandedSubtopics[sub.id] || shouldExpandAll || !isEditing) && (
                                         <>
                                           {isEditing && (
                                             <div className="flex gap-2 mt-1 mb-1">

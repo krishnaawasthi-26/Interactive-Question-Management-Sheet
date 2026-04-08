@@ -1,12 +1,15 @@
 import { getCurrentRoute, navigateTo, ROUTES } from "../services/routes";
 
 const primaryLinks = [
-  { label: "My Sheets", route: ROUTES.PROFILE, icon: "📚" },
-  { label: "Public Sheets", route: ROUTES.ABOUT, icon: "🌐" },
+  { label: "Home", route: ROUTES.HOME, icon: "🏠" },
+  { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
+  { label: "My Sheets", route: ROUTES.APP, icon: "📚" },
+  { label: "Public Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🌐" },
   { label: "Learning Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "📈" },
 ];
 
 const supportLinks = [
+  { label: "About Us", route: ROUTES.ABOUT, icon: "ℹ️" },
   { label: "How To Use", route: ROUTES.HOW_TO_USE, icon: "🧭" },
   { label: "Contact", route: ROUTES.CONTACT, icon: "✉️" },
 ];

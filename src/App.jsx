@@ -8,7 +8,9 @@ import HowToUsePage from "./pages/HowToUsePage";
 import ImportPage from "./pages/ImportPage";
 import LearningInsightsPage from "./pages/LearningInsightsPage";
 import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import PublicSheetsPage from "./pages/PublicSheetsPage";
 import SharedPage from "./pages/SharedPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -58,19 +60,19 @@ function ExportRoute({ theme, onThemeChange }) {
   return <ExportPage theme={theme} onThemeChange={onThemeChange} onBack={() => navigate(`${ROUTES.APP}/${sheetId || ""}`)} />;
 }
 
-function SharedRoute() {
+function SharedRoute({ theme, onThemeChange }) {
   const { shareType, shareId } = useParams();
-  return <SharedPage shareType={shareType} shareId={shareId} />;
+  return <SharedPage shareType={shareType} shareId={shareId} theme={theme} onThemeChange={onThemeChange} />;
 }
 
-function PublicProfileRoute() {
+function PublicProfileRoute({ theme, onThemeChange }) {
   const { username } = useParams();
-  return <SharedPage shareType="public-profile" username={username} />;
+  return <SharedPage shareType="public-profile" username={username} theme={theme} onThemeChange={onThemeChange} />;
 }
 
-function PublicSheetRoute() {
+function PublicSheetRoute({ theme, onThemeChange }) {
   const { username, sheetSlug } = useParams();
-  return <SharedPage shareType="public-sheet" username={username} sheetSlug={sheetSlug} />;
+  return <SharedPage shareType="public-sheet" username={username} sheetSlug={sheetSlug} theme={theme} onThemeChange={onThemeChange} />;
 }
 
 function App() {
@@ -99,12 +101,14 @@ function App() {
       <Route path={ROUTES.CONTACT} element={<ContactPage theme={theme} onThemeChange={setTheme} />} />
       <Route path={ROUTES.HOW_TO_USE} element={<HowToUsePage theme={theme} onThemeChange={setTheme} />} />
 
-      <Route path={`${ROUTES.SHARED_PREFIX}/:shareType/:shareId`} element={<SharedRoute />} />
-      <Route path={`${ROUTES.PROFILE}/:username/:sheetSlug`} element={<PublicSheetRoute />} />
-      <Route path={`${ROUTES.PROFILE}/:username`} element={<PublicProfileRoute />} />
+      <Route path={`${ROUTES.SHARED_PREFIX}/:shareType/:shareId`} element={<SharedRoute theme={theme} onThemeChange={setTheme} />} />
+      <Route path={`${ROUTES.PROFILE}/:username/:sheetSlug`} element={<PublicSheetRoute theme={theme} onThemeChange={setTheme} />} />
+      <Route path={`${ROUTES.PROFILE}/:username`} element={<PublicProfileRoute theme={theme} onThemeChange={setTheme} />} />
 
       <Route element={<ProtectedRoute />}>
+        <Route path={ROUTES.HOME} element={<HomePage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.PUBLIC_SHEETS} element={<PublicSheetsPage theme={theme} onThemeChange={setTheme} />} />
         <Route
           path={ROUTES.PROFILE}
           element={(
@@ -123,7 +127,7 @@ function App() {
         <Route path={`${ROUTES.EXPORT}/:sheetId?`} element={<ExportRoute theme={theme} onThemeChange={setTheme} />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
     </Routes>
   );
 }

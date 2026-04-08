@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import TopicList from "../components/TopicList";
 import {
   fetchPublicProfile,
@@ -13,7 +14,12 @@ import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
 
-function SharedPage({ shareType, shareId, username, sheetSlug }) {
+function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp }) {
+  const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
+  const shareType = shareTypeProp ?? shareTypeFromRoute;
+  const shareId = shareIdProp ?? shareIdFromRoute;
+  const username = usernameProp ?? usernameFromRoute;
+  const sheetSlug = sheetSlugProp ?? sheetSlugFromRoute;
   const [profile, setProfile] = useState(null);
   const [sharedSheet, setSharedSheet] = useState(null);
   const [error, setError] = useState(null);
@@ -433,14 +439,14 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 p-6 text-white">
+    <div className="min-h-screen bg-[var(--app-bg)] p-6 text-[var(--text-primary)]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{sheetTitle} (Read only)</h1>
         <div className="flex flex-wrap items-center gap-2">
           {currentUser?.token && sharedSheet && (
             <button
               type="button"
-              className="rounded border border-emerald-700 px-3 py-1 text-sm text-emerald-200"
+              className="rounded border border-emerald-600/40 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-300"
               onClick={async () => {
                 try {
                   await trackSheetEngagement(currentUser.token, sharedSheet.id, "download");
@@ -456,7 +462,7 @@ function SharedPage({ shareType, shareId, username, sheetSlug }) {
           {currentUser?.token && sharedSheet && (
             <button
               type="button"
-              className="rounded border border-amber-700 px-3 py-1 text-sm text-amber-200"
+              className="rounded border border-amber-600/40 bg-amber-500/10 px-3 py-1 text-sm text-amber-300"
               onClick={() => setShowRemixModal(true)}
             >
               Copy to my sheets
