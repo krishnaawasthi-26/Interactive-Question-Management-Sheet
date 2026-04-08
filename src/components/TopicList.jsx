@@ -110,13 +110,13 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
     setEditValue("");
   };
 
-  const handleToggleProgress = (topicId, subId, question) => {
+  const handleToggleProgress = (topicId, subId, question, topicTitle, subTopicTitle) => {
     if (!allowProgressToggle) return;
     if (question.done) {
       toggleQuestionDone(topicId, subId, question.id);
       return;
     }
-    setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text });
+    setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text, questionLink: question.link, topicName: topicTitle, subTopicName: subTopicTitle });
   };
 
   const startResourceEdit = (question) => {
@@ -398,7 +398,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                                 <button
                                                                   type="button"
                                                                   disabled={!allowProgressToggle}
-                                                                  onClick={() => handleToggleProgress(topic.id, sub.id, q)}
+                                                                  onClick={() => handleToggleProgress(topic.id, sub.id, q, topic.title, sub.title)}
                                                                   className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${
                                                                     q.done
                                                                       ? "border-emerald-500 bg-emerald-500 text-white"
@@ -587,6 +587,8 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
       {activeAttempt && (
         <AttemptLogModal
           questionText={activeAttempt.questionText}
+          questionLink={activeAttempt.questionLink}
+          topicName={activeAttempt.topicName}
           onClose={() => setActiveAttempt(null)}
           onSave={(attemptLog) => {
             updateQuestionAttempt(activeAttempt.topicId, activeAttempt.subId, activeAttempt.questionId, attemptLog);
