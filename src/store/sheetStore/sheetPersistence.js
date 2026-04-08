@@ -191,8 +191,14 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       getState: get,
       overrideFields: { title },
     });
-    await saveSheet(token, sheetId, payload);
-    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { title }) }));
+    const updatedSheet = await saveSheet(token, sheetId, payload);
+    set((state) => {
+      const nextActiveState = state.activeSheetId === sheetId ? { sheetTitle: title } : {};
+      return {
+        ...nextActiveState,
+        sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet || { title }),
+      };
+    });
   },
 
   setSheetVisibility: async (token, sheetId, isPublic) => {
@@ -202,8 +208,10 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       getState: get,
       overrideFields: { isPublic },
     });
-    await saveSheet(token, sheetId, payload);
-    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isPublic }) }));
+    const updatedSheet = await saveSheet(token, sheetId, payload);
+    set((state) => ({
+      sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet || { isPublic }),
+    }));
   },
 
   setSheetArchived: async (token, sheetId, isArchived) => {
@@ -213,8 +221,10 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       getState: get,
       overrideFields: { isArchived },
     });
-    await saveSheet(token, sheetId, payload);
-    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isArchived }) }));
+    const updatedSheet = await saveSheet(token, sheetId, payload);
+    set((state) => ({
+      sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet || { isArchived }),
+    }));
   },
 
   setSheetTitle: (title) =>
