@@ -158,7 +158,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       theme={theme}
       onThemeChange={onThemeChange}
       userLabel={currentUser?.fullName || currentUser?.email || "Account"}
-      rightPanel={<EditorActionPanel actions={sheetActionButtons} />}
+      rightPanel={isEditing ? <EditorActionPanel actions={sheetActionButtons} /> : null}
     >
       <div className="panel rounded-3xl p-4 sm:p-5">
         {isEditing && (
@@ -181,7 +181,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           {(isLoading || loadError || saveError) && (
             <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
           )}
-          {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} />}
+          {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} onOpenEdit={() => setIsEditing(true)} />}
         </main>
       </div>
     </AppShell>
