@@ -10,6 +10,7 @@
   --text-primary: #e6edf5;
   --text-muted: #a2afc2;
   --border-subtle: rgba(255, 255, 255, 0.14);
+  --danger-color: #f87171;
   --btn-accent-primary: #3730a3;
   --btn-accent-primary-hover: #312e81;
   --btn-accent-warm: #9a3412;
@@ -32,6 +33,7 @@
   --text-primary: #dde7ff;
   --text-muted: #9ab0d9;
   --border-subtle: rgba(125, 166, 255, 0.3);
+  --danger-color: #f87171;
   --btn-accent-primary: #312e81;
   --btn-accent-primary-hover: #1e1b4b;
   --btn-accent-warm: #7c2d12;
@@ -54,6 +56,7 @@
   --text-primary: #0f172a;
   --text-muted: #475569;
   --border-subtle: rgba(15, 23, 42, 0.14);
+  --danger-color: #dc2626;
   --btn-accent-primary: #312e81;
   --btn-accent-primary-hover: #1e1b4b;
   --btn-accent-warm: #9a3412;
@@ -212,7 +215,6 @@ body {
 
 @media (min-width: 1024px) {
   .app-shell {
-    padding-left: 18rem;
-    padding-right: 1.5rem;
+    padding: 1.5rem 1.5rem 1.5rem 18.5rem;
   }
 }

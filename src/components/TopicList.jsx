@@ -148,7 +148,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="space-y-4"
+              className="space-y-3"
             >
             {visibleTopics.map((topic, tIndex) => (
               <Draggable
@@ -161,16 +161,16 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="cursor-grab active:cursor-grabbing p-4 rounded-xl shadow-sm border border-gray-800 bg-[rgba(255,255,255,0.03)]"
+                    className="cursor-grab active:cursor-grabbing rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55"
                   >
                     {/* Topic */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
                       <div className="flex items-center flex-1">
                         <button
                           onClick={() => toggleTopic(topic.id)}
-                          className="mr-2 px-2 py-1 bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] rounded text-indigo-100 transition"
+                          className="mr-2 flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
                         >
-                          {expandedTopics[topic.id] ? "-" : "+"}
+                          <span className={`text-xs transition ${expandedTopics[topic.id] ? "rotate-90" : ""}`}>▸</span>
                         </button>
 
                         {editingTopicId === topic.id && isEditing ? (
@@ -191,14 +191,14 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                             </button>
                           </div>
                         ) : (
-                          <h2 className="text-lg font-semibold">{topic.title}</h2>
+                          <h2 className="text-sm font-semibold text-[var(--text-primary)]">{topic.title}</h2>
                         )}
                       </div>
 
                       {isEditing && (
-                        <div className="flex gap-2">
+                        <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-1">
                           <button
-                            className="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm transition"
+                            className="rounded-md px-2 py-1 text-xs text-[var(--text-primary)] transition hover:bg-[var(--surface)]"
                             onClick={() => {
                               setEditingTopicId(topic.id);
                               setEditValue(topic.title);
@@ -207,7 +207,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                             Edit
                           </button>
                           <button
-                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition"
+                            className="rounded-md px-2 py-1 text-xs text-[var(--danger-color)] transition hover:bg-[var(--danger-color)]/15"
                             onClick={() => deleteTopic(topic.id)}
                           >
                             Delete
@@ -219,7 +219,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                     {(expandedTopics[topic.id] || shouldExpandAll) && (
                       <>
                         {isEditing && (
-                          <div className="flex gap-2 mb-2">
+                          <div className="mb-2 mt-2 flex gap-2">
                             <input
                               placeholder="Add Subtopic"
                               className="flex-1 bg-transparent border border-gray-700 px-2 py-1 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -238,7 +238,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                             />
 
                             <button
-                              className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition"
+                              className="rounded-md bg-[var(--btn-accent-primary)] px-2.5 py-1 text-xs font-medium text-white transition hover:bg-[var(--btn-accent-primary-hover)]"
                               onClick={() => {
                                 if (!subInput[topic.id]) return;
                                 addSubTopic(topic.id, subInput[topic.id]).then((created) => {
@@ -257,7 +257,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className="pl-4 space-y-2"
+                              className="space-y-2 pl-4"
                             >
                               {topic.subTopics.map((sub, sIndex) => (
                                 <Draggable key={sub.id} draggableId={sub.id.toString()} index={sIndex}>
@@ -266,15 +266,15 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
-                                      className="cursor-grab active:cursor-grabbing border-l-4 py-2 rounded-md bg-[rgba(255,255,255,0.02)] border-gray-500"
+                                      className="cursor-grab active:cursor-grabbing rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/60 py-1"
                                     >
-                                      <div className="flex items-center justify-between p-3">
+                                      <div className="flex items-center justify-between gap-3 p-2">
                                         <div className="flex items-center flex-1">
                                           <button
                                             onClick={() => toggleSubtopic(sub.id)}
-                                            className="mr-2 px-2 py-1 bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] rounded text-indigo-100 transition"
+                                            className="mr-2 flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
                                           >
-                                            {expandedSubtopics[sub.id] ? "-" : "+"}
+                                            <span className={`text-xs transition ${expandedSubtopics[sub.id] ? "rotate-90" : ""}`}>▸</span>
                                           </button>
 
                                           {editingSubId === sub.id && isEditing ? (
@@ -295,14 +295,14 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                               </button>
                                             </div>
                                           ) : (
-                                            <h3 className="font-medium">{sub.title}</h3>
+                                            <h3 className="text-sm font-medium text-[var(--text-primary)]">{sub.title}</h3>
                                           )}
                                         </div>
 
                                         {isEditing && (
-                                          <div className="flex gap-2">
+                                          <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-1">
                                             <button
-                                              className="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm transition"
+                                              className="rounded-md px-2 py-1 text-xs text-[var(--text-primary)] transition hover:bg-[var(--surface)]"
                                               onClick={() => {
                                                 setEditingSubId(sub.id);
                                                 setEditValue(sub.title);
@@ -311,7 +311,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                               Edit
                                             </button>
                                             <button
-                                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition"
+                                              className="rounded-md px-2 py-1 text-xs text-[var(--danger-color)] transition hover:bg-[var(--danger-color)]/15"
                                               onClick={() => deleteSubTopic(topic.id, sub.id)}
                                             >
                                               Delete
@@ -363,7 +363,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                               <ul
                                                 ref={provided.innerRef}
                                                 {...provided.droppableProps}
-                                                className="pl-6 py-2 rounded-md bg-[rgba(74,33,33,0.09)] border-gray-500"
+                                                className="space-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-soft)] px-2 py-2"
                                               >
                                                 {sub.questions.map((q, qIndex) => (
                                                   <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex}>
@@ -372,7 +372,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        className="cursor-grab active:cursor-grabbing mb-2 rounded-lg border border-gray-600 bg-[rgba(255,255,255,0.02)] p-3 hover:bg-[rgba(255,255,255,0.03)]"
+                                                        className="cursor-grab active:cursor-grabbing rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60"
                                                       >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
@@ -409,7 +409,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                                 >
                                                                   ✓
                                                                 </button>
-                                                                <span className="leading-6">{q.text}</span>
+                                                                <span className="text-sm leading-5 text-[var(--text-primary)]">{q.text}</span>
                                                               </span>
                                                               {isEditing && (
                                                                 <>
@@ -450,11 +450,11 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                             </div>
 
                                                             {(q.link || q.articleLink || q.videoLink || q.notes) && (
-                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-7 text-xs">
-                                                                {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Link</a>}
-                                                                {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Article</a>}
-                                                                {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded bg-zinc-800 px-2 py-1 text-blue-300">Video</a>}
-                                                                {q.notes && <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-200">Notes added</span>}
+                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-7 text-[11px]">
+                                                                {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Link</a>}
+                                                                {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Article</a>}
+                                                                {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Video</a>}
+                                                                {q.notes && <span className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Notes added</span>}
                                                               </div>
                                                             )}
 
@@ -535,7 +535,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                                   className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
                                                                   rows={3}
                                                                 />
-                                                                <div className="flex gap-2">
+                                                                <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-1">
                                                                   <button
                                                                     className="rounded-md bg-green-600 px-2 py-1 text-xs text-white"
                                                                     onClick={() => saveResourceEdit(topic.id, sub.id, q.id)}

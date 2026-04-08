@@ -2,36 +2,53 @@ import { navigateTo, ROUTES } from "../services/hashRouter";
 
 const primaryLinks = [
   { label: "Profile", route: ROUTES.PROFILE },
-  { label: "About Us", route: ROUTES.ABOUT },
+  { label: "About", route: ROUTES.ABOUT },
   { label: "How To Use", route: ROUTES.HOW_TO_USE },
-  { label: "Contact Us", route: ROUTES.CONTACT },
+  { label: "Contact", route: ROUTES.CONTACT },
   { label: "Learning Insights", route: ROUTES.LEARNING_INSIGHTS },
 ];
 
-function SiteNav({ actionButtons = [], showSidebarActions = false }) {
+function SiteNav() {
   return (
     <>
-      <nav className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-3 lg:hidden">
-        {primaryLinks.map((link) => (
-          <button
-            key={link.route}
-            type="button"
-            className="rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 transition hover:bg-zinc-800"
-            onClick={() => navigateTo(link.route)}
+      <nav className="mb-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)]/90 p-3 lg:hidden">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">IQMS</p>
+          <a
+            href="https://leetcode.com"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-[var(--border-subtle)] px-2 py-1 text-xs text-[var(--text-muted)]"
           >
-            {link.label}
-          </button>
-        ))}
-      </nav>
-
-      <aside className="fixed left-4 top-20 z-40 hidden w-60 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)]/95 p-4 shadow-xl backdrop-blur lg:block">
-        <p className="mb-4 text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">IQMS</p>
-        <div className="space-y-2">
+            LeetCode
+          </a>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           {primaryLinks.map((link) => (
             <button
               key={link.route}
               type="button"
-              className="w-full rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-left text-sm text-[var(--text-primary)] transition hover:bg-[var(--surface-elevated)]"
+              className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/55 px-3 py-2 text-left text-sm text-[var(--text-primary)] transition hover:bg-[var(--surface-elevated)]"
+              onClick={() => navigateTo(link.route)}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <aside className="fixed left-6 top-6 bottom-6 z-40 hidden w-64 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/96 p-5 shadow-xl lg:block">
+        <div className="mb-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">IQMS</p>
+          <h1 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Question Sheets</h1>
+        </div>
+
+        <div className="space-y-1.5">
+          {primaryLinks.map((link) => (
+            <button
+              key={link.route}
+              type="button"
+              className="w-full rounded-xl px-3 py-2.5 text-left text-sm text-[var(--text-muted)] transition hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
               onClick={() => navigateTo(link.route)}
             >
               {link.label}
@@ -41,30 +58,11 @@ function SiteNav({ actionButtons = [], showSidebarActions = false }) {
             href="https://leetcode.com"
             target="_blank"
             rel="noreferrer"
-            className="block w-full rounded-lg border border-amber-700 px-3 py-2 text-left text-sm text-amber-200 transition hover:bg-amber-900/20"
+            className="mt-2 block w-full rounded-xl px-3 py-2.5 text-left text-sm text-[var(--text-muted)] transition hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
           >
             LeetCode
           </a>
         </div>
-
-        {showSidebarActions && actionButtons.length > 0 && (
-          <div className="mt-5 border-t border-[var(--border-subtle)] pt-4">
-            <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">Sheet Actions</p>
-            <div className="space-y-2">
-              {actionButtons.map((action) => (
-                <button
-                  key={action.key}
-                  type="button"
-                  onClick={action.onClick}
-                  disabled={action.disabled}
-                  className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/60 px-3 py-2 text-left text-sm text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </aside>
     </>
   );

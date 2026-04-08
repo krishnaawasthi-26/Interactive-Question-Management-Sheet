@@ -1,29 +1,18 @@
 function QuestionSearch({ value, onChange }) {
   return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-zinc-300 mb-2" htmlFor="question-search">
-        Search questions
+    <section className="mb-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 p-4">
+      <label className="mb-2 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="question-search">
+        Search & filter
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <input
-          id="question-search"
-          type="search"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="Type to filter questions..."
-          className="w-full bg-transparent border border-gray-700 px-3 py-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-        {/* <label className="flex items-center gap-2 text-sm text-zinc-300">
-          <input
-            type="checkbox"
-            checked={onlyExactMatch}
-            onChange={(event) => onExactMatchChange(event.target.checked)}
-            className="h-4 w-4 accent-orange-500"
-          />
-          Only show questions
-        </label> */}
-      </div>
-    </div>
+      <input
+        id="question-search"
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search questions or keywords"
+        className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--btn-accent-primary)]"
+      />
+    </section>
   );
 }
 

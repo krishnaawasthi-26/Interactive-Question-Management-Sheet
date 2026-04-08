@@ -204,9 +204,10 @@ function App() {
   if (routeState.route === ROUTES.APP) {
     return (
       <>
-        {themeSelector}
         <SheetPage
           sheetId={routeState.sheetId}
+          theme={theme}
+          onThemeChange={setTheme}
           onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
           onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
           onBackProfile={() => navigateTo(ROUTES.PROFILE)}
