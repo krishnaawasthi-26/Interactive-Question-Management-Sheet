@@ -19,6 +19,9 @@ const MAX_SUBTOPICS = 100;
 const MAX_QUESTIONS = 200;
 const lastPersistedSignatureBySheet = new Map();
 const inFlightPersistBySheet = new Map();
+const lastSavedSheetStateById = new Map();
+
+const buildSheetSignature = (title, topics) => JSON.stringify({ title, topics });
 
 const countSubTopics = (topics) =>
   topics.reduce((count, topic) => count + (topic.subTopics?.length || 0), 0);
@@ -57,6 +60,9 @@ export const useSheetStore = create((set, get) => ({
   past: [],
   future: [],
   limitWarning: null,
+  hasPendingChanges: false,
+  isSaving: false,
+  saveError: null,
 
   loadSheets: async (token) => {
     const sheets = await listSheets(token);
@@ -129,9 +135,12 @@ export const useSheetStore = create((set, get) => ({
         isLoading: false,
         past: [],
         future: [],
+        hasPendingChanges: false,
+        saveError: null,
       });
-      const signature = JSON.stringify({ title: sheet.title || "Question Sheet", topics: sheet.topics || [] });
+      const signature = buildSheetSignature(sheet.title || "Question Sheet", sheet.topics || []);
       lastPersistedSignatureBySheet.set(sheet.id, signature);
+      lastSavedSheetStateById.set(sheet.id, { title: sheet.title || "Question Sheet", topics: sheet.topics || [] });
       return sheet;
     } catch (error) {
       set({ isLoading: false, loadError: error.message });
@@ -142,7 +151,7 @@ export const useSheetStore = create((set, get) => ({
   persistCurrentSheet: async (token) => {
     const { activeSheetId, topics, sheetTitle } = get();
     if (!activeSheetId) return;
-    const signature = JSON.stringify({ title: sheetTitle, topics });
+    const signature = buildSheetSignature(sheetTitle, topics);
     if (lastPersistedSignatureBySheet.get(activeSheetId) === signature) return;
     const inFlight = inFlightPersistBySheet.get(activeSheetId);
     if (inFlight?.signature === signature) {
@@ -164,6 +173,38 @@ export const useSheetStore = create((set, get) => ({
     await persistPromise;
   },
 
+  saveCurrentSheetDraft: async (token) => {
+    const { activeSheetId, topics, sheetTitle } = get();
+    if (!activeSheetId) return false;
+    set({ isSaving: true, saveError: null });
+    try {
+      await saveSheet(token, activeSheetId, { title: sheetTitle, topics });
+      const signature = buildSheetSignature(sheetTitle, topics);
+      lastPersistedSignatureBySheet.set(activeSheetId, signature);
+      lastSavedSheetStateById.set(activeSheetId, { title: sheetTitle, topics: JSON.parse(JSON.stringify(topics)) });
+      set({ hasPendingChanges: false, isSaving: false });
+      return true;
+    } catch (error) {
+      set({ isSaving: false, saveError: error.message || "Unable to save sheet changes." });
+      return false;
+    }
+  },
+
+  discardUnsavedChanges: () => {
+    const { activeSheetId } = get();
+    if (!activeSheetId) return;
+    const savedState = lastSavedSheetStateById.get(activeSheetId);
+    if (!savedState) return;
+    set({
+      sheetTitle: savedState.title,
+      topics: JSON.parse(JSON.stringify(savedState.topics)),
+      past: [],
+      future: [],
+      hasPendingChanges: false,
+      saveError: null,
+    });
+  },
+
   renameSheet: async (token, sheetId, title) => {
     await saveSheet(token, sheetId, { title });
     set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { title }) }));
@@ -180,7 +221,11 @@ export const useSheetStore = create((set, get) => ({
   },
 
   setSheetTitle: (title) => {
-    set({ sheetTitle: title });
+    set((state) => {
+      const hasPendingChanges =
+        buildSheetSignature(title, state.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { sheetTitle: title, hasPendingChanges };
+    });
   },
 
   clearLimitWarning: () => set({ limitWarning: null }),
@@ -192,20 +237,35 @@ export const useSheetStore = create((set, get) => ({
       return null;
     }
     const updatedSheet = await createTopic({ topics: currentTopics }, title);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     set({ limitWarning: null });
     return updatedSheet;
   },
 
   editTopic: async (id, newTitle) => {
     const updatedSheet = await updateTopic({ topics: get().topics }, id, newTitle);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
   deleteTopic: async (id) => {
     const updatedSheet = await deleteTopic({ topics: get().topics }, id);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
@@ -216,20 +276,35 @@ export const useSheetStore = create((set, get) => ({
       return null;
     }
     const updatedSheet = await createSubTopic({ topics: currentTopics }, topicId, subTitle);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     set({ limitWarning: null });
     return updatedSheet;
   },
 
   editSubTopic: async (topicId, subId, newTitle) => {
     const updatedSheet = await updateSubTopic({ topics: get().topics }, topicId, subId, newTitle);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
   deleteSubTopic: async (topicId, subId) => {
     const updatedSheet = await deleteSubTopic({ topics: get().topics }, topicId, subId);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
@@ -240,20 +315,35 @@ export const useSheetStore = create((set, get) => ({
       return null;
     }
     const updatedSheet = await createQuestion({ topics: currentTopics }, topicId, subId, questionText);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     set({ limitWarning: null });
     return updatedSheet;
   },
 
   editQuestion: async (topicId, subId, questionId, newText) => {
     const updatedSheet = await updateQuestion({ topics: get().topics }, topicId, subId, questionId, newText);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
   deleteQuestion: async (topicId, subId, questionId) => {
     const updatedSheet = await deleteQuestion({ topics: get().topics }, topicId, subId, questionId);
-    set((state) => withHistory(state, updatedSheet.topics));
+    set((state) => {
+      const nextState = withHistory(state, updatedSheet.topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
+    });
     return updatedSheet;
   },
 
@@ -276,7 +366,10 @@ export const useSheetStore = create((set, get) => ({
               ),
             }
       );
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   undo: () =>
@@ -285,7 +378,9 @@ export const useSheetStore = create((set, get) => ({
       const previousTopics = state.past[state.past.length - 1];
       const nextPast = state.past.slice(0, -1);
       const nextFuture = [JSON.parse(JSON.stringify(state.topics)), ...state.future].slice(0, HISTORY_LIMIT);
-      return { topics: previousTopics, past: nextPast, future: nextFuture };
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, previousTopics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { topics: previousTopics, past: nextPast, future: nextFuture, hasPendingChanges };
     }),
 
   redo: () =>
@@ -293,13 +388,18 @@ export const useSheetStore = create((set, get) => ({
       if (state.future.length === 0) return state;
       const [nextTopics, ...remainingFuture] = state.future;
       const nextPast = [...state.past, JSON.parse(JSON.stringify(state.topics))].slice(-HISTORY_LIMIT);
-      return { topics: nextTopics, past: nextPast, future: remainingFuture };
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextTopics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { topics: nextTopics, past: nextPast, future: remainingFuture, hasPendingChanges };
     }),
 
   reorderTopics: (startIndex, endIndex) =>
     set((state) => {
       const topics = reorderArray(state.topics, startIndex, endIndex);
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   moveSubTopic: (fromTopicId, toTopicId, startIndex, endIndex) =>
@@ -316,7 +416,10 @@ export const useSheetStore = create((set, get) => ({
         if (topic.id === toTopicId) return { ...topic, subTopics: newToSubTopics };
         return topic;
       });
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   moveQuestion: (fromTopicId, fromSubId, toTopicId, toSubId, startIndex, endIndex) =>
@@ -334,7 +437,10 @@ export const useSheetStore = create((set, get) => ({
             ? { ...topic, subTopics: topic.subTopics.map((subTopic) => (subTopic.id === fromSubId ? { ...subTopic, questions: newQuestions } : subTopic)) }
             : topic
         );
-        return withHistory(state, topics);
+        const nextState = withHistory(state, topics);
+        const hasPendingChanges =
+          buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+        return { ...nextState, hasPendingChanges };
       }
       const newFromQuestions = Array.from(fromSub.questions);
       const [movedQuestion] = newFromQuestions.splice(startIndex, 1);
@@ -356,7 +462,10 @@ export const useSheetStore = create((set, get) => ({
         }
         return topic;
       });
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   toggleQuestionDone: (topicId, subId, questionId) =>
@@ -380,7 +489,10 @@ export const useSheetStore = create((set, get) => ({
               ),
             }
       );
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   updateQuestionAttempt: (topicId, subId, questionId, attemptLog) =>
@@ -404,7 +516,10 @@ export const useSheetStore = create((set, get) => ({
               ),
             }
       );
-      return withHistory(state, topics);
+      const nextState = withHistory(state, topics);
+      const hasPendingChanges =
+        buildSheetSignature(state.sheetTitle, nextState.topics) !== lastPersistedSignatureBySheet.get(state.activeSheetId);
+      return { ...nextState, hasPendingChanges };
     }),
 
   setReadOnlySheet: (sheet) =>
@@ -414,5 +529,7 @@ export const useSheetStore = create((set, get) => ({
       sheetTitle: sheet.title || "Question Sheet",
       past: [],
       future: [],
+      hasPendingChanges: false,
+      saveError: null,
     }),
 }));

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AddTopicForm from "../components/AddTopicForm";
 import Header from "../components/Header";
 import QuestionSearch from "../components/QuestionSearch";
@@ -18,14 +18,24 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   const addTopic = useSheetStore((state) => state.addTopic);
   const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const loadSheetById = useSheetStore((state) => state.loadSheetById);
-  const persistCurrentSheet = useSheetStore((state) => state.persistCurrentSheet);
+  const saveCurrentSheetDraft = useSheetStore((state) => state.saveCurrentSheetDraft);
+  const discardUnsavedChanges = useSheetStore((state) => state.discardUnsavedChanges);
   const isLoading = useSheetStore((state) => state.isLoading);
+  const isSaving = useSheetStore((state) => state.isSaving);
   const loadError = useSheetStore((state) => state.loadError);
+  const saveError = useSheetStore((state) => state.saveError);
+  const hasPendingChanges = useSheetStore((state) => state.hasPendingChanges);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const setSheetTitle = useSheetStore((state) => state.setSheetTitle);
   const topics = useSheetStore((state) => state.topics);
   const limitWarning = useSheetStore((state) => state.limitWarning);
   const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
+  const undo = useSheetStore((state) => state.undo);
+  const redo = useSheetStore((state) => state.redo);
+  const canUndo = useSheetStore((state) => state.past.length > 0);
+  const canRedo = useSheetStore((state) => state.future.length > 0);
+  const suppressHashGuardRef = useRef(false);
+  const previousHashRef = useRef(window.location.hash);
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -33,12 +43,57 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
   }, [sheetId, loadSheetById, currentUser?.token]);
 
   useEffect(() => {
-    if (!sheetId || !currentUser?.token) return;
-    const timeout = setTimeout(() => {
-      persistCurrentSheet(currentUser.token);
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [topics, sheetTitle, persistCurrentSheet, currentUser?.token, sheetId]);
+    previousHashRef.current = window.location.hash;
+  }, []);
+
+  useEffect(() => {
+    const onBeforeUnload = (event) => {
+      if (!hasPendingChanges) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    const onHashChange = () => {
+      if (suppressHashGuardRef.current) {
+        suppressHashGuardRef.current = false;
+        previousHashRef.current = window.location.hash;
+        return;
+      }
+
+      if (!hasPendingChanges) {
+        previousHashRef.current = window.location.hash;
+        return;
+      }
+
+      const shouldLeave = window.confirm("You have unsaved changes. Save or cancel your edits before leaving this page.");
+      if (!shouldLeave) {
+        suppressHashGuardRef.current = true;
+        window.location.hash = previousHashRef.current;
+        return;
+      }
+      previousHashRef.current = window.location.hash;
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("hashchange", onHashChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("hashchange", onHashChange);
+    };
+  }, [hasPendingChanges]);
+
+  const handleSaveChanges = async () => {
+    if (!currentUser?.token || !sheetId) return;
+    await saveCurrentSheetDraft(currentUser.token);
+  };
+
+  const handleCancelChanges = () => {
+    if (!hasPendingChanges) return;
+    const confirmed = window.confirm("Discard all unsaved changes?");
+    if (!confirmed) return;
+    discardUnsavedChanges();
+  };
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -90,8 +145,10 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
         )}
 
         <main>
-          {(isLoading || loadError) && (
-            <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">{isLoading ? "Loading sheet..." : loadError}</p>
+          {(isLoading || loadError || saveError) && (
+            <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">
+              {isLoading ? "Loading sheet..." : loadError || saveError}
+            </p>
           )}
           {isEditing ? (
             <TopicList isEditing searchQuery={searchQuery} />
@@ -115,6 +172,44 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, onLogout, onBackProfil
       >
         Export
       </button>
+
+      <div className="fixed left-2 top-1/3 z-50 hidden -translate-y-1/2 flex-col gap-2 lg:flex">
+        <button
+          type="button"
+          onClick={undo}
+          disabled={!canUndo}
+          className="rounded-r-xl border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-xs font-semibold text-zinc-200 shadow-lg backdrop-blur disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Undo
+        </button>
+        <button
+          type="button"
+          onClick={redo}
+          disabled={!canRedo}
+          className="rounded-r-xl border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-xs font-semibold text-zinc-200 shadow-lg backdrop-blur disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Redo
+        </button>
+      </div>
+
+      <div className="fixed right-2 top-1/3 z-50 hidden -translate-y-1/2 flex-col gap-2 lg:flex">
+        <button
+          type="button"
+          onClick={handleSaveChanges}
+          disabled={!hasPendingChanges || isSaving}
+          className="rounded-l-xl border border-emerald-600 bg-emerald-700/30 px-3 py-2 text-xs font-semibold text-emerald-100 shadow-lg backdrop-blur disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </button>
+        <button
+          type="button"
+          onClick={handleCancelChanges}
+          disabled={!hasPendingChanges || isSaving}
+          className="rounded-l-xl border border-rose-600 bg-rose-700/30 px-3 py-2 text-xs font-semibold text-rose-100 shadow-lg backdrop-blur disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Cancel Changes
+        </button>
+      </div>
     </div>
   );
 }
