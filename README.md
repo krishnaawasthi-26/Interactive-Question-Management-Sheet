@@ -2,7 +2,7 @@
 
 deployment link : https://interactive-question-management-she-gamma.vercel.app/
 
-This project now contains:
+This project contains:
 
 - A **React + Vite frontend** (`/`) for question sheet UI.
 - A **Spring Boot backend** (`/backend`) for authentication APIs.
@@ -12,15 +12,45 @@ This project now contains:
 
 ## Environment configuration
 
-Backend Mongo connection now supports an environment variable:
+Use environment variables only for runtime configuration.
+
+### Frontend (`/.env`)
+
+Copy the example file and adjust as needed:
+
+```bash
+cp .env.example .env
+```
+
+Supported frontend variables:
+
+- `VITE_API_BASE_URL` (default in example: `http://localhost:8080`)
+- `VITE_SYNC_API_BASE_URL` (default in example: `/api/sync/outbox`)
+- `VITE_PUBLIC_SHEET_API_BASE_URL` (default in example points to public sheet API)
+
+### Backend (`/backend/.env`)
+
+Copy the backend example file and set values:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Supported backend variables:
 
 - `MONGODB_URI` (recommended)
-- fallback default: `mongodb://localhost:27017/iqms`
+  - Example placeholder for cloud MongoDB:
+    `MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>/<db>?retryWrites=true&w=majority`
+  - Local default example:
+    `MONGODB_URI=mongodb://localhost:27017/iqms`
+- `APP_AUTH_SECRET` (required for non-dev deployments)
 
 Configured in `backend/src/main/resources/application.properties` as:
 
 ```properties
 spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/iqms}
+app.auth.secret=${APP_AUTH_SECRET:change-me-super-secret-key}
 ```
 
 ---
@@ -33,13 +63,10 @@ Open terminal 1:
 
 ```bash
 cd backend
-export MONGODB_URI="mongodb+srv://sheet:samplepass1@sheet.d6mwyaj.mongodb.net/iqms?retryWrites=true&w=majority&appName=sheet"
 mvn spring-boot:run
 ```
 
 Backend starts at: `http://localhost:8080`
-
-> If you want local Mongo instead, skip `export MONGODB_URI=...` and keep the default local URI.
 
 ### 2) Start frontend (React + Vite)
 
@@ -53,7 +80,7 @@ npm start
 
 Frontend starts at: `http://localhost:5173`
 
-Frontend is configured to always bind to `0.0.0.0:5173` with strict port mode, so if 5173 is taken Vite will fail fast instead of silently switching ports.
+Frontend is configured to bind to `0.0.0.0:5173` with strict port mode, so if 5173 is taken Vite fails fast instead of silently switching ports.
 
 ---
 
@@ -67,7 +94,7 @@ curl --location 'http://localhost:8080/api/auth/signup' \
 --data-raw '{
   "name": "Test User",
   "email": "test@example.com",
-  "password": "secret123"
+  "password": "your-password-here"
 }'
 ```
 
@@ -78,7 +105,7 @@ curl --location 'http://localhost:8080/api/auth/login' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "email": "test@example.com",
-  "password": "secret123"
+  "password": "your-password-here"
 }'
 ```
 
