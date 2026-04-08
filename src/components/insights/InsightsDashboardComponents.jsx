@@ -195,11 +195,11 @@ export function RecentMistakesCard({ mistakes }) {
   return (
     <section className="panel rounded-2xl p-4">
       <h3 className="text-base font-semibold">Recent mistakes</h3>
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-4 list-none space-y-2 pl-0">
         {mistakes.map((mistake) => (
           <li key={mistake.id} className="rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-sm">
-            <p>{mistake.name}</p>
-            <p className="text-xs text-[var(--text-tertiary)]">{mistake.topic} • {mistake.when}</p>
+            <p className="font-medium">{mistake.summary || mistake.name}</p>
+            <p className="text-xs text-[var(--text-tertiary)]">Last seen: {mistake.when}</p>
           </li>
         ))}
       </ul>
