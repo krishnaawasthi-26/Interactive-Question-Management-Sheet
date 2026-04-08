@@ -8,6 +8,8 @@ import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 import EditorActionPanel from "../components/EditorActionPanel";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { calculateSheetProgress } from "../services/progress";
+import { navigateTo, ROUTES } from "../services/routes";
 
 const formatRelativeTime = (isoValue) => {
   if (!isoValue) return "Not saved yet";
@@ -34,11 +36,15 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeDialog, setActiveDialog] = useState(null);
+  const [sortBy, setSortBy] = useState("edited");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [, setNowTick] = useState(0);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
   const loadSheetById = useSheetStore((state) => state.loadSheetById);
+  const loadSheets = useSheetStore((state) => state.loadSheets);
+  const sheets = useSheetStore((state) => state.sheets);
   const saveCurrentSheetDraft = useSheetStore((state) => state.saveCurrentSheetDraft);
   const discardUnsavedChanges = useSheetStore((state) => state.discardUnsavedChanges);
   const isLoading = useSheetStore((state) => state.isLoading);
@@ -62,6 +68,11 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     if (!sheetId || !currentUser?.token) return;
     loadSheetById(currentUser.token, sheetId);
   }, [sheetId, loadSheetById, currentUser?.token]);
+
+  useEffect(() => {
+    if (sheetId || !currentUser?.token) return;
+    loadSheets(currentUser.token);
+  }, [sheetId, currentUser?.token, loadSheets]);
 
   useEffect(() => {
     previousHashRef.current = window.location.hash;
@@ -193,6 +204,33 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         ? "Unsaved changes"
         : "Saved";
 
+  const filteredAndSortedSheets = [...sheets]
+    .filter((sheet) => {
+      if (typeFilter === "all") return true;
+      if (typeFilter === "public") return Boolean(sheet.isPublic);
+      if (typeFilter === "private") return !sheet.isPublic;
+      if (typeFilter === "archived") return Boolean(sheet.isArchived);
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "created") {
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+      if (sortBy === "progress") {
+        return calculateSheetProgress(b).percent - calculateSheetProgress(a).percent;
+      }
+      if (sortBy === "type") {
+        return Number(Boolean(b.isPublic)) - Number(Boolean(a.isPublic));
+      }
+      if (sortBy === "questions") {
+        return calculateSheetProgress(b).totalQuestions - calculateSheetProgress(a).totalQuestions;
+      }
+      if (sortBy === "title") {
+        return `${a.title || ""}`.localeCompare(`${b.title || ""}`);
+      }
+      return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+    });
+
   const sheetActionButtons = [
     { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
     { key: "redo", label: "Redo", onClick: redo, disabled: !canRedo },
@@ -238,7 +276,62 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         onDismissAlert={clearLimitWarning}
       >
         <div className="panel rounded-3xl p-4 sm:p-5">
-          {isEditing && (
+          {!sheetId ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="text-sm">
+                  <span className="mb-1 block text-[var(--text-secondary)]">Sort by</span>
+                  <select className="field-base min-w-52" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                    <option value="edited">Last edited</option>
+                    <option value="created">Created date</option>
+                    <option value="progress">Progress</option>
+                    <option value="type">Type (Public/Private)</option>
+                    <option value="questions">Question count</option>
+                    <option value="title">Title (A-Z)</option>
+                  </select>
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-[var(--text-secondary)]">Sheet type</span>
+                  <select className="field-base min-w-44" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                    <option value="all">All sheets</option>
+                    <option value="public">Public only</option>
+                    <option value="private">Private only</option>
+                    <option value="archived">Archived only</option>
+                  </select>
+                </label>
+              </div>
+
+              {filteredAndSortedSheets.length === 0 ? (
+                <p className="text-sm text-[var(--text-secondary)]">No sheets found for this filter.</p>
+              ) : (
+                <div className="space-y-3">
+                  {filteredAndSortedSheets.map((sheet) => {
+                    const progress = calculateSheetProgress(sheet);
+                    return (
+                      <div key={sheet.id} className="panel-elevated flex items-center justify-between gap-4 rounded-lg p-3">
+                        <div className="space-y-1">
+                          <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            {sheet.isPublic ? "Public" : "Private"}
+                            {sheet.isArchived ? " • Archived" : ""} • Progress {progress.percent}% ({progress.completedQuestions}/{progress.totalQuestions})
+                          </p>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            Created: {sheet.createdAt ? new Date(sheet.createdAt).toLocaleDateString() : "Unknown"} •
+                            Updated: {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleString() : "Unknown"}
+                          </p>
+                        </div>
+                        <button type="button" className="btn-base btn-neutral px-3 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>
+                          Open
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {isEditing && (
             <>
               <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
               <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
@@ -251,6 +344,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             )}
             {isEditing ? <TopicList isEditing searchQuery={searchQuery} /> : <SheetDashboardView title={sheetTitle} topics={topics} onOpenEdit={() => setIsEditing(true)} />}
           </main>
+            </>
+          )}
         </div>
       </AppShell>
 

@@ -121,7 +121,14 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       return;
     }
 
-    const persistPromise = saveSheet(token, activeSheetId, { title: sheetTitle, topics })
+    const payload = await buildSafeSheetUpdatePayload({
+      token,
+      sheetId: activeSheetId,
+      getState: get,
+      overrideFields: { title: sheetTitle, topics },
+    });
+
+    const persistPromise = saveSheet(token, activeSheetId, payload)
       .then(() => {
         internals.lastPersistedSignatureBySheet.set(activeSheetId, signature);
       })
@@ -142,7 +149,13 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
 
     set({ isSaving: true, saveError: null });
     try {
-      await saveSheet(token, activeSheetId, { title: sheetTitle, topics });
+      const payload = await buildSafeSheetUpdatePayload({
+        token,
+        sheetId: activeSheetId,
+        getState: get,
+        overrideFields: { title: sheetTitle, topics },
+      });
+      await saveSheet(token, activeSheetId, payload);
       const signature = buildSheetSignature(sheetTitle, topics);
       internals.lastPersistedSignatureBySheet.set(activeSheetId, signature);
       internals.lastSavedSheetStateById.set(activeSheetId, { title: sheetTitle, topics: cloneDeep(topics) });

@@ -72,16 +72,6 @@ function AppSidebar() {
         <div className="space-y-4">
           <NavGroup title="Sheets" links={primaryLinks} currentRoute={currentRoute} />
           <NavGroup title="Support" links={supportLinks} currentRoute={currentRoute} />
-
-          <a
-            href="https://leetcode.com"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
-          >
-            <span aria-hidden>🧩</span>
-            <span>LeetCode</span>
-          </a>
         </div>
       </aside>
     </>
