@@ -1,4 +1,5 @@
-import { SYNC_API_BASE_URL } from "../../config/apiConfig";
+import { API_ENDPOINTS } from "../../config/apiConfig";
+import { apiRequest } from "../apiClient";
 import {
   isBrowserEnvironment,
   readOutbox,
@@ -15,12 +16,9 @@ const markOperationSynced = (opId) => {
 };
 
 const syncSingleOperation = async (operation) => {
-  await fetch(SYNC_API_BASE_URL, {
+  await apiRequest(API_ENDPOINTS.outboxSync, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ operations: [operation] }),
+    body: { operations: [operation] },
   });
 };
 

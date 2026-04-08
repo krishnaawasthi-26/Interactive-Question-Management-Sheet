@@ -1,0 +1,189 @@
+import {
+  API_BASE_URL,
+  API_ERROR_MESSAGES,
+  CLIENT_RATE_LIMIT,
+} from "../config/apiConfig";
+
+const isBrowser = typeof window !== "undefined";
+
+const safeParse = (value, fallback) => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+const normalizeRateLimitState = (rawState) => {
+  const state = rawState && typeof rawState === "object" ? rawState : {};
+  const timestamps = Array.isArray(state.timestamps)
+    ? state.timestamps.filter((timestamp) => Number.isFinite(timestamp))
+    : [];
+
+  return {
+    timestamps,
+    disabledUntilEpochMs: Number.isFinite(state.disabledUntilEpochMs)
+      ? state.disabledUntilEpochMs
+      : 0,
+  };
+};
+
+const readRateLimitState = () => {
+  if (!isBrowser) return { timestamps: [], disabledUntilEpochMs: 0 };
+
+  const parsed = safeParse(window.localStorage.getItem(CLIENT_RATE_LIMIT.storageKey), {
+    timestamps: [],
+    disabledUntilEpochMs: 0,
+  });
+
+  return normalizeRateLimitState(parsed);
+};
+
+const writeRateLimitState = (state) => {
+  if (!isBrowser) return;
+  window.localStorage.setItem(CLIENT_RATE_LIMIT.storageKey, JSON.stringify(state));
+};
+
+export const createApiError = (
+  message,
+  {
+    code = null,
+    status = null,
+    retryAfterSeconds = null,
+    disabledUntilEpochMs = null,
+    details = null,
+  } = {}
+) => {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  error.retryAfterSeconds = retryAfterSeconds;
+  error.disabledUntilEpochMs = disabledUntilEpochMs;
+  error.details = details;
+  return error;
+};
+
+const parseErrorPayload = async (response) => {
+  try {
+    const payload = await response.json();
+    if (payload?.message || payload?.error) {
+      return {
+        message: payload.message ?? payload.error,
+        code: payload.code ?? null,
+        retryAfterSeconds: payload.retryAfterSeconds ?? null,
+        disabledUntilEpochMs: payload.disabledUntilEpochMs ?? null,
+        details: payload,
+      };
+    }
+  } catch {
+    // Ignore JSON parse errors and try plain text fallback below.
+  }
+
+  try {
+    const text = (await response.text())?.trim();
+    if (text) {
+      return {
+        message: text,
+        code: null,
+        retryAfterSeconds: null,
+        disabledUntilEpochMs: null,
+        details: null,
+      };
+    }
+  } catch {
+    // Ignore read errors and use fallback below.
+  }
+
+  return {
+    message: API_ERROR_MESSAGES.requestFailed,
+    code: null,
+    retryAfterSeconds: null,
+    disabledUntilEpochMs: null,
+    details: null,
+  };
+};
+
+const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
+  if (!rateLimit) return;
+
+  const now = Date.now();
+  const state = readRateLimitState();
+
+  if (state.disabledUntilEpochMs > now) {
+    const retryAfterSeconds = Math.ceil((state.disabledUntilEpochMs - now) / 1000);
+    throw createApiError(API_ERROR_MESSAGES.rateLimited.replace("{seconds}", retryAfterSeconds), {
+      code: "REQUEST_COOLDOWN",
+      retryAfterSeconds,
+      disabledUntilEpochMs: state.disabledUntilEpochMs,
+    });
+  }
+
+  const recent = (state.timestamps ?? []).filter(
+    (timestamp) => now - timestamp <= CLIENT_RATE_LIMIT.requestWindowMs
+  );
+
+  if (recent.length >= CLIENT_RATE_LIMIT.requestLimit) {
+    const disabledUntilEpochMs = now + CLIENT_RATE_LIMIT.cooldownMs;
+    const retryAfterSeconds = Math.ceil(CLIENT_RATE_LIMIT.cooldownMs / 1000);
+
+    writeRateLimitState({ timestamps: recent, disabledUntilEpochMs });
+
+    throw createApiError(API_ERROR_MESSAGES.rateLimited.replace("{seconds}", retryAfterSeconds), {
+      code: "REQUEST_COOLDOWN",
+      retryAfterSeconds,
+      disabledUntilEpochMs,
+    });
+  }
+
+  writeRateLimitState({ timestamps: [...recent, now], disabledUntilEpochMs: 0 });
+};
+
+const toRequestUrl = ({ path, baseUrl }) => {
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${baseUrl}${path}`;
+};
+
+const parseResponseData = async (response) => {
+  if (response.status === 204) return null;
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return text || null;
+};
+
+export const apiRequest = async (
+  path,
+  { method = "GET", body, token, headers = {}, baseUrl = API_BASE_URL, rateLimit = false } = {}
+) => {
+  maybeEnforceRateLimit({ rateLimit });
+
+  let response;
+
+  try {
+    response = await fetch(toRequestUrl({ path, baseUrl }), {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      ...(body !== undefined && body !== null ? { body: JSON.stringify(body) } : {}),
+    });
+  } catch {
+    throw createApiError(API_ERROR_MESSAGES.network);
+  }
+
+  if (!response.ok) {
+    const parsed = await parseErrorPayload(response);
+    throw createApiError(parsed.message, {
+      ...parsed,
+      status: response.status,
+    });
+  }
+
+  return parseResponseData(response);
+};
