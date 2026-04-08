@@ -17,6 +17,8 @@ const MAX_SHEETS = 5;
 const MAX_TOPICS = 50;
 const MAX_SUBTOPICS = 100;
 const MAX_QUESTIONS = 200;
+const lastPersistedSignatureBySheet = new Map();
+const inFlightPersistBySheet = new Map();
 
 const countSubTopics = (topics) =>
   topics.reduce((count, topic) => count + (topic.subTopics?.length || 0), 0);
@@ -40,6 +42,9 @@ const withHistory = (state, nextTopics) => {
   const nextPast = [...state.past, snapshot].slice(-HISTORY_LIMIT);
   return { topics: nextTopics, past: nextPast, future: [] };
 };
+
+const updateSheetInCollection = (sheets, sheetId, updates) =>
+  sheets.map((sheet) => (sheet.id === sheetId ? { ...sheet, ...updates } : sheet));
 
 export const useSheetStore = create((set, get) => ({
   sheets: [],
@@ -65,15 +70,13 @@ export const useSheetStore = create((set, get) => ({
       return null;
     }
     const created = await createSheet(token, title);
-    const sheets = await listSheets(token);
-    set({ sheets, limitWarning: null });
+    set((state) => ({ sheets: [...state.sheets, created], limitWarning: null }));
     return created;
   },
 
   deleteSheet: async (token, sheetId) => {
     await removeSheet(token, sheetId);
-    const sheets = await listSheets(token);
-    set({ sheets });
+    set((state) => ({ sheets: state.sheets.filter((sheet) => sheet.id !== sheetId) }));
   },
 
 
@@ -87,8 +90,17 @@ export const useSheetStore = create((set, get) => ({
       title: customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`,
       topics: sourceSheet.topics || [],
     });
-    const sheets = await listSheets(token);
-    set({ sheets, limitWarning: null });
+    set((state) => ({
+      sheets: [
+        ...state.sheets,
+        {
+          ...created,
+          title: customTitle || `${sourceSheet.title || sourceSheet.name || "Untitled Sheet"} (Copy)`,
+          topics: sourceSheet.topics || [],
+        },
+      ],
+      limitWarning: null,
+    }));
     return created;
   },
 
@@ -118,6 +130,8 @@ export const useSheetStore = create((set, get) => ({
         past: [],
         future: [],
       });
+      const signature = JSON.stringify({ title: sheet.title || "Question Sheet", topics: sheet.topics || [] });
+      lastPersistedSignatureBySheet.set(sheet.id, signature);
       return sheet;
     } catch (error) {
       set({ isLoading: false, loadError: error.message });
@@ -128,25 +142,41 @@ export const useSheetStore = create((set, get) => ({
   persistCurrentSheet: async (token) => {
     const { activeSheetId, topics, sheetTitle } = get();
     if (!activeSheetId) return;
-    await saveSheet(token, activeSheetId, { title: sheetTitle, topics });
+    const signature = JSON.stringify({ title: sheetTitle, topics });
+    if (lastPersistedSignatureBySheet.get(activeSheetId) === signature) return;
+    const inFlight = inFlightPersistBySheet.get(activeSheetId);
+    if (inFlight?.signature === signature) {
+      await inFlight.promise;
+      return;
+    }
+
+    const persistPromise = saveSheet(token, activeSheetId, { title: sheetTitle, topics })
+      .then(() => {
+        lastPersistedSignatureBySheet.set(activeSheetId, signature);
+      })
+      .finally(() => {
+        const current = inFlightPersistBySheet.get(activeSheetId);
+        if (current?.signature === signature) {
+          inFlightPersistBySheet.delete(activeSheetId);
+        }
+      });
+    inFlightPersistBySheet.set(activeSheetId, { signature, promise: persistPromise });
+    await persistPromise;
   },
 
   renameSheet: async (token, sheetId, title) => {
     await saveSheet(token, sheetId, { title });
-    const sheets = await listSheets(token);
-    set({ sheets });
+    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { title }) }));
   },
 
   setSheetVisibility: async (token, sheetId, isPublic) => {
     await saveSheet(token, sheetId, { isPublic });
-    const sheets = await listSheets(token);
-    set({ sheets });
+    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isPublic }) }));
   },
 
   setSheetArchived: async (token, sheetId, isArchived) => {
     await saveSheet(token, sheetId, { isArchived });
-    const sheets = await listSheets(token);
-    set({ sheets });
+    set((state) => ({ sheets: updateSheetInCollection(state.sheets, sheetId, { isArchived }) }));
   },
 
   setSheetTitle: (title) => {
