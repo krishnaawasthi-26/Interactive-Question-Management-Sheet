@@ -3,71 +3,59 @@
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --app-bg: #0f1117;
-  --surface: #151a23;
-  --surface-elevated: #1c2330;
-  --surface-soft: rgba(255, 255, 255, 0.04);
-  --text-primary: #e6edf5;
-  --text-muted: #a2afc2;
-  --border-subtle: rgba(255, 255, 255, 0.14);
-  --danger-color: #f87171;
-  --btn-accent-primary: #3730a3;
-  --btn-accent-primary-hover: #312e81;
-  --btn-accent-warm: #9a3412;
-  --btn-accent-warm-hover: #7c2d12;
-  --accent-emerald: #6ee7b7;
-  --accent-sky: #7dd3fc;
-  --accent-fuchsia: #f0abfc;
-  --accent-amber: #fcd34d;
-  --accent-rose: #fda4af;
-  --accent-violet: #c4b5fd;
-  --accent-red: #fca5a5;
+  --app-bg: #0a1020;
+  --surface: #121a2b;
+  --surface-elevated: #1a2437;
+  --surface-soft: rgba(154, 171, 197, 0.08);
+  --text-primary: #e7edf7;
+  --text-secondary: #b5c0d4;
+  --text-tertiary: #8e9bb2;
+  --text-muted: var(--text-secondary);
+  --border-subtle: rgba(148, 163, 184, 0.24);
+  --border-strong: rgba(148, 163, 184, 0.36);
+  --accent-primary: #d7a955;
+  --accent-primary-hover: #e2b96e;
+  --accent-danger: #e46868;
+  --accent-success: #51b78f;
+  --accent-info: #6597d6;
 }
 
 :root[data-theme="night"] {
   color-scheme: dark;
-  --app-bg: #05070f;
-  --surface: #0c1220;
-  --surface-elevated: #111a2d;
-  --surface-soft: rgba(148, 163, 184, 0.11);
-  --text-primary: #dde7ff;
-  --text-muted: #9ab0d9;
-  --border-subtle: rgba(125, 166, 255, 0.3);
-  --danger-color: #f87171;
-  --btn-accent-primary: #312e81;
-  --btn-accent-primary-hover: #1e1b4b;
-  --btn-accent-warm: #7c2d12;
-  --btn-accent-warm-hover: #5b1f0d;
-  --accent-emerald: #6ee7b7;
-  --accent-sky: #7dd3fc;
-  --accent-fuchsia: #f5d0fe;
-  --accent-amber: #fcd34d;
-  --accent-rose: #fda4af;
-  --accent-violet: #c4b5fd;
-  --accent-red: #fca5a5;
+  --app-bg: #070b16;
+  --surface: #0f1727;
+  --surface-elevated: #182237;
+  --surface-soft: rgba(154, 171, 197, 0.1);
+  --text-primary: #e9efff;
+  --text-secondary: #aebbd5;
+  --text-tertiary: #8798b7;
+  --text-muted: var(--text-secondary);
+  --border-subtle: rgba(133, 155, 197, 0.28);
+  --border-strong: rgba(133, 155, 197, 0.38);
+  --accent-primary: #d8b269;
+  --accent-primary-hover: #e3bf78;
+  --accent-danger: #e37c7c;
+  --accent-success: #60c39b;
+  --accent-info: #6fa6e3;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --app-bg: #f4f7fb;
+  --app-bg: #f3f6fb;
   --surface: #ffffff;
-  --surface-elevated: #f8fafc;
+  --surface-elevated: #f8fafd;
   --surface-soft: rgba(15, 23, 42, 0.04);
-  --text-primary: #0f172a;
-  --text-muted: #475569;
-  --border-subtle: rgba(15, 23, 42, 0.14);
-  --danger-color: #dc2626;
-  --btn-accent-primary: #312e81;
-  --btn-accent-primary-hover: #1e1b4b;
-  --btn-accent-warm: #9a3412;
-  --btn-accent-warm-hover: #7c2d12;
-  --accent-emerald: #047857;
-  --accent-sky: #0369a1;
-  --accent-fuchsia: #a21caf;
-  --accent-amber: #b45309;
-  --accent-rose: #be123c;
-  --accent-violet: #6d28d9;
-  --accent-red: #b91c1c;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --text-muted: var(--text-secondary);
+  --border-subtle: rgba(100, 116, 139, 0.24);
+  --border-strong: rgba(100, 116, 139, 0.35);
+  --accent-primary: #b7791f;
+  --accent-primary-hover: #9a6316;
+  --accent-danger: #c24141;
+  --accent-success: #2f855a;
+  --accent-info: #3f6fb0;
 }
 
 html,
@@ -77,136 +65,19 @@ body,
 }
 
 body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--app-bg);
   color: var(--text-primary);
-  transition: background-color 180ms ease, color 180ms ease;
+  transition: background-color 160ms ease, color 160ms ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Theme remaps for existing utility classes used throughout the app. */
-:root .bg-zinc-950,
-:root .dark\:bg-slate-950,
-:root .bg-slate-100 {
-  background-color: var(--app-bg) !important;
-}
-
-:root .bg-zinc-900,
-:root .bg-zinc-900\/60,
-:root .bg-zinc-900\/70,
-:root .bg-zinc-900\/20,
-:root .bg-slate-50,
-:root .bg-slate-50\/80,
-:root .bg-\[rgba\(255\,255\,255\,0\.03\)\],
-:root .bg-\[rgba\(255\,255\,255\,0\.02\)\],
-:root .bg-\[rgba\(255\,255\,255\,0\.05\)\],
-:root .bg-transparent,
-:root .bg-white,
-:root .bg-white\/95,
-:root .dark\:bg-slate-900,
-:root .dark\:bg-slate-950\/80 {
-  background-color: var(--surface) !important;
-}
-
-:root .text-white,
-:root .text-slate-100,
-:root .text-slate-900,
-:root .text-slate-800,
-:root .text-slate-700,
-:root .text-zinc-200,
-:root .text-zinc-300,
-:root .text-zinc-100,
-:root .text-gray-200,
-:root .dark\:text-slate-100 {
-  color: var(--text-primary) !important;
-}
-
-:root .text-slate-600,
-:root .text-slate-500,
-:root .text-slate-400,
-:root .text-gray-400,
-:root .text-zinc-400,
-:root .dark\:text-slate-300 {
-  color: var(--text-muted) !important;
-}
-
-:root .border-gray-800,
-:root .border-gray-700,
-:root .border-gray-500,
-:root .border-slate-300,
-:root .border-zinc-800,
-:root .border-zinc-700,
-:root .border-zinc-600,
-:root .border-slate-200,
-:root .border-slate-100,
-:root .dark\:border-slate-700,
-:root .dark\:border-slate-800 {
-  border-color: var(--border-subtle) !important;
-}
-
-:root .hover\:bg-zinc-800:hover,
-:root .hover\:bg-zinc-900:hover,
-:root .hover\:bg-gray-800:hover,
-:root .hover\:bg-slate-100:hover,
-:root .hover\:bg-slate-50:hover {
-  background-color: var(--surface-elevated) !important;
-}
-
-/* Normalize light-tone hover backgrounds so text contrast stays readable across themes. */
-:root .hover\:bg-blue-50:hover,
-:root .hover\:bg-blue-100:hover,
-:root .hover\:bg-sky-50:hover,
-:root .hover\:bg-slate-50\/80:hover {
-  background-color: var(--surface-elevated) !important;
-}
-
-/* Keep link hover states legible in light mode (avoid near-white on near-white). */
-:root[data-theme="light"] .hover\:text-sky-200:hover {
-  color: #0369a1 !important;
-}
-
-/* Keep link hover states legible in dark/night modes (avoid washed-out colors). */
-:root[data-theme="dark"] .hover\:text-sky-200:hover,
-:root[data-theme="night"] .hover\:text-sky-200:hover {
-  color: #7dd3fc !important;
-}
-
-/* Keep accent action colors readable and consistently dark across pages/themes. */
-:root .bg-indigo-600 {
-  background-color: var(--btn-accent-primary) !important;
-}
-
-:root .hover\:bg-indigo-700:hover {
-  background-color: var(--btn-accent-primary-hover) !important;
-}
-
-:root .bg-orange-600 {
-  background-color: var(--btn-accent-warm) !important;
-}
-
-:root .hover\:bg-orange-700:hover {
-  background-color: var(--btn-accent-warm-hover) !important;
-}
-
-:root .text-emerald-200 { color: var(--accent-emerald) !important; }
-:root .text-sky-200 { color: var(--accent-sky) !important; }
-:root .text-fuchsia-200 { color: var(--accent-fuchsia) !important; }
-:root .text-amber-200 { color: var(--accent-amber) !important; }
-:root .text-rose-200 { color: var(--accent-rose) !important; }
-
-:root .border-emerald-700 { border-color: color-mix(in srgb, var(--accent-emerald) 55%, transparent) !important; }
-:root .border-sky-700 { border-color: color-mix(in srgb, var(--accent-sky) 55%, transparent) !important; }
-:root .border-fuchsia-700 { border-color: color-mix(in srgb, var(--accent-fuchsia) 55%, transparent) !important; }
-:root .border-amber-700 { border-color: color-mix(in srgb, var(--accent-amber) 55%, transparent) !important; }
-:root .border-rose-700 { border-color: color-mix(in srgb, var(--accent-rose) 55%, transparent) !important; }
-:root .border-violet-700 { border-color: color-mix(in srgb, var(--accent-violet) 55%, transparent) !important; }
-:root .border-red-700 { border-color: color-mix(in srgb, var(--accent-red) 55%, transparent) !important; }
-
-
 .app-shell {
   width: 100%;
   min-height: 100vh;
-  padding: 1rem;
+  padding: 16px;
 }
 
 .app-content {
@@ -215,6 +86,75 @@ body {
 
 @media (min-width: 1024px) {
   .app-shell {
-    padding: 1.5rem 1.5rem 1.5rem 18.5rem;
+    padding: 24px 24px 24px 304px;
   }
+}
+
+.panel {
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+
+.panel-elevated {
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+}
+
+.btn-base {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 140ms ease;
+}
+
+.btn-primary {
+  background: color-mix(in srgb, var(--accent-primary) 22%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--accent-primary) 44%, transparent);
+  color: #f9e8c9;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent-primary-hover) 26%, var(--surface-elevated));
+}
+
+.btn-neutral {
+  border-color: var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
+.btn-neutral:hover {
+  border-color: var(--border-strong);
+  filter: brightness(1.04);
+}
+
+.btn-danger {
+  border-color: color-mix(in srgb, var(--accent-danger) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-danger) 15%, var(--surface-elevated));
+  color: #ffc9c9;
+}
+
+.btn-success {
+  border-color: color-mix(in srgb, var(--accent-success) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-success) 16%, var(--surface-elevated));
+  color: #cbffe8;
+}
+
+.field-base {
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+.field-base::placeholder { color: var(--text-tertiary); }
+.field-base:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 50%, transparent);
+  outline-offset: 1px;
 }

@@ -67,168 +67,76 @@ function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
-  const themeSelector = (
-    <div className="fixed right-4 top-4 z-[70] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/90 p-2 shadow-lg backdrop-blur">
-      <label htmlFor="theme-select" className="mr-2 text-xs font-medium text-[var(--text-muted)]">
-        Theme
-      </label>
-      <select
-        id="theme-select"
-        value={theme}
-        onChange={(event) => setTheme(event.target.value)}
-        className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-sm text-[var(--text-primary)]"
-      >
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="night">Night</option>
-      </select>
-    </div>
-  );
-
   if (routeState.route === ROUTES.SIGNUP) {
-    return (
-      <>
-        {themeSelector}
-        <SignUpPage
-          onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)}
-          onGoToLogin={() => navigateTo(ROUTES.LOGIN)}
-        />
-      </>
-    );
+    return <SignUpPage theme={theme} onThemeChange={setTheme} onSignUpSuccess={() => navigateTo(ROUTES.PROFILE)} onGoToLogin={() => navigateTo(ROUTES.LOGIN)} />;
   }
 
   if (routeState.route === ROUTES.SHARED_PREFIX) {
-    return (
-      <>
-        {themeSelector}
-        <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />
-      </>
-    );
+    return <SharedPage shareType={routeState.shareType} shareId={routeState.shareId} />;
   }
 
   if (routeState.route === ROUTES.PUBLIC_PROFILE) {
-    return (
-      <>
-        {themeSelector}
-        <SharedPage shareType="public-profile" username={routeState.username} />
-      </>
-    );
+    return <SharedPage shareType="public-profile" username={routeState.username} />;
   }
 
   if (routeState.route === ROUTES.PUBLIC_SHEET) {
-    return (
-      <>
-        {themeSelector}
-        <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />
-      </>
-    );
+    return <SharedPage shareType="public-sheet" username={routeState.username} sheetSlug={routeState.sheetSlug} />;
   }
 
   if (routeState.route === ROUTES.IMPORT) {
-    return (
-      <>
-        {themeSelector}
-        <ImportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />
-      </>
-    );
+    return <ImportPage theme={theme} onThemeChange={setTheme} onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
   }
 
   if (routeState.route === ROUTES.ABOUT) {
-    return (
-      <>
-        {themeSelector}
-        <AboutPage />
-      </>
-    );
+    return <AboutPage theme={theme} onThemeChange={setTheme} />;
   }
 
   if (routeState.route === ROUTES.CONTACT) {
-    return (
-      <>
-        {themeSelector}
-        <ContactPage />
-      </>
-    );
+    return <ContactPage theme={theme} onThemeChange={setTheme} />;
   }
 
   if (routeState.route === ROUTES.HOW_TO_USE) {
-    return (
-      <>
-        {themeSelector}
-        <HowToUsePage />
-      </>
-    );
+    return <HowToUsePage theme={theme} onThemeChange={setTheme} />;
   }
 
   if (routeState.route === ROUTES.LEARNING_INSIGHTS) {
-    return (
-      <>
-        {themeSelector}
-        <LearningInsightsPage />
-      </>
-    );
+    return <LearningInsightsPage theme={theme} onThemeChange={setTheme} />;
   }
 
   if (routeState.route === ROUTES.EXPORT) {
-    return (
-      <>
-        {themeSelector}
-        <ExportPage onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />
-      </>
-    );
+    return <ExportPage theme={theme} onThemeChange={setTheme} onBack={() => navigateTo(`${ROUTES.APP}/${routeState.sheetId || ""}`)} />;
   }
 
   if (routeState.route === ROUTES.PROFILE) {
     return (
-      <>
-        {themeSelector}
-        <ProfilePage
-          onLogout={() => {
-            logout();
-            navigateTo(ROUTES.LOGIN);
-          }}
-        />
-      </>
+      <ProfilePage
+        theme={theme}
+        onThemeChange={setTheme}
+        onLogout={() => {
+          logout();
+          navigateTo(ROUTES.LOGIN);
+        }}
+      />
     );
   }
 
   if (routeState.route === ROUTES.EDIT_PROFILE) {
-    return (
-      <>
-        {themeSelector}
-        <EditProfilePage />
-      </>
-    );
+    return <EditProfilePage theme={theme} onThemeChange={setTheme} />;
   }
 
   if (routeState.route === ROUTES.APP) {
     return (
-      <>
-        <SheetPage
-          sheetId={routeState.sheetId}
-          theme={theme}
-          onThemeChange={setTheme}
-          onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
-          onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
-          onBackProfile={() => navigateTo(ROUTES.PROFILE)}
-          onLogout={() => {
-            logout();
-            navigateTo(ROUTES.LOGIN);
-          }}
-        />
-      </>
+      <SheetPage
+        sheetId={routeState.sheetId}
+        theme={theme}
+        onThemeChange={setTheme}
+        onOpenImport={() => navigateTo(`${ROUTES.IMPORT}/${routeState.sheetId || ""}`)}
+        onOpenExport={() => navigateTo(`${ROUTES.EXPORT}/${routeState.sheetId || ""}`)}
+      />
     );
   }
 
-  return (
-    <>
-      {themeSelector}
-      <LoginPage
-        onLoginSuccess={() => navigateTo(ROUTES.PROFILE)}
-        onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)}
-      />
-    </>
-  );
+  return <LoginPage theme={theme} onThemeChange={setTheme} onLoginSuccess={() => navigateTo(ROUTES.PROFILE)} onGoToSignUp={() => navigateTo(ROUTES.SIGNUP)} />;
 }
 
 export default App;

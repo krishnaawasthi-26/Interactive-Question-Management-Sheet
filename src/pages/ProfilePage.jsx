@@ -4,9 +4,9 @@ import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
 import { fetchProfile } from "../api/profileApi";
-import SiteNav from "../components/SiteNav";
+import AppShell from "../components/AppShell";
 
-function ProfilePage({ onLogout }) {
+function ProfilePage({ theme, onThemeChange, onLogout }) {
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
@@ -59,15 +59,17 @@ function ProfilePage({ onLogout }) {
   const following = profileDetails?.following || [];
 
   return (
-    <div className="app-shell text-[var(--text-primary)]">
-      <div className="app-content px-6 py-8 space-y-6">
-        <SiteNav />
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">My Profile</h1>
-          <button onClick={onLogout} className="rounded-md border border-rose-700 px-3 py-1 text-sm text-rose-200">Logout</button>
-        </div>
+    <AppShell
+      title="My Profile"
+      subtitle="Manage sheets, progress, and profile visibility"
+      theme={theme}
+      onThemeChange={onThemeChange}
+      userLabel={currentUser?.username || "Account"}
+      headerActions={<button onClick={onLogout} className="btn-base btn-danger text-sm">Logout</button>}
+    >
+      <div className="space-y-6">
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Profile details</h2>
           <p className="text-sm text-zinc-200">Name: {currentUser?.name || "-"}</p>
           <p className="text-sm text-zinc-200">Username: @{persistedUsername}</p>
@@ -77,7 +79,7 @@ function ProfilePage({ onLogout }) {
           <p className="text-sm text-zinc-200">Sheets copied by you: {profileDetails?.copiedSheetsCount ?? 0}</p>
           <div className="flex flex-wrap gap-2 text-sm">
             <button
-              className="rounded border border-emerald-700 px-2 py-1 text-emerald-200"
+              className="btn-base btn-success px-2 py-1 text-emerald-200"
               type="button"
               onClick={() =>
                 setEngagementViewer({ title: "Downloaded by", users: allDownloadedUsers })
@@ -86,7 +88,7 @@ function ProfilePage({ onLogout }) {
               Downloaded: {totalDownloadCount}
             </button>
             <button
-              className="rounded border border-sky-700 px-2 py-1 text-sky-200"
+              className="btn-base btn-neutral px-2 py-1 text-sky-200"
               type="button"
               onClick={() =>
                 setEngagementViewer({ title: "Followers", users: followers.map((entry) => ({ ...entry, sheetTitle: "" })) })
@@ -95,7 +97,7 @@ function ProfilePage({ onLogout }) {
               Followers: {profileDetails?.followersCount ?? followers.length}
             </button>
             <button
-              className="rounded border border-fuchsia-700 px-2 py-1 text-fuchsia-200"
+              className="btn-base btn-neutral px-2 py-1 text-fuchsia-200"
               type="button"
               onClick={() =>
                 setEngagementViewer({ title: "Following", users: following.map((entry) => ({ ...entry, sheetTitle: "" })) })
@@ -104,7 +106,7 @@ function ProfilePage({ onLogout }) {
               Following: {profileDetails?.followingCount ?? following.length}
             </button>
             <button
-              className="rounded border border-amber-700 px-2 py-1 text-amber-200"
+              className="btn-base btn-neutral px-2 py-1 text-amber-200"
               type="button"
               onClick={() => setEngagementViewer({ title: "Copied by", users: allCopiedUsers })}
             >
@@ -112,7 +114,7 @@ function ProfilePage({ onLogout }) {
             </button>
           </div>
           <button
-            className="rounded bg-indigo-600 px-3 py-2"
+            className="btn-base btn-primary"
             onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
           >
             Profile Info
@@ -121,7 +123,7 @@ function ProfilePage({ onLogout }) {
           <p className="text-sm text-zinc-300 break-all">Share profile (read-only): {profileShareUrl}</p>
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">My overall progress</h2>
           <p className="text-sm text-zinc-200">
             {overallProgress.completedQuestions}/{overallProgress.totalQuestions} solved ({overallProgress.percent}%)
@@ -134,7 +136,7 @@ function ProfilePage({ onLogout }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Create own sheets</h2>
           {limitWarning && (
             <div className="flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
@@ -145,9 +147,9 @@ function ProfilePage({ onLogout }) {
             </div>
           )}
           <div className="flex gap-2">
-            <input className="flex-1 rounded border border-gray-700 bg-transparent px-3 py-2" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => setNewSheetTitle(e.target.value)} />
+            <input className="flex-1 field-base" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => setNewSheetTitle(e.target.value)} />
             <button
-              className="rounded bg-orange-600 px-3 py-2"
+              className="btn-base btn-primary"
               onClick={async () => {
                 const created = await createNewSheet(currentUser.token, newSheetTitle || "Untitled Sheet");
                 if (!created) return;
@@ -160,7 +162,7 @@ function ProfilePage({ onLogout }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">On-going sheets</h2>
           <p className="text-xs text-zinc-400">These are active sheets and are easiest to access from the main profile page.</p>
           {ongoingSheets.length === 0 ? (
@@ -170,10 +172,10 @@ function ProfilePage({ onLogout }) {
               {ongoingSheets.map((sheet) => {
                 const progress = calculateSheetProgress(sheet);
                 return (
-                  <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
+                  <div key={sheet.id} className="panel-elevated rounded-lg p-3 flex items-center justify-between">
                     <div className="w-full max-w-md space-y-2">
                       <input
-                        className="w-full rounded border border-gray-700 bg-transparent px-2 py-1 font-medium"
+                        className="w-full field-base px-2 py-1 font-medium"
                         value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
                         onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
                       />
@@ -196,7 +198,7 @@ function ProfilePage({ onLogout }) {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        className="rounded border border-emerald-700 px-2 py-1"
+                        className="btn-base btn-success px-2 py-1"
                         onClick={async () => {
                           const nextTitle = ((sheetTitles[sheet.id] ?? sheet.title) || "").trim();
                           if (!nextTitle) return;
@@ -205,21 +207,21 @@ function ProfilePage({ onLogout }) {
                       >
                         Save Name
                       </button>
-                      <button className="rounded border border-sky-700 px-2 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
+                      <button className="btn-base btn-neutral px-2 py-1" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
                       <button
-                        className="rounded border border-violet-700 px-2 py-1"
+                        className="btn-base btn-neutral px-2 py-1"
                         onClick={() => setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic)}
                       >
                         {sheet.isPublic ? "Make Private" : "Make Public"}
                       </button>
                       <button
-                        className="rounded border border-zinc-600 px-2 py-1"
+                        className="btn-base btn-neutral px-2 py-1"
                         onClick={() => setSheetArchived(currentUser.token, sheet.id, true)}
                       >
                         Archive
                       </button>
                       <button
-                        className="rounded border border-amber-700 px-2 py-1"
+                        className="btn-base btn-neutral px-2 py-1"
                         onClick={async () => {
                           const copied = await duplicateSheetById(currentUser.token, sheet.id);
                           if (!copied) return;
@@ -229,7 +231,7 @@ function ProfilePage({ onLogout }) {
                         Copy
                       </button>
                       <button
-                        className="rounded border border-red-700 px-2 py-1"
+                        className="btn-base btn-danger px-2 py-1"
                         onClick={async () => {
                           if (!window.confirm("Are you sure to delete this sheet?")) return;
                           await deleteSheet(currentUser.token, sheet.id);
@@ -245,7 +247,7 @@ function ProfilePage({ onLogout }) {
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Public sheets</h2>
           <p className="text-xs text-zinc-400">Only these sheets are visible on your public profile URL.</p>
           {publicSheets.length === 0 ? (
@@ -253,7 +255,7 @@ function ProfilePage({ onLogout }) {
           ) : (
             <div className="space-y-2">
               {publicSheets.map((sheet) => (
-                <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
+                <div key={sheet.id} className="panel-elevated rounded-lg p-3 flex items-center justify-between">
                   <p className="font-medium">{sheet.title}</p>
                   <a
                     className="text-xs text-zinc-300 underline-offset-2 hover:underline"
@@ -267,7 +269,7 @@ function ProfilePage({ onLogout }) {
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Archived sheets</h2>
           <p className="text-xs text-zinc-400">Archived sheets are moved out of your main workflow, but still easy to restore.</p>
           {archivedSheets.length === 0 ? (
@@ -275,17 +277,17 @@ function ProfilePage({ onLogout }) {
           ) : (
             <div className="space-y-2">
               {archivedSheets.map((sheet) => (
-                <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between">
+                <div key={sheet.id} className="panel-elevated rounded-lg p-3 flex items-center justify-between">
                   <p className="font-medium">{sheet.title}</p>
                   <div className="flex gap-2">
                     <button
-                      className="rounded border border-sky-700 px-2 py-1"
+                      className="btn-base btn-neutral px-2 py-1"
                       onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}
                     >
                       Open
                     </button>
                     <button
-                      className="rounded border border-zinc-500 px-2 py-1"
+                      className="btn-base btn-neutral px-2 py-1"
                       onClick={() => setSheetArchived(currentUser.token, sheet.id, false)}
                     >
                       Restore
@@ -297,7 +299,7 @@ function ProfilePage({ onLogout }) {
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-800 p-4 space-y-3 bg-[rgba(255,255,255,0.03)]">
+        <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Recently updated sheets</h2>
           <p className="text-xs text-zinc-400">Only your own sheets appear here. No static templates are shown.</p>
           {sheets.length === 0 ? (
@@ -309,7 +311,7 @@ function ProfilePage({ onLogout }) {
                 .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
                 .slice(0, 5)
                 .map((sheet) => (
-                  <div key={sheet.id} className="rounded border border-gray-700 p-3 flex items-center justify-between gap-4">
+                  <div key={sheet.id} className="panel-elevated rounded-lg p-3 flex items-center justify-between gap-4">
                     <div>
                       <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
                       <p className="text-xs text-zinc-400">
@@ -317,7 +319,7 @@ function ProfilePage({ onLogout }) {
                       </p>
                     </div>
                     <button
-                      className="rounded border border-sky-700 px-2 py-1 text-sm"
+                      className="btn-base btn-neutral px-2 py-1 text-sm"
                       onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}
                     >
                       Open
@@ -327,15 +329,14 @@ function ProfilePage({ onLogout }) {
             </div>
           )}
         </div>
-      </div>
       {engagementViewer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-zinc-900 p-4">
+          <div className="panel w-full max-w-lg p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
               <button
                 type="button"
-                className="rounded border border-gray-700 px-2 py-1 text-xs"
+                className="btn-base btn-neutral px-2 py-1 text-xs"
                 onClick={() => setEngagementViewer(null)}
               >
                 Close
@@ -346,7 +347,7 @@ function ProfilePage({ onLogout }) {
             ) : (
               <div className="max-h-72 space-y-2 overflow-auto">
                 {engagementViewer.users.map((entry, index) => (
-                  <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="rounded border border-gray-700 p-2 text-sm">
+                  <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="panel-elevated rounded-lg p-2 text-sm">
                     <p className="font-medium">@{entry.username}</p>
                     {entry.sheetTitle ? (
                       <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
@@ -360,7 +361,8 @@ function ProfilePage({ onLogout }) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
