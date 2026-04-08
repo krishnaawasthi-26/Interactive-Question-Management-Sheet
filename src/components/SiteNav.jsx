@@ -16,9 +16,6 @@ function SiteNav() {
       <nav className="panel mb-4 p-3 lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">IQMS</p>
-          <a href="https://leetcode.com" target="_blank" rel="noreferrer" className="btn-base btn-neutral px-3 py-1 text-xs">
-            LeetCode
-          </a>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {primaryLinks.map((link) => {
@@ -62,15 +59,6 @@ function SiteNav() {
               </button>
             );
           })}
-          <a
-            href="https://leetcode.com"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-[var(--text-secondary)] transition hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
-          >
-            <span aria-hidden>🧩</span>
-            <span>LeetCode</span>
-          </a>
         </div>
       </aside>
     </>
