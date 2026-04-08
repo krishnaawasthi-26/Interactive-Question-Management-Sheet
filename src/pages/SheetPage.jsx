@@ -194,7 +194,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
               {isEditing ? (
                 <TopicList isEditing searchQuery={searchQuery} />
               ) : (
-                <SheetDashboardView title={sheetTitle || "Advanced DSA Sheet - V2"} topics={topics} />
+                <SheetDashboardView title={sheetTitle} topics={topics} />
               )}
             </main>
           </div>
