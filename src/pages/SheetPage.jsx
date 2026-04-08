@@ -7,12 +7,12 @@ import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import SiteNav from "../components/SiteNav";
+import EditorActionPanel from "../components/EditorActionPanel";
 
-function SheetPage({ sheetId, onOpenImport, onOpenExport }) {
+function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }) {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSidebarActions, setShowSidebarActions] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
@@ -81,16 +81,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport }) {
       window.removeEventListener("hashchange", onHashChange);
     };
   }, [hasPendingChanges]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setShowSidebarActions(window.scrollY > 180);
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const handleSaveChanges = async () => {
     if (!currentUser?.token || !sheetId) return;
@@ -165,58 +155,54 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport }) {
 
   return (
     <div className="app-shell bg-[var(--app-bg)] text-[var(--text-primary)] transition-colors">
-      <SiteNav actionButtons={sheetActionButtons} showSidebarActions={showSidebarActions} />
-      <div className="app-content rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 p-4 shadow-2xl sm:p-6">
-        <Header title={sheetTitle} onTitleChange={(nextTitle) => setSheetTitle(nextTitle)} />
+      <SiteNav />
+      <div className="app-content">
+        <Header
+          title={sheetTitle}
+          onTitleChange={(nextTitle) => setSheetTitle(nextTitle)}
+          theme={theme}
+          onThemeChange={onThemeChange}
+          userLabel={currentUser?.fullName || currentUser?.email || "Account"}
+        />
 
-        <div className="mb-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-3 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            {sheetActionButtons.map((action) => (
-              <button
-                key={action.key}
-                type="button"
-                onClick={action.onClick}
-                disabled={action.disabled}
-                className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition hover:-translate-y-0.5 hover:bg-[var(--surface-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="min-w-0 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/80 p-4 shadow-xl sm:p-5">
+            {isEditing && (
+              <>
+                <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
+                {limitWarning && (
+                  <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-500/45 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+                    <span>{limitWarning}</span>
+                    <button
+                      type="button"
+                      className="rounded-md border border-amber-500/70 px-2 py-0.5 text-xs"
+                      onClick={clearLimitWarning}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
 
-        {isEditing && (
-          <>
-            <AddTopicForm title={title} onTitleChange={(e) => setTitle(e.target.value)} onAdd={handleAdd} />
-            {limitWarning && (
-              <div className="mb-4 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
-                <span>{limitWarning}</span>
-                <button
-                  type="button"
-                  className="rounded border border-amber-500 px-2 py-0.5 text-xs"
-                  onClick={clearLimitWarning}
-                >
-                  Dismiss
-                </button>
-              </div>
+                <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
+              </>
             )}
 
-            <QuestionSearch value={searchQuery} onChange={setSearchQuery} />
-          </>
-        )}
+            <main>
+              {(isLoading || loadError || saveError) && (
+                <p className="mb-4 text-sm text-[var(--text-muted)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
+              )}
+              {isEditing ? (
+                <TopicList isEditing searchQuery={searchQuery} />
+              ) : (
+                <SheetDashboardView title={sheetTitle || "Advanced DSA Sheet - V2"} topics={topics} />
+              )}
+            </main>
+          </div>
 
-        <main>
-          {(isLoading || loadError || saveError) && (
-            <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">
-              {isLoading ? "Loading sheet..." : loadError || saveError}
-            </p>
-          )}
-          {isEditing ? (
-            <TopicList isEditing searchQuery={searchQuery} />
-          ) : (
-            <SheetDashboardView title={sheetTitle || "Advanced DSA Sheet - V2"} topics={topics} />
-          )}
-        </main>
+          <div className="xl:sticky xl:top-6 xl:h-fit">
+            <EditorActionPanel actions={sheetActionButtons} />
+          </div>
+        </div>
       </div>
     </div>
   );
