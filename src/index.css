@@ -198,3 +198,21 @@ body {
 :root .border-rose-700 { border-color: color-mix(in srgb, var(--accent-rose) 55%, transparent) !important; }
 :root .border-violet-700 { border-color: color-mix(in srgb, var(--accent-violet) 55%, transparent) !important; }
 :root .border-red-700 { border-color: color-mix(in srgb, var(--accent-red) 55%, transparent) !important; }
+
+
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.app-content {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    padding-left: 18rem;
+    padding-right: 1.5rem;
+  }
+}

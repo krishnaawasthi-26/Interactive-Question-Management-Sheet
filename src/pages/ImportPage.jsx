@@ -40,8 +40,9 @@ function ImportPage({ onBack }) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10 text-white">
+    <div className="app-shell text-[var(--text-primary)]">
       <SiteNav />
+      <div className="app-content rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)]/80 p-6">
       <h1 className="mb-4 text-2xl font-semibold">Import Sheet JSON</h1>
       <p className="mb-3 text-sm text-zinc-300">
         Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, each
@@ -79,6 +80,7 @@ function ImportPage({ onBack }) {
       >
         Back to App
       </button>
+      </div>
     </div>
   );
 }

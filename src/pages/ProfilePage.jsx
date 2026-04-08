@@ -59,8 +59,8 @@ function ProfilePage({ onLogout }) {
   const following = profileDetails?.following || [];
 
   return (
-    <div className="min-h-screen [background-color:rgb(24_24_27/var(--tw-bg-opacity,1))] text-white">
-      <div className="mx-auto max-w-4xl px-6 py-8 space-y-6">
+    <div className="app-shell text-[var(--text-primary)]">
+      <div className="app-content px-6 py-8 space-y-6">
         <SiteNav />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">My Profile</h1>

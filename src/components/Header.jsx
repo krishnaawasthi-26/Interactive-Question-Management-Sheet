@@ -6,7 +6,6 @@ import { navigateTo, ROUTES } from "../services/hashRouter";
 function Header({
   isEditing,
   onToggleEdit,
-  onOpenImport,
   onOpenExport,
   onLogout,
   title,
@@ -61,13 +60,6 @@ function Header({
         <button type="button" onClick={onCreateNewSheet} className="rounded-md border border-orange-600 px-3 py-1 text-sm text-orange-200">New Sheet</button>
         <UndoRedoControls />
         <ExportButton onClick={onOpenExport} />
-        <button
-          type="button"
-          onClick={onOpenImport}
-          className="rounded-md border border-sky-600 px-3 py-1 text-sm text-sky-200 transition hover:bg-sky-700/20"
-        >
-          Import JSON
-        </button>
         <button
           onClick={onToggleEdit}
           className="rounded-md border border-gray-700 px-3 py-1 text-sm text-gray-200 transition hover:bg-gray-800"

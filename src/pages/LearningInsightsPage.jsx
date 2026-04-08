@@ -117,8 +117,8 @@ function LearningInsightsPage() {
   }, [sheets]);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+    <div className="app-shell text-[var(--text-primary)]">
+      <div className="app-content space-y-5 px-4 py-6 sm:px-6 sm:py-8">
         <SiteNav />
 
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
