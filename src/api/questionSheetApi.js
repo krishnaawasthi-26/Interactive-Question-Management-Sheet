@@ -1,7 +1,8 @@
 import sampleSheet from "../data/sampleSheet.json";
 
-const API_BASE_URL =
-  "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug/striver-sde-sheet";
+const PUBLIC_SHEET_API_BASE_URL =
+  import.meta.env.VITE_PUBLIC_SHEET_API_BASE_URL ||
+  "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug";
 
 const SYNC_API_BASE_URL =
   import.meta.env.VITE_SYNC_API_BASE_URL || "/api/sync/outbox";
@@ -183,7 +184,7 @@ const persistSheetWithOperation = (sheet, operationType, payload = {}) => {
 
 export const fetchSheetBySlug = async (slug) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/${slug}`);
+    const response = await fetch(`${PUBLIC_SHEET_API_BASE_URL}/${slug}`);
     if (!response.ok) throw new Error("Failed to fetch sheet");
 
     const data = await response.json();
