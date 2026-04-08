@@ -16,7 +16,8 @@ const MISTAKES = [
 ];
 
 const CONFIDENCE_LEVELS = ["Low", "Medium", "High"];
-const REVISION_OPTIONS = ["Today", "Tomorrow", "In 2 Days", "In 1 Week", "In 2 Weeks"];
+const REVISION_OPTIONS = ["Today", "Tomorrow", "In 2 Days", "In 1 Week", "In 2 Weeks", "Never"];
+const TIME_SPENT_OPTIONS = ["5", "10", "15", "20", "30", "45", "60"];
 const DIFFICULTY_OPTIONS = ["Unspecified", "Easy", "Medium", "Hard"];
 
 const getPlatformFromLink = (link) => {
@@ -29,6 +30,7 @@ const getPlatformFromLink = (link) => {
 };
 
 const toRevisionDate = (revisionTiming) => {
+  if (revisionTiming === "Never") return null;
   const offsetDays = {
     Today: 0,
     Tomorrow: 1,
@@ -44,6 +46,8 @@ const toRevisionDate = (revisionTiming) => {
 const sectionClass = "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4";
 
 export function AttemptOutcomeSection({ result, setResult, timeSpent, setTimeSpent, confidence, setConfidence }) {
+  const selectedTimeOption = TIME_SPENT_OPTIONS.includes(String(timeSpent)) ? String(timeSpent) : "custom";
+
   return (
     <section className={sectionClass}>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Outcome</h3>
@@ -58,10 +62,35 @@ export function AttemptOutcomeSection({ result, setResult, timeSpent, setTimeSpe
             ))}
           </div>
         </div>
-        <label className="space-y-2">
+        <div className="space-y-2">
           <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
-          <input type="number" min="1" step="1" value={timeSpent} onChange={(event) => setTimeSpent(event.target.value)} className="field-base w-full" />
-        </label>
+          <select
+            value={selectedTimeOption}
+            onChange={(event) => {
+              if (event.target.value === "custom") return;
+              setTimeSpent(event.target.value);
+            }}
+            className="field-base w-full"
+          >
+            {TIME_SPENT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option} min
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
+          {selectedTimeOption === "custom" ? (
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={timeSpent}
+              onChange={(event) => setTimeSpent(event.target.value)}
+              className="field-base w-full"
+              placeholder="Enter custom minutes"
+            />
+          ) : null}
+        </div>
       </div>
       <div className="mt-4">
         <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
@@ -146,11 +175,13 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
   const [topic, setTopic] = useState(topicName || "General");
 
   const handleSave = () => {
+    const normalizedTimeSpent = Math.max(1, Number(timeSpent) || 1);
+
     onSave({
       problemName,
       platform,
       result,
-      timeSpent: `${timeSpent} minutes`,
+      timeSpent: `${normalizedTimeSpent} minutes`,
       mistakes,
       notes,
       confidence,
