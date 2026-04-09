@@ -41,12 +41,33 @@ function NavGroup({ title, links, currentRoute }) {
 
 function AppSidebar() {
   const currentRoute = getCurrentRoute().route;
+  const canOpenTopicTimers = currentRoute === ROUTES.APP;
+  const openTopicScheduler = (mode) => {
+    if (!canOpenTopicTimers) return;
+    window.dispatchEvent(new CustomEvent("iqms-open-topic-timer", { detail: { mode } }));
+  };
 
   return (
     <>
       <nav className="panel mb-4 p-3 lg:hidden">
         <div className="mb-3 grid grid-cols-2 gap-2">
           <NotificationBell compact />
+          <button
+            type="button"
+            disabled={!canOpenTopicTimers}
+            className={`rounded-lg border px-3 py-2 text-left text-sm ${canOpenTopicTimers ? "border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-info)_16%,var(--surface-elevated))]" : "cursor-not-allowed border-[var(--border-subtle)] bg-[var(--surface-elevated)] opacity-60"}`}
+            onClick={() => openTopicScheduler("reminder")}
+          >
+            ⏰ Reminder
+          </button>
+          <button
+            type="button"
+            disabled={!canOpenTopicTimers}
+            className={`rounded-lg border px-3 py-2 text-left text-sm ${canOpenTopicTimers ? "border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-danger)_14%,var(--surface-elevated))]" : "cursor-not-allowed border-[var(--border-subtle)] bg-[var(--surface-elevated)] opacity-60"}`}
+            onClick={() => openTopicScheduler("alarm")}
+          >
+            🔔 Alarm
+          </button>
           {[...primaryLinks, ...supportLinks].map((link) => {
             const active = currentRoute === link.route;
             return (
@@ -73,6 +94,31 @@ function AppSidebar() {
 
         <div className="space-y-4">
           <NotificationBell />
+          <div className="space-y-1.5">
+            <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Clock</p>
+            <button
+              type="button"
+              disabled={!canOpenTopicTimers}
+              className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition ${canOpenTopicTimers
+                ? "border-transparent text-[var(--text-secondary)] hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
+                : "cursor-not-allowed border-transparent text-[var(--text-tertiary)] opacity-70"}`}
+              onClick={() => openTopicScheduler("reminder")}
+            >
+              <span aria-hidden>⏰</span>
+              <span>Topic Reminder</span>
+            </button>
+            <button
+              type="button"
+              disabled={!canOpenTopicTimers}
+              className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition ${canOpenTopicTimers
+                ? "border-transparent text-[var(--text-secondary)] hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
+                : "cursor-not-allowed border-transparent text-[var(--text-tertiary)] opacity-70"}`}
+              onClick={() => openTopicScheduler("alarm")}
+            >
+              <span aria-hidden>🔔</span>
+              <span>Topic Alarm</span>
+            </button>
+          </div>
           <NavGroup title="Sheets" links={primaryLinks} currentRoute={currentRoute} />
           <NavGroup title="Support" links={supportLinks} currentRoute={currentRoute} />
         </div>
