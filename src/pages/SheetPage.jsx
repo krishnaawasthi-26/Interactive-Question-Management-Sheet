@@ -7,8 +7,10 @@ import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 import EditorActionPanel from "../components/EditorActionPanel";
 import ConfirmationModal from "../components/ConfirmationModal";
+import TopicReminderAlarmPanel from "../components/TopicReminderAlarmPanel";
 import { calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES } from "../services/routes";
+import { getNotificationPermissionState, requestNotificationPermission } from "../services/notifications";
 
 const formatRelativeTime = (isoValue) => {
   if (!isoValue) return "Not saved yet";
@@ -39,6 +41,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const [typeFilter, setTypeFilter] = useState("all");
   const [sheetTitles, setSheetTitles] = useState({});
   const [, setNowTick] = useState(0);
+  const [topicSchedulerState, setTopicSchedulerState] = useState({ open: false, mode: "reminder" });
+  const [scheduledTopicAlerts, setScheduledTopicAlerts] = useState([]);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const addTopic = useSheetStore((state) => state.addTopic);
@@ -68,7 +72,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const canRedo = useSheetStore((state) => state.future.length > 0);
   const suppressHashGuardRef = useRef(false);
   const previousHashRef = useRef(window.location.hash);
+  const announcedTopicAlertsRef = useRef(new Set());
   const focusProblemId = new URLSearchParams(window.location.search).get("problemId");
+  const topicAlertStorageKey = `iqms-topic-alerts:${sheetId || "sheet-index"}`;
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -103,6 +109,77 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
 
     return () => window.clearInterval(interval);
   }, [lastSavedAt]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(topicAlertStorageKey);
+    if (!raw) {
+      setScheduledTopicAlerts([]);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        setScheduledTopicAlerts([]);
+        return;
+      }
+      setScheduledTopicAlerts(parsed);
+    } catch {
+      setScheduledTopicAlerts([]);
+    }
+  }, [topicAlertStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(topicAlertStorageKey, JSON.stringify(scheduledTopicAlerts));
+  }, [scheduledTopicAlerts, topicAlertStorageKey]);
+
+  useEffect(() => {
+    const onOpenTopicScheduler = (event) => {
+      const mode = event?.detail?.mode === "alarm" ? "alarm" : "reminder";
+      if (!sheetId) return;
+      setTopicSchedulerState({ open: true, mode });
+    };
+
+    window.addEventListener("iqms-open-topic-timer", onOpenTopicScheduler);
+    return () => window.removeEventListener("iqms-open-topic-timer", onOpenTopicScheduler);
+  }, [sheetId]);
+
+  useEffect(() => {
+    const tick = () => {
+      if (!scheduledTopicAlerts.length) return;
+      const now = Date.now();
+      const dueAlerts = scheduledTopicAlerts.filter((item) => {
+        const scheduledAt = new Date(item.scheduledFor).getTime();
+        return !Number.isNaN(scheduledAt) && scheduledAt <= now && !item.completed;
+      });
+
+      if (!dueAlerts.length) return;
+
+      dueAlerts.forEach((item) => {
+        if (announcedTopicAlertsRef.current.has(item.id)) return;
+        announcedTopicAlertsRef.current.add(item.id);
+        if ("Notification" in window && Notification.permission === "granted") {
+          const title = item.mode === "alarm" ? `Alarm: ${item.topicTitle}` : `Reminder: ${item.topicTitle}`;
+          const body = `Time for topic "${item.topicTitle}" in your sheet.`;
+          new Notification(title, { body, tag: `topic-${item.id}` });
+        }
+      });
+
+      setScheduledTopicAlerts((current) =>
+        current.map((item) => {
+          const scheduledAt = new Date(item.scheduledFor).getTime();
+          if (Number.isNaN(scheduledAt) || scheduledAt > now || item.completed) return item;
+          return { ...item, completed: true };
+        })
+      );
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(interval);
+  }, [scheduledTopicAlerts]);
 
   const closeDialog = useCallback(() => setActiveDialog(null), []);
 
@@ -212,6 +289,27 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     addTopic(title).then((created) => {
       if (created) setTitle("");
     });
+  };
+
+  const saveTopicAlert = async ({ topicId, scheduledFor, mode }) => {
+    const topic = topics.find((entry) => entry.id === topicId);
+    if (!topic) return;
+
+    if (getNotificationPermissionState() !== "granted") {
+      await requestNotificationPermission();
+    }
+
+    setScheduledTopicAlerts((current) => [
+      ...current,
+      {
+        id: `topic-alert-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        topicId,
+        topicTitle: topic.title || "Untitled Topic",
+        scheduledFor,
+        mode,
+        completed: false,
+      },
+    ]);
   };
 
   const saveStatusLabel = isSaving
@@ -444,6 +542,17 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         actions={activeDialog?.actions}
         onClose={closeDialog}
         isBusy={isSaving}
+      />
+
+      <TopicReminderAlarmPanel
+        open={topicSchedulerState.open}
+        mode={topicSchedulerState.mode}
+        topics={topics}
+        scheduledAlerts={scheduledTopicAlerts.filter((item) => !item.completed)}
+        onModeChange={(mode) => setTopicSchedulerState((current) => ({ ...current, mode }))}
+        onSave={saveTopicAlert}
+        onDelete={(id) => setScheduledTopicAlerts((current) => current.filter((item) => item.id !== id))}
+        onClose={() => setTopicSchedulerState((current) => ({ ...current, open: false }))}
       />
     </>
   );
