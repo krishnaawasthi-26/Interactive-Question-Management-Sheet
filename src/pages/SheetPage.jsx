@@ -68,6 +68,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const canRedo = useSheetStore((state) => state.future.length > 0);
   const suppressHashGuardRef = useRef(false);
   const previousHashRef = useRef(window.location.hash);
+  const focusProblemId = new URLSearchParams(window.location.search).get("problemId");
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -429,7 +430,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             {(isLoading || loadError || saveError) && (
               <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
             )}
-            <TopicList isEditing={isEditing} searchQuery={searchQuery} allowProgressToggle={isEditing} />
+            <TopicList isEditing={isEditing} searchQuery={searchQuery} allowProgressToggle={isEditing} focusProblemId={focusProblemId} />
           </main>
             </>
           )}

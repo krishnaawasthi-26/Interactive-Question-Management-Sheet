@@ -1,4 +1,5 @@
 import { getCurrentRoute, navigateTo, ROUTES } from "../services/routes";
+import NotificationBell from "./NotificationBell";
 
 const primaryLinks = [
   { label: "Home", route: ROUTES.HOME, icon: "🏠" },
@@ -45,6 +46,7 @@ function AppSidebar() {
     <>
       <nav className="panel mb-4 p-3 lg:hidden">
         <div className="mb-3 grid grid-cols-2 gap-2">
+          <NotificationBell compact />
           {[...primaryLinks, ...supportLinks].map((link) => {
             const active = currentRoute === link.route;
             return (
@@ -70,6 +72,7 @@ function AppSidebar() {
         </div>
 
         <div className="space-y-4">
+          <NotificationBell />
           <NavGroup title="Sheets" links={primaryLinks} currentRoute={currentRoute} />
           <NavGroup title="Support" links={supportLinks} currentRoute={currentRoute} />
         </div>
