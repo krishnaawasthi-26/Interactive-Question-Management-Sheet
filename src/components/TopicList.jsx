@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
 
-function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false, allowProgressToggle = true }) {
+function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false, allowProgressToggle = true, focusProblemId = null }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
   const addQuestion = useSheetStore((state) => state.addQuestion);
@@ -131,6 +131,18 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
       },
     }));
   };
+
+
+
+  useEffect(() => {
+    if (!focusProblemId) return;
+    const target = document.querySelector(`[data-problem-id="${focusProblemId}"]`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.add("ring-2", "ring-[var(--accent-primary)]");
+    const timer = window.setTimeout(() => target.classList.remove("ring-2", "ring-[var(--accent-primary)]"), 1800);
+    return () => window.clearTimeout(timer);
+  }, [focusProblemId, topics]);
 
   const saveResourceEdit = (topicId, subId, questionId) => {
     const draft = resourceDraftByQuestion[questionId];
@@ -369,6 +381,7 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                   <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex}>
                                                     {(provided) => (
                                                       <li
+                                                        data-problem-id={String(q.id)}
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
