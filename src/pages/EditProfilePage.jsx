@@ -22,17 +22,25 @@ function EditProfilePage({ theme, onThemeChange }) {
   const [emailOtp, setEmailOtp] = useState("");
   const [emailVerificationId, setEmailVerificationId] = useState("");
   const [emailStatus, setEmailStatus] = useState("");
+  const usernameChangesRemaining = Number(currentUser?.usernameChangesRemaining ?? 7);
+  const emailChangesRemaining = Number(currentUser?.emailChangesRemaining ?? 7);
+  const isUsernameLocked = usernameChangesRemaining <= 0;
+  const isEmailLocked = emailChangesRemaining <= 0;
 
   return (
     <AppShell title="Edit Profile" subtitle="Update public and personal details" theme={theme} onThemeChange={onThemeChange}>
       <div className="panel space-y-3 p-5">
         <input className="field-base w-full" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
         <input className="field-base w-full" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <p className={`text-xs ${isEmailLocked ? "text-[var(--accent-danger)]" : "text-[var(--text-secondary)]"}`}>
+          Email (Gmail) changes left: {Math.max(0, emailChangesRemaining)} / 7
+        </p>
         {email !== (currentUser?.email || "") && (
           <div className="rounded-lg border border-[var(--border-color)] p-3">
             {!emailVerificationId ? (
               <button
-                className="btn-base btn-primary"
+                className="btn-base btn-primary disabled:opacity-60"
+                disabled={isEmailLocked}
                 onClick={async () => {
                   const result = await requestEmailChangeOtp({ email });
                   if (result?.verificationId) {
@@ -64,7 +72,16 @@ function EditProfilePage({ theme, onThemeChange }) {
             )}
           </div>
         )}
-        <input className="field-base w-full" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} placeholder="Unique username" />
+        <input
+          className="field-base w-full disabled:opacity-60"
+          value={username}
+          disabled={isUsernameLocked}
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
+          placeholder="Unique username"
+        />
+        <p className={`text-xs ${isUsernameLocked ? "text-[var(--accent-danger)]" : "text-[var(--text-secondary)]"}`}>
+          Username changes left: {Math.max(0, usernameChangesRemaining)} / 7
+        </p>
         <textarea className="field-base w-full" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Description / bio" rows={4} />
         <div className="grid gap-3 md:grid-cols-2">
           <input className="field-base w-full" value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Institution" />

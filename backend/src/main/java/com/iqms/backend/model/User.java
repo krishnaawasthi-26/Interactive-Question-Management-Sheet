@@ -35,6 +35,9 @@ public class User {
   private String websiteUrl;
   private String githubUrl;
   private String linkedinUrl;
+  private Integer usernameChangeCount = 0;
+  private Integer emailChangeCount = 0;
+  private Boolean googleOnboardingComplete = Boolean.TRUE;
   private Set<String> followerUserIds = new LinkedHashSet<>();
   private Set<String> followingUserIds = new LinkedHashSet<>();
   private Set<String> copiedSheetIds = new LinkedHashSet<>();
@@ -157,6 +160,30 @@ public class User {
 
   public void setLinkedinUrl(String linkedinUrl) {
     this.linkedinUrl = linkedinUrl;
+  }
+
+  public int getUsernameChangeCount() {
+    return usernameChangeCount == null ? 0 : usernameChangeCount;
+  }
+
+  public void setUsernameChangeCount(Integer usernameChangeCount) {
+    this.usernameChangeCount = usernameChangeCount == null ? 0 : usernameChangeCount;
+  }
+
+  public int getEmailChangeCount() {
+    return emailChangeCount == null ? 0 : emailChangeCount;
+  }
+
+  public void setEmailChangeCount(Integer emailChangeCount) {
+    this.emailChangeCount = emailChangeCount == null ? 0 : emailChangeCount;
+  }
+
+  public boolean isGoogleOnboardingComplete() {
+    return googleOnboardingComplete == null || googleOnboardingComplete;
+  }
+
+  public void setGoogleOnboardingComplete(Boolean googleOnboardingComplete) {
+    this.googleOnboardingComplete = googleOnboardingComplete;
   }
 
   public Set<String> getFollowerUserIds() {

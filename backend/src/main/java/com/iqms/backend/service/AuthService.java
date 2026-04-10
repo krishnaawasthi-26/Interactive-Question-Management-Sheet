@@ -22,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class AuthService {
 
   private static final String OTP_PURPOSE_SIGNUP = "signup";
+  private static final int MAX_USERNAME_CHANGES = 7;
+  private static final int MAX_EMAIL_CHANGES = 7;
   private final UserRepository userRepository;
   private final TokenService tokenService;
   private final LoginAttemptService loginAttemptService;
@@ -97,6 +99,9 @@ public class AuthService {
     user.setAuthProvider("LOCAL");
     user.setProfileShareId("profile_" + UUID.randomUUID().toString().replace("-", ""));
     user.setCreatedAt(Instant.now());
+    user.setUsernameChangeCount(0);
+    user.setEmailChangeCount(0);
+    user.setGoogleOnboardingComplete(true);
 
     User created = userRepository.save(user);
     return toResponse(created);
@@ -142,6 +147,9 @@ public class AuthService {
       created.setGoogleSubject(googleProfile.subject());
       created.setProfileShareId("profile_" + UUID.randomUUID().toString().replace("-", ""));
       created.setCreatedAt(Instant.now());
+      created.setUsernameChangeCount(0);
+      created.setEmailChangeCount(0);
+      created.setGoogleOnboardingComplete(false);
       return userRepository.save(created);
     });
 
@@ -170,6 +178,11 @@ public class AuthService {
         user.getWebsiteUrl(),
         user.getGithubUrl(),
         user.getLinkedinUrl(),
+        user.getUsernameChangeCount(),
+        Math.max(0, MAX_USERNAME_CHANGES - user.getUsernameChangeCount()),
+        user.getEmailChangeCount(),
+        Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()),
+        "GOOGLE".equalsIgnoreCase(user.getAuthProvider()) && !user.isGoogleOnboardingComplete(),
         token);
   }
 
