@@ -58,6 +58,19 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
   const followers = profileDetails?.followers || [];
   const following = profileDetails?.following || [];
 
+  const normalizeUrl = (value) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  };
+
+  const profileLinks = [
+    { label: "Website", href: normalizeUrl(profileDetails?.websiteUrl) },
+    { label: "GitHub", href: normalizeUrl(profileDetails?.githubUrl) },
+    { label: "LinkedIn", href: normalizeUrl(profileDetails?.linkedinUrl) },
+  ].filter((item) => item.href);
+
   return (
     <AppShell
       title="My Profile"
@@ -77,6 +90,30 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
           <p className="text-sm text-zinc-200">Public sheets: {publicSheets.length}</p>
           <p className="text-sm text-zinc-200">Archived sheets: {archivedSheets.length}</p>
           <p className="text-sm text-zinc-200">Sheets copied by you: {profileDetails?.copiedSheetsCount ?? 0}</p>
+          {profileDetails?.bio && <p className="text-sm text-zinc-200 whitespace-pre-wrap">Description: {profileDetails.bio}</p>}
+          {(profileDetails?.institution || profileDetails?.company) && (
+            <p className="text-sm text-zinc-200">
+              {profileDetails?.institution && <span>Institution: {profileDetails.institution}</span>}
+              {profileDetails?.institution && profileDetails?.company && <span> · </span>}
+              {profileDetails?.company && <span>Company: {profileDetails.company}</span>}
+            </p>
+          )}
+          {profileLinks.length > 0 && (
+            <div className="flex flex-wrap gap-2 text-sm text-zinc-200">
+              <span>Links:</span>
+              {profileLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sky-300 underline underline-offset-2"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap gap-2 text-sm">
             <button
               className="btn-base btn-success px-2 py-1 text-emerald-200"
