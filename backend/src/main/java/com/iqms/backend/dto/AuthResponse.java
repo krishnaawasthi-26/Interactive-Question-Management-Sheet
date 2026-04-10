@@ -13,6 +13,11 @@ public class AuthResponse {
   private String websiteUrl;
   private String githubUrl;
   private String linkedinUrl;
+  private Integer usernameChangesUsed;
+  private Integer usernameChangesRemaining;
+  private Integer emailChangesUsed;
+  private Integer emailChangesRemaining;
+  private Boolean requiresGoogleOnboarding;
   private String token;
 
   public AuthResponse(
@@ -28,6 +33,11 @@ public class AuthResponse {
       String websiteUrl,
       String githubUrl,
       String linkedinUrl,
+      Integer usernameChangesUsed,
+      Integer usernameChangesRemaining,
+      Integer emailChangesUsed,
+      Integer emailChangesRemaining,
+      Boolean requiresGoogleOnboarding,
       String token) {
     this.id = id;
     this.name = name;
@@ -41,6 +51,11 @@ public class AuthResponse {
     this.websiteUrl = websiteUrl;
     this.githubUrl = githubUrl;
     this.linkedinUrl = linkedinUrl;
+    this.usernameChangesUsed = usernameChangesUsed;
+    this.usernameChangesRemaining = usernameChangesRemaining;
+    this.emailChangesUsed = emailChangesUsed;
+    this.emailChangesRemaining = emailChangesRemaining;
+    this.requiresGoogleOnboarding = requiresGoogleOnboarding;
     this.token = token;
   }
 
@@ -56,5 +71,10 @@ public class AuthResponse {
   public String getWebsiteUrl() { return websiteUrl; }
   public String getGithubUrl() { return githubUrl; }
   public String getLinkedinUrl() { return linkedinUrl; }
+  public Integer getUsernameChangesUsed() { return usernameChangesUsed; }
+  public Integer getUsernameChangesRemaining() { return usernameChangesRemaining; }
+  public Integer getEmailChangesUsed() { return emailChangesUsed; }
+  public Integer getEmailChangesRemaining() { return emailChangesRemaining; }
+  public Boolean getRequiresGoogleOnboarding() { return requiresGoogleOnboarding; }
   public String getToken() { return token; }
 }

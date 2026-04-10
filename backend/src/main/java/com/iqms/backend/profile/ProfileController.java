@@ -32,6 +32,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/profile")
 public class ProfileController {
+  private static final int MAX_USERNAME_CHANGES = 7;
+  private static final int MAX_EMAIL_CHANGES = 7;
 
   private final UserRepository userRepository;
   private final CurrentUser currentUser;
@@ -89,6 +91,14 @@ public class ProfileController {
 
     if (username != null && !username.isBlank()) {
       String normalizedUsername = normalizeUsername(username);
+      if (!normalizedUsername.equals(user.getUsername())) {
+        if (user.getUsernameChangeCount() >= MAX_USERNAME_CHANGES) {
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "You have reached the username change limit (7).");
+        }
+        user.setUsernameChangeCount(user.getUsernameChangeCount() + 1);
+      }
       userRepository
           .findByUsername(normalizedUsername)
           .filter(found -> !found.getId().equals(user.getId()))
@@ -105,6 +115,15 @@ public class ProfileController {
     if (githubUrl != null) user.setGithubUrl(normalizeOptionalValue(githubUrl));
     if (linkedinUrl != null) user.setLinkedinUrl(normalizeOptionalValue(linkedinUrl));
 
+    if ("GOOGLE".equalsIgnoreCase(user.getAuthProvider())
+        && !user.isGoogleOnboardingComplete()
+        && name != null
+        && !name.isBlank()
+        && username != null
+        && !username.isBlank()) {
+      user.setGoogleOnboardingComplete(true);
+    }
+
     User saved = userRepository.save(user);
     return ResponseEntity.ok(profilePayload(saved));
   }
@@ -115,6 +134,11 @@ public class ProfileController {
       HttpServletRequest request,
       @jakarta.validation.Valid @RequestBody EmailChangeRequest body) {
     User user = findUser(currentUser.getUserId(request));
+    if (user.getEmailChangeCount() >= MAX_EMAIL_CHANGES) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "You have reached the email change limit (7).");
+    }
     String normalizedEmail = body.getEmail().trim().toLowerCase();
     userRepository
         .findByEmail(normalizedEmail)
@@ -149,6 +173,7 @@ public class ProfileController {
         });
 
     user.setEmail(normalizedEmail);
+    user.setEmailChangeCount(user.getEmailChangeCount() + 1);
     User saved = userRepository.save(user);
     return ResponseEntity.ok(profilePayload(saved));
   }
@@ -237,6 +262,11 @@ public class ProfileController {
     payload.put("websiteUrl", user.getWebsiteUrl());
     payload.put("githubUrl", user.getGithubUrl());
     payload.put("linkedinUrl", user.getLinkedinUrl());
+    payload.put("usernameChangesUsed", user.getUsernameChangeCount());
+    payload.put("usernameChangesRemaining", Math.max(0, MAX_USERNAME_CHANGES - user.getUsernameChangeCount()));
+    payload.put("emailChangesUsed", user.getEmailChangeCount());
+    payload.put("emailChangesRemaining", Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()));
+    payload.put("requiresGoogleOnboarding", "GOOGLE".equalsIgnoreCase(user.getAuthProvider()) && !user.isGoogleOnboardingComplete());
     payload.put("followers", mapUsersById(user.getFollowerUserIds()));
     payload.put("following", mapUsersById(user.getFollowingUserIds()));
     payload.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
