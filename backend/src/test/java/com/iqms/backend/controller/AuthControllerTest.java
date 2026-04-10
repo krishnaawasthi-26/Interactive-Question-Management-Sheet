@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iqms.backend.dto.AuthResponse;
+import com.iqms.backend.dto.OtpChallengeResponse;
 import com.iqms.backend.exception.GlobalExceptionHandler;
 import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
@@ -33,14 +34,10 @@ class AuthControllerTest {
   @MockitoBean private RequestFingerprintService requestFingerprintService;
 
   @Test
-  void signupReturnsAuthResponseForValidPayload() throws Exception {
-    AuthResponse response = new AuthResponse(
-        "u1", "Jane", "jane@example.com", "jane", "2026-04-08T00:00:00Z", "profile_1",
-        null, null, null, null, null, null, "token-1");
+  void requestSignupOtpReturnsChallengeForValidPayload() throws Exception {
+    when(authService.requestSignUpOtp(any())).thenReturn(new OtpChallengeResponse("verify-1", "OTP sent"));
 
-    when(authService.signUp(any())).thenReturn(response);
-
-    mockMvc.perform(post("/api/auth/signup")
+    mockMvc.perform(post("/api/auth/signup/request-otp")
             .contentType("application/json")
             .content(objectMapper.writeValueAsString(java.util.Map.of(
                 "name", "Jane",
@@ -48,12 +45,12 @@ class AuthControllerTest {
                 "username", "jane",
                 "password", "password123"))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.token").value("token-1"));
+        .andExpect(jsonPath("$.verificationId").value("verify-1"));
   }
 
   @Test
   void signupValidationFailureReturnsBadRequest() throws Exception {
-    mockMvc.perform(post("/api/auth/signup")
+    mockMvc.perform(post("/api/auth/signup/request-otp")
             .contentType("application/json")
             .content(objectMapper.writeValueAsString(java.util.Map.of(
                 "name", "",
@@ -78,5 +75,21 @@ class AuthControllerTest {
                 "password", "wrongpass"))))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.message").value("Incorrect password."));
+  }
+
+  @Test
+  void verifySignupOtpReturnsAuthResponse() throws Exception {
+    AuthResponse response = new AuthResponse(
+        "u1", "Jane", "jane@example.com", "jane", "2026-04-08T00:00:00Z", "profile_1",
+        null, null, null, null, null, null, "token-1");
+    when(authService.verifySignUpOtp(any())).thenReturn(response);
+
+    mockMvc.perform(post("/api/auth/signup/verify-otp")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(java.util.Map.of(
+                "verificationId", "verify-1",
+                "otp", "123456"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.token").value("token-1"));
   }
 }

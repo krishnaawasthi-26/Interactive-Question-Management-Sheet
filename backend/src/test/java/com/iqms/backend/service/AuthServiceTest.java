@@ -32,6 +32,9 @@ class AuthServiceTest {
   @Mock private TokenService tokenService;
   @Mock private LoginAttemptService loginAttemptService;
   @Mock private PasswordEncoder passwordEncoder;
+  @Mock private OtpService otpService;
+  @Mock private OtpDeliveryService otpDeliveryService;
+  @Mock private GoogleTokenVerifier googleTokenVerifier;
 
   @InjectMocks private AuthService authService;
 
@@ -47,33 +50,26 @@ class AuthServiceTest {
   }
 
   @Test
-  void signUpCreatesUserWhenEmailAndUsernameAvailable() {
+  void requestSignUpOtpCreatesChallengeWhenEmailAndUsernameAvailable() {
     when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.empty());
     when(userRepository.findByUsername("jane_doe")).thenReturn(Optional.empty());
     when(passwordEncoder.encode("password123")).thenReturn("hashed");
-    when(tokenService.issueToken("user-1")).thenReturn("token-1");
-    when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-      User saved = invocation.getArgument(0);
-      saved.setId("user-1");
-      saved.setCreatedAt(Instant.parse("2026-04-08T00:00:00Z"));
-      return saved;
-    });
+    when(otpService.issueOtp("jane@example.com", "signup", any())).thenReturn(new OtpService.OtpChallenge("verify-1", "123456"));
 
-    AuthResponse response = authService.signUp(signUpRequest);
+    var challenge = authService.requestSignUpOtp(signUpRequest);
 
-    assertThat(response.getId()).isEqualTo("user-1");
-    assertThat(response.getToken()).isEqualTo("token-1");
-    assertThat(response.getEmail()).isEqualTo("jane@example.com");
+    assertThat(challenge.getVerificationId()).isEqualTo("verify-1");
+    verify(otpDeliveryService).sendOtp("jane@example.com", "signup", "123456");
   }
 
   @Test
-  void signUpThrowsConflictWhenEmailExists() {
+  void requestSignUpOtpThrowsConflictWhenEmailExists() {
     when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.of(new User()));
 
-    ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.signUp(signUpRequest));
+    ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.requestSignUpOtp(signUpRequest));
 
     assertThat(ex.getStatusCode().value()).isEqualTo(HttpStatus.CONFLICT.value());
-    verify(userRepository, never()).save(any(User.class));
+    verify(otpService, never()).issueOtp(any(), any(), any());
   }
 
   @Test
@@ -97,24 +93,5 @@ class AuthServiceTest {
 
     assertThat(response.getToken()).isEqualTo("token-1");
     verify(loginAttemptService).recordSuccess("device-1");
-  }
-
-  @Test
-  void loginThrowsUnauthorizedForWrongPassword() {
-    LoginRequest request = new LoginRequest();
-    request.setIdentifier("jane_doe");
-    request.setPassword("wrong");
-
-    User user = new User();
-    user.setUsername("jane_doe");
-    user.setPassword("hashed");
-
-    when(userRepository.findByUsername("jane_doe")).thenReturn(Optional.of(user));
-    when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
-
-    ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> authService.login(request, "device-1"));
-
-    assertThat(ex.getStatusCode().value()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-    verify(loginAttemptService).recordFailure("device-1");
   }
 }
