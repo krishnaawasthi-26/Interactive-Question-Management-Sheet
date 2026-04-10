@@ -1,8 +1,11 @@
 package com.iqms.backend.controller;
 
 import com.iqms.backend.dto.AuthResponse;
+import com.iqms.backend.dto.GoogleLoginRequest;
+import com.iqms.backend.dto.OtpChallengeResponse;
 import com.iqms.backend.dto.LoginRequest;
 import com.iqms.backend.dto.SignUpRequest;
+import com.iqms.backend.dto.VerifyOtpRequest;
 import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +28,14 @@ public class AuthController {
     this.requestFingerprintService = requestFingerprintService;
   }
 
-  @PostMapping("/signup")
-  public ResponseEntity<AuthResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-    return ResponseEntity.ok(authService.signUp(request));
+  @PostMapping("/signup/request-otp")
+  public ResponseEntity<OtpChallengeResponse> requestSignUpOtp(@Valid @RequestBody SignUpRequest request) {
+    return ResponseEntity.ok(authService.requestSignUpOtp(request));
+  }
+
+  @PostMapping("/signup/verify-otp")
+  public ResponseEntity<AuthResponse> verifySignUpOtp(@Valid @RequestBody VerifyOtpRequest request) {
+    return ResponseEntity.ok(authService.verifySignUpOtp(request));
   }
 
   @PostMapping("/login")
@@ -36,5 +44,10 @@ public class AuthController {
       HttpServletRequest servletRequest) {
     String deviceKey = requestFingerprintService.fingerprint(servletRequest);
     return ResponseEntity.ok(authService.login(request, deviceKey));
+  }
+
+  @PostMapping("/google")
+  public ResponseEntity<AuthResponse> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+    return ResponseEntity.ok(authService.loginWithGoogle(request));
   }
 }

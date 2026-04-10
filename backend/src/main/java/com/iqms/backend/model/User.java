@@ -22,6 +22,8 @@ public class User {
   private String username;
 
   private String password;
+  private String authProvider;
+  private String googleSubject;
 
   @Indexed(unique = true)
   private String profileShareId;
@@ -71,6 +73,22 @@ public class User {
 
   public String getUsername() {
     return username;
+  }
+
+  public String getAuthProvider() {
+    return authProvider;
+  }
+
+  public void setAuthProvider(String authProvider) {
+    this.authProvider = authProvider;
+  }
+
+  public String getGoogleSubject() {
+    return googleSubject;
+  }
+
+  public void setGoogleSubject(String googleSubject) {
+    this.googleSubject = googleSubject;
   }
 
   public void setUsername(String username) {

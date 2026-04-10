@@ -5,7 +5,10 @@ import AppShell from "../components/AppShell";
 
 function EditProfilePage({ theme, onThemeChange }) {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const authError = useAuthStore((state) => state.authError);
   const updateProfile = useAuthStore((state) => state.updateProfile);
+  const requestEmailChangeOtp = useAuthStore((state) => state.requestEmailChangeOtp);
+  const verifyEmailChangeOtp = useAuthStore((state) => state.verifyEmailChangeOtp);
 
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
@@ -16,12 +19,51 @@ function EditProfilePage({ theme, onThemeChange }) {
   const [websiteUrl, setWebsiteUrl] = useState(currentUser?.websiteUrl || "");
   const [githubUrl, setGithubUrl] = useState(currentUser?.githubUrl || "");
   const [linkedinUrl, setLinkedinUrl] = useState(currentUser?.linkedinUrl || "");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [emailVerificationId, setEmailVerificationId] = useState("");
+  const [emailStatus, setEmailStatus] = useState("");
 
   return (
     <AppShell title="Edit Profile" subtitle="Update public and personal details" theme={theme} onThemeChange={onThemeChange}>
       <div className="panel space-y-3 p-5">
         <input className="field-base w-full" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
         <input className="field-base w-full" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        {email !== (currentUser?.email || "") && (
+          <div className="rounded-lg border border-[var(--border-color)] p-3">
+            {!emailVerificationId ? (
+              <button
+                className="btn-base btn-primary"
+                onClick={async () => {
+                  const result = await requestEmailChangeOtp({ email });
+                  if (result?.verificationId) {
+                    setEmailVerificationId(result.verificationId);
+                    setEmailStatus(result.message || "OTP sent to new email.");
+                  }
+                }}
+              >
+                Send email change OTP
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-[var(--text-secondary)]">{emailStatus}</p>
+                <input className="field-base w-full" placeholder="Enter 6-digit OTP" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} />
+                <button
+                  className="btn-base btn-success"
+                  onClick={async () => {
+                    const verified = await verifyEmailChangeOtp({ verificationId: emailVerificationId, otp: emailOtp });
+                    if (verified) {
+                      setEmailVerificationId("");
+                      setEmailOtp("");
+                      setEmailStatus("Email updated successfully.");
+                    }
+                  }}
+                >
+                  Verify email OTP
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <input className="field-base w-full" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} placeholder="Unique username" />
         <textarea className="field-base w-full" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Description / bio" rows={4} />
         <div className="grid gap-3 md:grid-cols-2">
@@ -31,11 +73,12 @@ function EditProfilePage({ theme, onThemeChange }) {
         <input className="field-base w-full" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="Website link (optional)" />
         <input className="field-base w-full" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} placeholder="GitHub profile link (optional)" />
         <input className="field-base w-full" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="LinkedIn profile link (optional)" />
+        {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
         <div className="flex gap-2">
           <button
             className="btn-base btn-success"
             onClick={async () => {
-              const isSaved = await updateProfile({ name, email, username, bio, institution, company, websiteUrl, githubUrl, linkedinUrl });
+              const isSaved = await updateProfile({ name, username, bio, institution, company, websiteUrl, githubUrl, linkedinUrl });
               if (isSaved) navigateTo(ROUTES.PROFILE);
             }}
           >
