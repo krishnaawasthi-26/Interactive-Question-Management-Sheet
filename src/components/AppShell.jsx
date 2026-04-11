@@ -1,4 +1,5 @@
-import AppSidebar from "./AppSidebar";
+import { useState } from "react";
+import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import AlertBar from "./AlertBar";
 
@@ -15,9 +16,14 @@ function AppShell({
   children,
   contentClassName = "",
 }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   return (
-    <div className="app-shell text-[var(--text-primary)]">
-      <AppSidebar />
+    <div
+      className="app-shell text-[var(--text-primary)]"
+      style={{ "--sidebar-width": isSidebarOpen ? "250px" : "72px" }}
+    >
+      <Sidebar isSidebarOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen((prev) => !prev)} />
       <div className="app-content">
         <TopBar theme={theme} onThemeChange={onThemeChange} userLabel={userLabel} actions={headerActions} />
         <div className="mx-auto w-full max-w-[1400px]">
