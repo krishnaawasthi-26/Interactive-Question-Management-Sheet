@@ -16,9 +16,12 @@ export const CLIENT_RATE_LIMIT = {
 
 export const API_ERROR_MESSAGES = {
   network: "Unable to connect right now. Please try again in a moment.",
+  timeout: "Request timed out. Please verify the backend is running and try again.",
   requestFailed: "Request failed. Please try again.",
   rateLimited: "Too many requests. Try after {seconds} seconds.",
 };
+
+export const API_REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 12_000);
 
 // Backward-compatible aliases.
 export const PUBLIC_SHEET_API_BASE_URL = API_ENDPOINTS.publicSheetBySlug;

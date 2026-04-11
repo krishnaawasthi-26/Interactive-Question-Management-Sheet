@@ -1,6 +1,7 @@
 import {
   API_BASE_URL,
   API_ERROR_MESSAGES,
+  API_REQUEST_TIMEOUT_MS,
   CLIENT_RATE_LIMIT,
 } from "../config/apiConfig";
 
@@ -162,10 +163,15 @@ export const apiRequest = async (
   maybeEnforceRateLimit({ rateLimit });
 
   let response;
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => {
+    controller.abort();
+  }, API_REQUEST_TIMEOUT_MS);
 
   try {
     response = await fetch(toRequestUrl({ path, baseUrl }), {
       method,
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -173,8 +179,13 @@ export const apiRequest = async (
       },
       ...(body !== undefined && body !== null ? { body: JSON.stringify(body) } : {}),
     });
-  } catch {
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw createApiError(API_ERROR_MESSAGES.timeout, { code: "REQUEST_TIMEOUT" });
+    }
     throw createApiError(API_ERROR_MESSAGES.network);
+  } finally {
+    globalThis.clearTimeout(timeout);
   }
 
   if (!response.ok) {
