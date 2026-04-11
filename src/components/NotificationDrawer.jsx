@@ -8,8 +8,9 @@ const fmt = (value) => {
 };
 
 function NotificationItem({ item, onOpen, onRead, onDone, onSnooze }) {
+  const unread = item.status === "due" || item.status === "unread" || item.status === "scheduled";
   return (
-    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/60 p-3">
+    <div className={`rounded-xl border p-3 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]/60"}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>

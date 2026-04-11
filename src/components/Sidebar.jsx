@@ -4,18 +4,20 @@ import { useAuthStore } from "../store/authStore";
 
 const sections = [
   {
-    title: "Main",
+    title: "Workspace",
     items: [
       { label: "Home", route: ROUTES.HOME, icon: "🏠" },
       { label: "My Sheets", route: ROUTES.APP, icon: "🗂️" },
       { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
       { label: "Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
-      { label: "Public Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🔔" },
-      { label: "Learn About Us", route: ROUTES.HOW_TO_USE, icon: "📘" },
-      { label: "About Us", route: ROUTES.ABOUT, icon: "ℹ️" },
-      { label: "Alerts", route: ROUTES.APP, icon: "🚨" },
-      { label: "Notifications", route: ROUTES.APP, icon: "🔔" },
-      { label: "Alarm", route: ROUTES.APP, icon: "⏰" },
+    ],
+  },
+  {
+    title: "Discover",
+    items: [
+      { label: "Public Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🌐" },
+      { label: "How To Use", route: ROUTES.HOW_TO_USE, icon: "📘" },
+      { label: "About", route: ROUTES.ABOUT, icon: "ℹ️" },
     ],
   },
 ];
@@ -26,24 +28,18 @@ function SidebarItem({ item, isOpen, active, onClick }) {
       type="button"
       title={!isOpen ? item.label : undefined}
       onClick={onClick}
-      className={`group relative flex w-full items-center rounded-xl border px-2.5 py-2.5 text-sm transition-all duration-300 ${
+      className={`group relative flex w-full items-center rounded-xl border px-2.5 py-2.5 text-sm transition-all duration-200 ${
         isOpen ? "justify-start gap-3" : "justify-center"
       } ${
         active
-          ? "border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_16%,var(--surface-elevated))] text-[var(--accent-primary)]"
+          ? "border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_15%,var(--surface-elevated))] text-[var(--text-primary)]"
           : "border-transparent text-[var(--text-secondary)] hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]"
       }`}
     >
       <span className="text-base" aria-hidden>{item.icon}</span>
-      <span className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${isOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
+      <span className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
         {item.label}
       </span>
-
-      {!isOpen ? (
-        <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-xs text-[var(--text-primary)] opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
-          {item.label}
-        </span>
-      ) : null}
     </button>
   );
 }
@@ -52,7 +48,7 @@ function SidebarSection({ title, items, isOpen, currentRoute }) {
   return (
     <section className="space-y-1.5">
       <p
-        className={`overflow-hidden whitespace-nowrap px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)] transition-all duration-300 ${
+        className={`caption-text overflow-hidden whitespace-nowrap px-2 transition-all duration-200 ${
           isOpen ? "w-auto opacity-100" : "w-0 opacity-0"
         }`}
       >
@@ -77,27 +73,26 @@ function Sidebar({ isSidebarOpen, onToggle }) {
   const currentRoute = getCurrentRoute().route;
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
-
   const sidebarWidth = useMemo(() => (isSidebarOpen ? "w-[250px]" : "w-[72px]"), [isSidebarOpen]);
 
   return (
-    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-hidden rounded-3xl border border-[var(--border-subtle)] bg-[#0e1525] p-3 text-[var(--text-primary)] shadow-lg transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-hidden rounded-[22px] border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
         <button
           type="button"
           onClick={onToggle}
           aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-lg text-[var(--accent-primary)] transition hover:border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-lg text-[var(--accent-primary)]"
         >
           ☰
         </button>
-        <div className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--accent-primary)]">IQMS</p>
-          <p className="text-xs text-[var(--text-secondary)]">Question Tracker</p>
+        <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidebarOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
+          <p className="eyebrow">IQMS</p>
+          <p className="meta-text">Question Tracker</p>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto pr-1">
+      <nav className="flex-1 space-y-4 overflow-y-auto pr-1">
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
@@ -115,12 +110,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
       <div className="mt-3 space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
         {currentUser ? (
           <>
-            <SidebarItem
-              item={{ label: "Edit Profile", icon: "✏️" }}
-              isOpen={isSidebarOpen}
-              active={currentRoute === ROUTES.EDIT_PROFILE}
-              onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
-            />
+            <SidebarItem item={{ label: "Edit Profile", icon: "✏️" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.EDIT_PROFILE} onClick={() => navigateTo(ROUTES.EDIT_PROFILE)} />
             <SidebarItem
               item={{ label: "Log Out", icon: "🚪" }}
               isOpen={isSidebarOpen}
@@ -132,12 +122,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
             />
           </>
         ) : (
-          <SidebarItem
-            item={{ label: "Login", icon: "🔐" }}
-            isOpen={isSidebarOpen}
-            active={currentRoute === ROUTES.LOGIN}
-            onClick={() => navigateTo(ROUTES.LOGIN)}
-          />
+          <SidebarItem item={{ label: "Login", icon: "🔐" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.LOGIN} onClick={() => navigateTo(ROUTES.LOGIN)} />
         )}
       </div>
     </aside>

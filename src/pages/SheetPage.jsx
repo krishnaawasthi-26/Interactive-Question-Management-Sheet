@@ -12,6 +12,9 @@ import { calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES } from "../services/routes";
 import { getNotificationPermissionState, requestNotificationPermission } from "../services/notifications";
 import { isPremiumActive } from "../services/premium";
+import ProgressBar from "../components/ui/ProgressBar";
+import EmptyState from "../components/ui/EmptyState";
+import SurfaceCard from "../components/ui/SurfaceCard";
 
 const formatRelativeTime = (isoValue) => {
   if (!isoValue) return "Not saved yet";
@@ -494,10 +497,10 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         alert={limitWarning}
         onDismissAlert={clearLimitWarning}
       >
-        <div className="panel rounded-3xl p-4 sm:p-5">
+        <SurfaceCard className="sm:p-5">
           {!sheetId ? (
             <div className="space-y-4">
-              <div className="flex flex-wrap items-end gap-3">
+              <div className="panel-elevated flex flex-wrap items-end gap-3 rounded-xl p-3">
                 <label className="text-sm">
                   <span className="mb-1 block text-[var(--text-secondary)]">Sort by</span>
                   <select className="field-base min-w-52" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
@@ -521,13 +524,13 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
               </div>
 
               {filteredAndSortedSheets.length === 0 ? (
-                <p className="text-sm text-[var(--text-secondary)]">No sheets found for this filter.</p>
+                <EmptyState title="No sheets found" description="Try another filter or create a new sheet to begin." icon="🧭" />
               ) : (
                 <div className="space-y-3">
                   {filteredAndSortedSheets.map((sheet) => {
                     const progress = calculateSheetProgress(sheet);
                     return (
-                      <div key={sheet.id} className="panel-elevated flex items-center justify-between gap-4 rounded-lg p-3">
+                      <div key={sheet.id} className="panel-elevated flex items-start justify-between gap-4 rounded-xl p-3">
                         <div className="w-full max-w-lg space-y-2">
                           <input
                             className="w-full field-base px-2 py-1 font-medium"
@@ -538,20 +541,27 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                             {sheet.isPublic ? "Public" : "Private"}
                             {sheet.isArchived ? " • Archived" : ""} • Progress {progress.percent}% ({progress.completedQuestions}/{progress.totalQuestions})
                           </p>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-700">
-                            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progress.percent}%` }} />
-                          </div>
+                          <ProgressBar percent={progress.percent} tone={progress.percent > 70 ? "success" : "warning"} />
                           <p className="text-xs text-[var(--text-secondary)]">
                             Created: {sheet.createdAt ? new Date(sheet.createdAt).toLocaleDateString() : "Unknown"} •
                             Updated: {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleString() : "Unknown"}
                           </p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {(groupedSheetActionsById[sheet.id] || []).map((action) => (
-                            <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
-                              {action.label}
-                            </button>
-                          ))}
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {(groupedSheetActionsById[sheet.id] || []).filter((action) => ["open", "save-name", "visibility"].includes(action.key)).map((action) => (
+                              <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-2">
+                            {(groupedSheetActionsById[sheet.id] || []).filter((action) => ["archive", "copy", "delete"].includes(action.key)).map((action) => (
+                              <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
@@ -593,7 +603,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           </main>
             </>
           )}
-        </div>
+        </SurfaceCard>
       </AppShell>
 
       <ConfirmationModal
