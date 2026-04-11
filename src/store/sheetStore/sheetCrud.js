@@ -9,9 +9,24 @@ import {
   updateSubTopic,
   updateTopic,
 } from "../../api/questionSheet";
-import { MAX_QUESTIONS, MAX_SUBTOPICS, MAX_TOPICS } from "./constants";
+import { useAuthStore } from "../authStore";
+import { isPremiumActive } from "../../services/premium";
+import { FREE_LIMITS, MAX_WORDS_PER_ENTRY, PREMIUM_LIMITS } from "./constants";
 import { countQuestions, countSubTopics } from "./helpers";
 import { updateQuestionById } from "./sheetSelectors";
+
+const getPlanLimits = () => {
+  const currentUser = useAuthStore.getState().currentUser;
+  return isPremiumActive(currentUser) ? PREMIUM_LIMITS : FREE_LIMITS;
+};
+
+const countWords = (value) =>
+  value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+const exceedsWordLimit = (value) => countWords(value) > MAX_WORDS_PER_ENTRY;
 
 // CRUD slice owns topic/subtopic/question changes and applies history + dirty tracking.
 export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDirty }) => ({
@@ -19,8 +34,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
 
   addTopic: async (title) => {
     const currentTopics = get().topics;
-    if (currentTopics.length >= MAX_TOPICS) {
-      set({ limitWarning: `Limit reached: topic (${MAX_TOPICS})` });
+    const limits = getPlanLimits();
+    if (currentTopics.length >= limits.topics) {
+      set({ limitWarning: `Limit reached: topic (${limits.topics})` });
+      return null;
+    }
+
+    if (exceedsWordLimit(title)) {
+      set({ limitWarning: `Topic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
     }
 
@@ -31,8 +52,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editTopic: async (id, newTitle) => {
+    if (exceedsWordLimit(newTitle)) {
+      set({ limitWarning: `Topic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
+      return null;
+    }
+
     const updatedSheet = await updateTopic({ topics: get().topics }, id, newTitle);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 
@@ -44,8 +71,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
 
   addSubTopic: async (topicId, subTitle) => {
     const currentTopics = get().topics;
-    if (countSubTopics(currentTopics) >= MAX_SUBTOPICS) {
-      set({ limitWarning: `Limit reached: subtopic (${MAX_SUBTOPICS})` });
+    const limits = getPlanLimits();
+    if (countSubTopics(currentTopics) >= limits.subTopics) {
+      set({ limitWarning: `Limit reached: subtopic (${limits.subTopics})` });
+      return null;
+    }
+
+    if (exceedsWordLimit(subTitle)) {
+      set({ limitWarning: `Subtopic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
     }
 
@@ -56,8 +89,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editSubTopic: async (topicId, subId, newTitle) => {
+    if (exceedsWordLimit(newTitle)) {
+      set({ limitWarning: `Subtopic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
+      return null;
+    }
+
     const updatedSheet = await updateSubTopic({ topics: get().topics }, topicId, subId, newTitle);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 
@@ -69,8 +108,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
 
   addQuestion: async (topicId, subId, questionText) => {
     const currentTopics = get().topics;
-    if (countQuestions(currentTopics) >= MAX_QUESTIONS) {
-      set({ limitWarning: `Limit reached: question (${MAX_QUESTIONS})` });
+    const limits = getPlanLimits();
+    if (countQuestions(currentTopics) >= limits.questions) {
+      set({ limitWarning: `Limit reached: question (${limits.questions})` });
+      return null;
+    }
+
+    if (exceedsWordLimit(questionText)) {
+      set({ limitWarning: `Question text can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
     }
 
@@ -81,8 +126,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editQuestion: async (topicId, subId, questionId, newText) => {
+    if (exceedsWordLimit(newText)) {
+      set({ limitWarning: `Question text can have at most ${MAX_WORDS_PER_ENTRY} words.` });
+      return null;
+    }
+
     const updatedSheet = await updateQuestion({ topics: get().topics }, topicId, subId, questionId, newText);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    set({ limitWarning: null });
     return updatedSheet;
   },
 

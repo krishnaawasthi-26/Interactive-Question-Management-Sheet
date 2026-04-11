@@ -14,6 +14,10 @@ public class PremiumAccessService {
   public static final int FREE_TOPIC_LIMIT = 30;
   public static final int FREE_SUBTOPIC_LIMIT = 50;
   public static final int FREE_QUESTION_LIMIT = 100;
+  public static final int PREMIUM_TOPIC_LIMIT = 100;
+  public static final int PREMIUM_SUBTOPIC_LIMIT = 200;
+  public static final int PREMIUM_QUESTION_LIMIT = 1000;
+  public static final int MAX_WORDS_PER_ENTRY = 50;
 
   private final UserRepository userRepository;
 
@@ -41,35 +45,79 @@ public class PremiumAccessService {
         featureName + " is a premium feature. Please buy premium to continue.");
   }
 
+  private int countWords(String value) {
+    String trimmed = value == null ? "" : value.trim();
+    if (trimmed.isEmpty()) return 0;
+    return trimmed.split("\\s+").length;
+  }
+
   public void assertFreeLimits(User user, List<Map<String, Object>> topics) {
-    if (topics == null || isPremiumActive(user)) return;
+    if (topics == null) return;
+
+    boolean premiumActive = isPremiumActive(user);
 
     int topicCount = topics.size();
     int subTopicCount = 0;
     int questionCount = 0;
 
+    int topicLimit = premiumActive ? PREMIUM_TOPIC_LIMIT : FREE_TOPIC_LIMIT;
+    int subTopicLimit = premiumActive ? PREMIUM_SUBTOPIC_LIMIT : FREE_SUBTOPIC_LIMIT;
+    int questionLimit = premiumActive ? PREMIUM_QUESTION_LIMIT : FREE_QUESTION_LIMIT;
+
     for (Map<String, Object> topic : topics) {
+      Object topicTitle = topic.get("title");
+      if (topicTitle instanceof String topicTitleText && countWords(topicTitleText) > MAX_WORDS_PER_ENTRY) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Topic title supports up to " + MAX_WORDS_PER_ENTRY + " words.");
+      }
+
       Object subTopicsRaw = topic.get("subTopics");
       if (!(subTopicsRaw instanceof List<?> subTopics)) continue;
       subTopicCount += subTopics.size();
 
       for (Object subObj : subTopics) {
         if (!(subObj instanceof Map<?, ?> subTopicMap)) continue;
+
+        Object subTopicTitle = subTopicMap.get("title");
+        if (subTopicTitle instanceof String subTopicTitleText && countWords(subTopicTitleText) > MAX_WORDS_PER_ENTRY) {
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Subtopic title supports up to " + MAX_WORDS_PER_ENTRY + " words.");
+        }
+
         Object questionsRaw = subTopicMap.get("questions");
         if (questionsRaw instanceof List<?> questions) {
           questionCount += questions.size();
+
+          for (Object questionObj : questions) {
+            if (!(questionObj instanceof Map<?, ?> questionMap)) continue;
+            Object questionText = questionMap.get("text");
+            if (questionText instanceof String questionTextValue
+                && countWords(questionTextValue) > MAX_WORDS_PER_ENTRY) {
+              throw new ResponseStatusException(
+                  HttpStatus.BAD_REQUEST,
+                  "Question text supports up to " + MAX_WORDS_PER_ENTRY + " words.");
+            }
+          }
         }
       }
     }
 
-    if (topicCount > FREE_TOPIC_LIMIT) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Free plan supports up to 30 topics.");
+    if (topicCount > topicLimit) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          (premiumActive ? "Premium" : "Free") + " plan supports up to " + topicLimit + " topics.");
     }
-    if (subTopicCount > FREE_SUBTOPIC_LIMIT) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Free plan supports up to 50 subtopics.");
+    if (subTopicCount > subTopicLimit) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          (premiumActive ? "Premium" : "Free") + " plan supports up to " + subTopicLimit + " subtopics.");
     }
-    if (questionCount > FREE_QUESTION_LIMIT) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Free plan supports up to 100 questions.");
+    if (questionCount > questionLimit) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          (premiumActive ? "Premium" : "Free") + " plan supports up to " + questionLimit + " questions.");
     }
   }
 }
