@@ -1,5 +1,6 @@
 package com.iqms.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +43,13 @@ public class Sheet {
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
   public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+  @JsonProperty("isPublic")
   public boolean isPublic() { return isPublic; }
+  @JsonProperty("isPublic")
   public void setPublic(boolean aPublic) { isPublic = aPublic; }
+  @JsonProperty("isArchived")
   public boolean isArchived() { return isArchived; }
+  @JsonProperty("isArchived")
   public void setArchived(boolean archived) { isArchived = archived; }
   public List<Map<String, Object>> getTopics() { return topics; }
   public void setTopics(List<Map<String, Object>> topics) { this.topics = topics; }

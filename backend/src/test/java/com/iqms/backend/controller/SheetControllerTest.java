@@ -41,6 +41,8 @@ class SheetControllerTest {
     Sheet sheet = new Sheet();
     sheet.setId("s1");
     sheet.setTitle("My Sheet");
+    sheet.setPublic(true);
+    sheet.setArchived(false);
 
     when(currentUser.getUserId(any())).thenReturn("owner-1");
     when(sheetService.createSheet(eq("owner-1"), eq("My Sheet"))).thenReturn(sheet);
@@ -49,7 +51,9 @@ class SheetControllerTest {
             .contentType("application/json")
             .content(objectMapper.writeValueAsString(Map.of("title", "My Sheet"))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value("s1"));
+        .andExpect(jsonPath("$.id").value("s1"))
+        .andExpect(jsonPath("$.isPublic").value(true))
+        .andExpect(jsonPath("$.isArchived").value(false));
   }
 
   @Test
