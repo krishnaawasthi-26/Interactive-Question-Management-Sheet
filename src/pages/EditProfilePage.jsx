@@ -19,6 +19,7 @@ function EditProfilePage({ theme, onThemeChange }) {
   const [websiteUrl, setWebsiteUrl] = useState(currentUser?.websiteUrl || "");
   const [githubUrl, setGithubUrl] = useState(currentUser?.githubUrl || "");
   const [linkedinUrl, setLinkedinUrl] = useState(currentUser?.linkedinUrl || "");
+  const [resumeUrl, setResumeUrl] = useState(currentUser?.resumeUrl || "");
   const [emailOtp, setEmailOtp] = useState("");
   const [emailVerificationId, setEmailVerificationId] = useState("");
   const [emailStatus, setEmailStatus] = useState("");
@@ -90,12 +91,13 @@ function EditProfilePage({ theme, onThemeChange }) {
         <input className="field-base w-full" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="Website link (optional)" />
         <input className="field-base w-full" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} placeholder="GitHub profile link (optional)" />
         <input className="field-base w-full" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="LinkedIn profile link (optional)" />
+        <input className="field-base w-full" value={resumeUrl} onChange={(e) => setResumeUrl(e.target.value)} placeholder="Resume link (optional)" />
         {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
         <div className="flex gap-2">
           <button
             className="btn-base btn-success"
             onClick={async () => {
-              const isSaved = await updateProfile({ name, username, bio, institution, company, websiteUrl, githubUrl, linkedinUrl });
+              const isSaved = await updateProfile({ name, username, bio, institution, company, websiteUrl, githubUrl, linkedinUrl, resumeUrl });
               if (isSaved) navigateTo(ROUTES.PROFILE);
             }}
           >
