@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const RESULT_OPTIONS = [
   { key: "solved", label: "Solved" },
@@ -45,7 +45,27 @@ const toRevisionDate = (revisionTiming) => {
 
 const sectionClass = "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-4";
 
-export function AttemptOutcomeSection({ result, setResult, timeSpent, setTimeSpent, confidence, setConfidence }) {
+const formatClock = (seconds) => {
+  const safeSeconds = Math.max(0, Number(seconds) || 0);
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+};
+
+export function AttemptOutcomeSection({
+  result,
+  setResult,
+  timeSpent,
+  setTimeSpent,
+  confidence,
+  setConfidence,
+  timerSeconds,
+  isTimerRunning,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer,
+  onUseTimerForTimeSpent,
+}) {
   const selectedTimeOption = TIME_SPENT_OPTIONS.includes(String(timeSpent)) ? String(timeSpent) : "custom";
 
   return (
@@ -92,6 +112,25 @@ export function AttemptOutcomeSection({ result, setResult, timeSpent, setTimeSpe
           ) : null}
         </div>
       </div>
+      <div className="mt-4 rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/60 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">Focus Timer</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{formatClock(timerSeconds)}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {isTimerRunning ? (
+              <button type="button" className="btn-base btn-neutral" onClick={onPauseTimer}>Pause</button>
+            ) : (
+              <button type="button" className="btn-base btn-primary" onClick={onStartTimer}>Start</button>
+            )}
+            <button type="button" className="btn-base btn-neutral" onClick={onResetTimer}>Reset</button>
+            <button type="button" className="btn-base btn-neutral" onClick={onUseTimerForTimeSpent}>Use timer</button>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-[var(--text-tertiary)]">Use timer to auto-fill time spent when you finish solving.</p>
+      </div>
+
       <div className="mt-4">
         <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
         <div className="inline-flex overflow-hidden rounded-md border border-[var(--border-subtle)]">
@@ -158,6 +197,9 @@ export function RevisionPlanningSection({ revisionTiming, setRevisionTiming, sol
 function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSave }) {
   const [result, setResult] = useState("partially_solved");
   const [timeSpent, setTimeSpent] = useState("40");
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const timerIntervalRef = useRef(null);
   const [mistakes, setMistakes] = useState(["Off by One Error"]);
   const [notes, setNotes] = useState("");
   const [confidence, setConfidence] = useState("Medium");
@@ -173,6 +215,38 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
 
   const [problemName] = useState(questionText);
   const [topic, setTopic] = useState(topicName || "General");
+
+  useEffect(() => {
+    if (!isTimerRunning) {
+      if (timerIntervalRef.current) {
+        window.clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      return undefined;
+    }
+
+    timerIntervalRef.current = window.setInterval(() => {
+      setTimerSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) {
+        window.clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [isTimerRunning]);
+
+  const startTimer = () => setIsTimerRunning(true);
+  const pauseTimer = () => setIsTimerRunning(false);
+  const resetTimer = () => {
+    setIsTimerRunning(false);
+    setTimerSeconds(0);
+  };
+  const useTimerForTimeSpent = () => {
+    const minutesFromTimer = Math.max(1, Math.ceil(timerSeconds / 60));
+    setTimeSpent(String(minutesFromTimer));
+  };
 
   const handleSave = () => {
     const normalizedTimeSpent = Math.max(1, Number(timeSpent) || 1);
@@ -228,6 +302,12 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
             setTimeSpent={setTimeSpent}
             confidence={confidence}
             setConfidence={setConfidence}
+            timerSeconds={timerSeconds}
+            isTimerRunning={isTimerRunning}
+            onStartTimer={startTimer}
+            onPauseTimer={pauseTimer}
+            onResetTimer={resetTimer}
+            onUseTimerForTimeSpent={useTimerForTimeSpent}
           />
 
           <MistakeAnalysisSection
