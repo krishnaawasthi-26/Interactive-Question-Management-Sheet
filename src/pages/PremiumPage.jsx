@@ -1,12 +1,40 @@
 import { useState } from "react";
 import AppShell from "../components/AppShell";
-import { subscribePremiumPlan } from "../api/premiumApi";
+import { createPremiumOrder, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
 
 const plans = [
-  { id: "monthly", name: "Monthly", price: "₹99" },
-  { id: "yearly", name: "Yearly", price: "₹1,999" },
+  { id: "monthly", name: "Monthly", price: "₹99", amountInPaise: 9900 },
+  { id: "yearly", name: "Yearly", price: "₹1,999", amountInPaise: 199900 },
 ];
+
+const loadRazorpayCheckoutScript = () =>
+  new Promise((resolve, reject) => {
+    if (typeof window === "undefined") {
+      reject(new Error("Payment checkout works only in browser."));
+      return;
+    }
+
+    if (window.Razorpay) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-razorpay="checkout"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Unable to load Razorpay checkout.")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.dataset.razorpay = "checkout";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Unable to load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
 
 function PremiumPage({ theme, onThemeChange }) {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -18,11 +46,55 @@ function PremiumPage({ theme, onThemeChange }) {
     setBusyPlan(planId);
     setMessage("");
     try {
-      const result = await subscribePremiumPlan(currentUser.token, planId);
-      const nextUser = { ...currentUser, ...result, premiumActive: true };
-      window.localStorage.setItem("iqms-current-user", JSON.stringify(nextUser));
-      useAuthStore.setState({ currentUser: nextUser });
-      setMessage(`Premium activated until ${new Date(result.premiumUntil).toLocaleString()}.`);
+      const selectedPlan = plans.find((plan) => plan.id === planId);
+      if (!selectedPlan) {
+        throw new Error("Invalid premium plan selected.");
+      }
+
+      await loadRazorpayCheckoutScript();
+
+      const order = await createPremiumOrder(currentUser.token, planId);
+
+      await new Promise((resolve, reject) => {
+        const razorpay = new window.Razorpay({
+          key: order.razorpayKeyId,
+          amount: order.amount ?? selectedPlan.amountInPaise,
+          currency: order.currency ?? "INR",
+          name: "IQMS Premium",
+          description: `${selectedPlan.name} premium plan`,
+          order_id: order.orderId,
+          prefill: {
+            name: currentUser.name || currentUser.username || "",
+            email: currentUser.email || "",
+          },
+          theme: {
+            color: "#4f46e5",
+          },
+          handler: async (paymentResponse) => {
+            try {
+              const verified = await verifyPremiumPayment(currentUser.token, {
+                plan: planId,
+                razorpayOrderId: paymentResponse.razorpay_order_id,
+                razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                razorpaySignature: paymentResponse.razorpay_signature,
+              });
+
+              const nextUser = { ...currentUser, ...verified, premiumActive: true };
+              window.localStorage.setItem("iqms-current-user", JSON.stringify(nextUser));
+              useAuthStore.setState({ currentUser: nextUser });
+              setMessage(`Premium activated until ${new Date(verified.premiumUntil).toLocaleString()}.`);
+              resolve();
+            } catch (verificationError) {
+              reject(verificationError);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error("Payment was cancelled.")),
+          },
+        });
+
+        razorpay.open();
+      });
     } catch (error) {
       setMessage(error.message || "Unable to activate premium.");
     } finally {

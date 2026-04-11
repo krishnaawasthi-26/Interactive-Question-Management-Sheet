@@ -81,6 +81,14 @@ cp .env.example .env
 Variables:
 - `MONGODB_URI` (default example: `mongodb://localhost:27017/iqms`)
 - `APP_AUTH_SECRET` (required for real deployments)
+- `RAZORPAY_KEY_ID` (Razorpay API key id, safe to share with frontend through backend response)
+- `RAZORPAY_KEY_SECRET` (Razorpay API secret, **keep only on backend/server env**)
+
+### Razorpay premium flow (secure)
+
+- Frontend opens `checkout.razorpay.com` only after requesting an order from backend.
+- Backend creates Razorpay order, stores pending order in MongoDB, and verifies signature + payment details before activating premium.
+- Premium is activated only after backend verification succeeds.
 
 ## Local development steps
 
