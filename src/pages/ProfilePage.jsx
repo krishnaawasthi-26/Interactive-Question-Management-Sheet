@@ -19,6 +19,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
   const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
 
   const [newSheetTitle, setNewSheetTitle] = useState("");
+  const [createSheetError, setCreateSheetError] = useState("");
   const [sheetTitles, setSheetTitles] = useState({});
   const [engagementViewer, setEngagementViewer] = useState(null);
   const [profileDetails, setProfileDetails] = useState(currentUser || null);
@@ -176,6 +177,11 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
 
         <div className="panel rounded-xl p-4 space-y-3">
           <h2 className="font-semibold">Create own sheets</h2>
+          {createSheetError ? (
+            <div className="rounded-md border border-rose-600/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+              {createSheetError}
+            </div>
+          ) : null}
           {limitWarning && (
             <div className="flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
               <span>{limitWarning}</span>
@@ -185,14 +191,34 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
             </div>
           )}
           <div className="flex gap-2">
-            <input className="flex-1 field-base" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => setNewSheetTitle(e.target.value)} />
+            <input
+              className="flex-1 field-base"
+              placeholder="New sheet title"
+              value={newSheetTitle}
+              onChange={(e) => {
+                setNewSheetTitle(e.target.value);
+                if (createSheetError) setCreateSheetError("");
+              }}
+            />
             <button
               className="btn-base btn-primary"
               onClick={async () => {
-                const created = await createNewSheet(currentUser.token, newSheetTitle || "Untitled Sheet");
-                if (!created) return;
-                setNewSheetTitle("");
-                navigateTo(`${ROUTES.APP}/${created.id}`);
+                const trimmedTitle = newSheetTitle.trim() || "Untitled Sheet";
+                if (!currentUser?.token) {
+                  setCreateSheetError("Your login session is missing. Please login again, then create a sheet.");
+                  navigateTo(ROUTES.LOGIN);
+                  return;
+                }
+
+                setCreateSheetError("");
+                try {
+                  const created = await createNewSheet(currentUser.token, trimmedTitle);
+                  if (!created) return;
+                  setNewSheetTitle("");
+                  navigateTo(`${ROUTES.APP}/${created.id}`);
+                } catch (error) {
+                  setCreateSheetError(error?.message || "Unable to create sheet right now. Please try again.");
+                }
               }}
             >
               Create Sheet

@@ -6,13 +6,13 @@ const sections = [
   {
     title: "Main",
     items: [
+      { label: "My Sheets", route: ROUTES.APP, icon: "🗂️" },
+      { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
+      { label: "Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
+      { label: "Public Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🔔" },
+      { label: "Portfolio (Resume)", route: ROUTES.EDIT_PROFILE, icon: "📄" },
       { label: "Learn About Us", route: ROUTES.HOW_TO_USE, icon: "📘" },
       { label: "About Us", route: ROUTES.ABOUT, icon: "ℹ️" },
-      { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
-      { label: "Alarm", route: ROUTES.APP, icon: "⏰" },
-      { label: "Reminder", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
-      { label: "Notification", route: ROUTES.PUBLIC_SHEETS, icon: "🔔" },
-      { label: "Portfolio (Resume)", route: ROUTES.EDIT_PROFILE, icon: "📄" },
     ],
   },
 ];
