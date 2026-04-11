@@ -111,6 +111,7 @@ const parseErrorPayload = async (response) => {
 
 const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
   if (!rateLimit) return;
+  if (!Number.isFinite(CLIENT_RATE_LIMIT.requestLimit) || CLIENT_RATE_LIMIT.requestLimit <= 0) return;
 
   const now = Date.now();
   const state = readRateLimitState();

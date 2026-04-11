@@ -9,7 +9,7 @@ export const API_ENDPOINTS = {
 
 export const CLIENT_RATE_LIMIT = {
   storageKey: "iqms-client-rate-limit",
-  requestLimit: 5,
+  requestLimit: 0,
   requestWindowMs: 10_000,
   cooldownMs: 5_000,
 };
