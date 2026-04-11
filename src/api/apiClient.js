@@ -65,16 +65,21 @@ export const createApiError = (
 };
 
 const parseErrorPayload = async (response) => {
+  const contentType = response.headers.get("content-type") ?? "";
+  const jsonResponse = typeof response.clone === "function" ? response.clone() : response;
+
   try {
-    const payload = await response.json();
-    if (payload?.message || payload?.error) {
-      return {
-        message: payload.message ?? payload.error,
-        code: payload.code ?? null,
-        retryAfterSeconds: payload.retryAfterSeconds ?? null,
-        disabledUntilEpochMs: payload.disabledUntilEpochMs ?? null,
-        details: payload,
-      };
+    if (contentType.includes("application/json")) {
+      const payload = await jsonResponse.json();
+      if (payload?.message || payload?.error) {
+        return {
+          message: payload.message ?? payload.error,
+          code: payload.code ?? null,
+          retryAfterSeconds: payload.retryAfterSeconds ?? null,
+          disabledUntilEpochMs: payload.disabledUntilEpochMs ?? null,
+          details: payload,
+        };
+      }
     }
   } catch {
     // Ignore JSON parse errors and try plain text fallback below.

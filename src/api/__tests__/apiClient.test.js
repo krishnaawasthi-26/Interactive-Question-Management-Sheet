@@ -28,6 +28,10 @@ describe("apiRequest", () => {
       vi.fn().mockResolvedValue({
         ok: false,
         status: 400,
+        headers: { get: () => "application/json" },
+        clone() {
+          return this;
+        },
         json: async () => ({ message: "bad request", code: "BAD_INPUT" }),
         text: async () => "",
       })
@@ -37,6 +41,23 @@ describe("apiRequest", () => {
       message: "bad request",
       code: "BAD_INPUT",
       status: 400,
+    });
+  });
+
+  it("uses plain text message for non-json error responses", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        headers: { get: () => "text/plain" },
+        text: async () => "Incorrect password. Please try again.",
+      })
+    );
+
+    await expect(apiRequest("/api/test", { method: "GET" })).rejects.toMatchObject({
+      message: "Incorrect password. Please try again.",
+      status: 401,
     });
   });
 });
