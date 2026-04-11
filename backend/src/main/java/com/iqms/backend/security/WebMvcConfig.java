@@ -19,11 +19,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(requestRateLimitInterceptor).addPathPatterns("/api/**");
-
     registry
         .addInterceptor(authInterceptor)
-        .addPathPatterns("/api/profile/**", "/api/sheets/**")
+        .addPathPatterns("/api/profile/**", "/api/sheets/**", "/api/premium/subscribe")
         .excludePathPatterns(
             "/api/profile/shared/**",
             "/api/profile/public/**",

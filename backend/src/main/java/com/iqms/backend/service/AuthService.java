@@ -31,6 +31,7 @@ public class AuthService {
   private final OtpService otpService;
   private final OtpDeliveryService otpDeliveryService;
   private final GoogleTokenVerifier googleTokenVerifier;
+  private final PremiumAccessService premiumAccessService;
   private final Map<String, PendingSignUp> pendingSignUps = new ConcurrentHashMap<>();
 
   public AuthService(
@@ -40,7 +41,8 @@ public class AuthService {
       PasswordEncoder passwordEncoder,
       OtpService otpService,
       OtpDeliveryService otpDeliveryService,
-      GoogleTokenVerifier googleTokenVerifier) {
+      GoogleTokenVerifier googleTokenVerifier,
+      PremiumAccessService premiumAccessService) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.loginAttemptService = loginAttemptService;
@@ -48,6 +50,7 @@ public class AuthService {
     this.otpService = otpService;
     this.otpDeliveryService = otpDeliveryService;
     this.googleTokenVerifier = googleTokenVerifier;
+    this.premiumAccessService = premiumAccessService;
   }
 
   public OtpChallengeResponse requestSignUpOtp(SignUpRequest request) {
@@ -102,6 +105,7 @@ public class AuthService {
     user.setUsernameChangeCount(0);
     user.setEmailChangeCount(0);
     user.setGoogleOnboardingComplete(true);
+    user.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
 
     User created = userRepository.save(user);
     return toResponse(created);
@@ -150,6 +154,7 @@ public class AuthService {
       created.setUsernameChangeCount(0);
       created.setEmailChangeCount(0);
       created.setGoogleOnboardingComplete(false);
+      created.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
       return userRepository.save(created);
     });
 
@@ -164,6 +169,8 @@ public class AuthService {
 
   private AuthResponse toResponse(User user) {
     String createdAt = user.getCreatedAt() == null ? null : user.getCreatedAt().toString();
+    String premiumUntil = user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString();
+    String premiumTrialEndsAt = user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString();
     String token = tokenService.issueToken(user.getId());
     return new AuthResponse(
         user.getId(),
@@ -183,6 +190,9 @@ public class AuthService {
         user.getEmailChangeCount(),
         Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()),
         "GOOGLE".equalsIgnoreCase(user.getAuthProvider()) && !user.isGoogleOnboardingComplete(),
+        premiumAccessService.isPremiumActive(user),
+        premiumUntil,
+        premiumTrialEndsAt,
         token);
   }
 

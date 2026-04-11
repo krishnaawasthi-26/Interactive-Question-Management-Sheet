@@ -11,6 +11,7 @@ import TopicReminderAlarmPanel from "../components/TopicReminderAlarmPanel";
 import { calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES } from "../services/routes";
 import { getNotificationPermissionState, requestNotificationPermission } from "../services/notifications";
+import { isPremiumActive } from "../services/premium";
 
 const formatRelativeTime = (isoValue) => {
   if (!isoValue) return "Not saved yet";
@@ -75,6 +76,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const announcedTopicAlertsRef = useRef(new Set());
   const focusProblemId = new URLSearchParams(window.location.search).get("problemId");
   const topicAlertStorageKey = `iqms-topic-alerts:${sheetId || "sheet-index"}`;
+  const premiumActive = isPremiumActive(currentUser);
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -139,12 +141,24 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     const onOpenTopicScheduler = (event) => {
       const mode = event?.detail?.mode === "alarm" ? "alarm" : "reminder";
       if (!sheetId) return;
+      if (!premiumActive) {
+        setActiveDialog({
+          key: "premium-required",
+          title: "Premium feature locked",
+          message: "Reminder and alarm are premium features. Buy premium to unlock.",
+          actions: [
+            { key: "cancel", label: "Maybe Later", variant: "neutral", onClick: () => setActiveDialog(null) },
+            { key: "buy", label: "Buy Premium", variant: "success", onClick: () => navigateTo(ROUTES.PREMIUM) },
+          ],
+        });
+        return;
+      }
       setTopicSchedulerState({ open: true, mode });
     };
 
     window.addEventListener("iqms-open-topic-timer", onOpenTopicScheduler);
     return () => window.removeEventListener("iqms-open-topic-timer", onOpenTopicScheduler);
-  }, [sheetId]);
+  }, [premiumActive, sheetId]);
 
   useEffect(() => {
     const tick = () => {
@@ -528,7 +542,24 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             {(isLoading || loadError || saveError) && (
               <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
             )}
-            <TopicList isEditing={isEditing} searchQuery={searchQuery} allowProgressToggle={isEditing} focusProblemId={focusProblemId} />
+            <TopicList
+              isEditing={isEditing}
+              searchQuery={searchQuery}
+              allowProgressToggle={isEditing}
+              focusProblemId={focusProblemId}
+              premiumActive={premiumActive}
+              onPremiumLocked={(message) =>
+                setActiveDialog({
+                  key: "premium-required",
+                  title: "Premium feature locked",
+                  message,
+                  actions: [
+                    { key: "cancel", label: "Close", variant: "neutral", onClick: closeDialog },
+                    { key: "buy", label: "Buy Premium", variant: "success", onClick: () => navigateTo(ROUTES.PREMIUM) },
+                  ],
+                })
+              }
+            />
           </main>
             </>
           )}

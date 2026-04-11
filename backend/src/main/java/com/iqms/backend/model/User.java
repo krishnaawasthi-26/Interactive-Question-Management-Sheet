@@ -41,6 +41,8 @@ public class User {
   private Set<String> followerUserIds = new LinkedHashSet<>();
   private Set<String> followingUserIds = new LinkedHashSet<>();
   private Set<String> copiedSheetIds = new LinkedHashSet<>();
+  private Instant premiumUntil;
+  private Instant premiumTrialEndsAt;
 
   public String getId() {
     return id;
@@ -208,5 +210,21 @@ public class User {
 
   public void setCopiedSheetIds(Set<String> copiedSheetIds) {
     this.copiedSheetIds = copiedSheetIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(copiedSheetIds);
+  }
+
+  public Instant getPremiumUntil() {
+    return premiumUntil;
+  }
+
+  public void setPremiumUntil(Instant premiumUntil) {
+    this.premiumUntil = premiumUntil;
+  }
+
+  public Instant getPremiumTrialEndsAt() {
+    return premiumTrialEndsAt;
+  }
+
+  public void setPremiumTrialEndsAt(Instant premiumTrialEndsAt) {
+    this.premiumTrialEndsAt = premiumTrialEndsAt;
   }
 }

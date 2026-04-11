@@ -10,6 +10,7 @@ import LearningInsightsPage from "./pages/LearningInsightsPage";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import PremiumPage from "./pages/PremiumPage";
 import PublicSheetsPage from "./pages/PublicSheetsPage";
 import SharedPage from "./pages/SharedPage";
 import SheetPage from "./pages/SheetPage";
@@ -108,6 +109,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.HOME} element={<HomePage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.PREMIUM} element={<PremiumPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PUBLIC_SHEETS} element={<PublicSheetsPage theme={theme} onThemeChange={setTheme} />} />
         <Route
           path={ROUTES.PROFILE}

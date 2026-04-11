@@ -13,6 +13,7 @@ export const ROUTES = {
   APP: "/app",
   IMPORT: "/import",
   EXPORT: "/export",
+  PREMIUM: "/premium",
 };
 
 export const slugifySegment = (value) => {
@@ -39,6 +40,7 @@ export const getCurrentRoute = () => {
   if (path === ROUTES.APP || path.startsWith(`${ROUTES.APP}/`)) return { route: ROUTES.APP };
   if (path === ROUTES.IMPORT || path.startsWith(`${ROUTES.IMPORT}/`)) return { route: ROUTES.IMPORT };
   if (path === ROUTES.EXPORT || path.startsWith(`${ROUTES.EXPORT}/`)) return { route: ROUTES.EXPORT };
+  if (path === ROUTES.PREMIUM) return { route: ROUTES.PREMIUM };
   if (path.startsWith(`${ROUTES.SHARED_PREFIX}/`)) return { route: ROUTES.SHARED_PREFIX };
   if (path.startsWith(`${ROUTES.PROFILE}/`)) return { route: ROUTES.SHARED_PREFIX };
 
