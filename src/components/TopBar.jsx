@@ -12,11 +12,6 @@ function TopBar({ theme = "dark", onThemeChange, userLabel = "Account", actions 
 
         <div className="flex items-center gap-2">
           {actions}
-          <input
-            aria-label="Search"
-            placeholder="Search"
-            className="field-base hidden w-40 py-2 text-sm xl:block"
-          />
           {onThemeChange ? (
             <select
               aria-label="Theme"
