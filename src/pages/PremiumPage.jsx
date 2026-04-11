@@ -4,8 +4,8 @@ import { createPremiumOrder, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
 
 const plans = [
-  { id: "monthly", name: "Monthly", price: "₹99", amountInPaise: 9900 },
-  { id: "yearly", name: "Yearly", price: "₹1,999", amountInPaise: 199900 },
+  { id: "monthly", name: "Monthly", price: "₹1", amountInPaise: 100 },
+  { id: "yearly", name: "Yearly", price: "₹1", amountInPaise: 100 },
 ];
 
 const loadRazorpayCheckoutScript = () =>
