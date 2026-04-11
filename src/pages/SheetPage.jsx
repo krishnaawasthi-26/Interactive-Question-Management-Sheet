@@ -11,6 +11,7 @@ import TopicReminderAlarmPanel from "../components/TopicReminderAlarmPanel";
 import { calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES } from "../services/routes";
 import { getNotificationPermissionState, requestNotificationPermission } from "../services/notifications";
+import { createAlarmNotification } from "../api/notificationApi";
 import { isPremiumActive } from "../services/premium";
 import ProgressBar from "../components/ui/ProgressBar";
 import EmptyState from "../components/ui/EmptyState";
@@ -335,6 +336,17 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         triggeredAt: null,
       },
     ]);
+
+    if (currentUser?.token) {
+      await createAlarmNotification(currentUser.token, {
+        title: `${mode === "alarm" ? "Alarm" : "Reminder"}: ${topic.title || "Topic"}`,
+        message: `Time for ${topic.title || "topic"} in ${sheetTitle || "your sheet"}.`,
+        scheduledFor: new Date(scheduledFor).toISOString(),
+        sourceType: "topic",
+        sourceId: topicId,
+        actionUrl: sheetId ? `/app/${sheetId}` : "/app",
+      });
+    }
   };
 
   const saveStatusLabel = isSaving

@@ -12,6 +12,9 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import PremiumPage from "./pages/PremiumPage";
 import PublicSheetsPage from "./pages/PublicSheetsPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import AlertsPage from "./pages/AlertsPage";
+import AlarmsPage from "./pages/AlarmsPage";
 import SharedPage from "./pages/SharedPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -141,6 +144,9 @@ function App() {
         <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PREMIUM} element={<PremiumPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PUBLIC_SHEETS} element={<PublicSheetsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.ALERTS} element={<AlertsPage theme={theme} onThemeChange={setTheme} />} />
+        <Route path={ROUTES.ALARMS} element={<AlarmsPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PROFILE} element={<OwnProfileRedirectRoute />} />
         <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage theme={theme} onThemeChange={setTheme} />} />
         <Route path={`${ROUTES.APP}/:sheetId?`} element={<SheetRoute theme={theme} onThemeChange={setTheme} />} />

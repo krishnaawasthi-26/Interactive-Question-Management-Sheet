@@ -20,8 +20,12 @@ export const requestNotificationPermission = async () => {
 export const showDueNowBrowserNotification = async (notification) => {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
 
-  const title = `Time to revise: ${notification.title}`;
-  const body = `Revision ${notification.revisionNumber} for ${notification.sheetTitle} is due now.`;
+  const title = notification.type === "alarm" ? `Reminder: ${notification.title}` : `Time to revise: ${notification.title}`;
+  const revision = notification.revisionNumber || notification?.metadata?.revisionNumber || "";
+  const sheetTitle = notification.sheetTitle || notification?.metadata?.sheetTitle || "your sheet";
+  const body = notification.type === "alarm"
+    ? (notification.message || "Your reminder is due now.")
+    : `Revision ${revision} for ${sheetTitle} is due now.`;
 
   if (navigator.serviceWorker?.controller) {
     const reg = await navigator.serviceWorker.getRegistration();
