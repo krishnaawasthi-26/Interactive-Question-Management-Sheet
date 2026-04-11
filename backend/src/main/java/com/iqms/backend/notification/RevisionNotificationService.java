@@ -3,6 +3,7 @@ package com.iqms.backend.notification;
 import com.iqms.backend.dto.notification.CreateAlarmRequest;
 import com.iqms.backend.dto.notification.NotificationActionResponse;
 import com.iqms.backend.dto.notification.NotificationFilterRequest;
+import com.iqms.backend.model.NotificationPreferences;
 import com.iqms.backend.model.PushSubscription;
 import com.iqms.backend.model.RevisionNotification;
 import com.iqms.backend.model.Sheet;
@@ -30,18 +31,21 @@ public class RevisionNotificationService {
   private final PushSubscriptionRepository pushSubscriptionRepository;
   private final PlatformNotificationSeedService platformSeedService;
   private final RevisionScheduleService revisionScheduleService;
+  private final NotificationPreferencesService notificationPreferencesService;
 
   public RevisionNotificationService(
       RevisionNotificationRepository notificationRepository,
       SheetRepository sheetRepository,
       PushSubscriptionRepository pushSubscriptionRepository,
       PlatformNotificationSeedService platformSeedService,
-      RevisionScheduleService revisionScheduleService) {
+      RevisionScheduleService revisionScheduleService,
+      NotificationPreferencesService notificationPreferencesService) {
     this.notificationRepository = notificationRepository;
     this.sheetRepository = sheetRepository;
     this.pushSubscriptionRepository = pushSubscriptionRepository;
     this.platformSeedService = platformSeedService;
     this.revisionScheduleService = revisionScheduleService;
+    this.notificationPreferencesService = notificationPreferencesService;
   }
 
   public List<RevisionNotification> fetchNotifications(String userId, NotificationFilterRequest filter) {
@@ -204,9 +208,17 @@ public class RevisionNotificationService {
   }
 
   private void hydrateNotifications(String userId) {
-    syncNotificationsFromSheets(userId);
-    platformSeedService.seedForUserIfNeeded(userId);
-    deliverDueAlarms(userId);
+    NotificationPreferences preferences = notificationPreferencesService.getForUser(userId);
+
+    if (preferences.isRevisionEnabled()) {
+      syncNotificationsFromSheets(userId);
+    }
+    if (preferences.isPlatformEnabled()) {
+      platformSeedService.seedForUserIfNeeded(userId);
+    }
+    if (preferences.isAlarmEnabled()) {
+      deliverDueAlarms(userId);
+    }
   }
 
   private boolean matchesStatusFilter(RevisionNotification item, String filter) {
