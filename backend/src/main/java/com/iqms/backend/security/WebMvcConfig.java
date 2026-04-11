@@ -21,7 +21,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public void addInterceptors(InterceptorRegistry registry) {
     registry
         .addInterceptor(authInterceptor)
-        .addPathPatterns("/api/profile/**", "/api/sheets/**", "/api/premium/subscribe")
+        .addPathPatterns(
+            "/api/profile/**",
+            "/api/sheets/**",
+            "/api/premium/create-order",
+            "/api/premium/verify")
         .excludePathPatterns(
             "/api/profile/shared/**",
             "/api/profile/public/**",
