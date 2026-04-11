@@ -3,7 +3,15 @@ import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
 
-function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false, allowProgressToggle = true, focusProblemId = null }) {
+function TopicList({
+  isEditing = true,
+  searchQuery = "",
+  onlyExactMatch = false,
+  allowProgressToggle = true,
+  focusProblemId = null,
+  premiumActive = false,
+  onPremiumLocked,
+}) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
   const addQuestion = useSheetStore((state) => state.addQuestion);
@@ -112,6 +120,10 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
 
   const handleToggleProgress = (topicId, subId, question, topicTitle, subTopicTitle) => {
     if (!allowProgressToggle) return;
+    if (!premiumActive) {
+      onPremiumLocked?.("Attempt duration and reminder features are premium.");
+      return;
+    }
     if (question.done) {
       toggleQuestionDone(topicId, subId, question.id);
       return;
@@ -422,6 +434,15 @@ function TopicList({ isEditing = true, searchQuery = "", onlyExactMatch = false,
                                                                 >
                                                                   ✓
                                                                 </button>
+                                                                {!premiumActive && (
+                                                                  <button
+                                                                    type="button"
+                                                                    onClick={() => onPremiumLocked?.("Attempt duration and reminder features are premium.")}
+                                                                    className="rounded-md border border-amber-700/60 bg-amber-900/20 px-2 py-0.5 text-xs text-amber-200 opacity-70"
+                                                                  >
+                                                                    🔒 Premium
+                                                                  </button>
+                                                                )}
                                                                 <span className="text-sm leading-5 text-[var(--text-primary)]">{q.text}</span>
                                                               </span>
                                                               {isEditing && (

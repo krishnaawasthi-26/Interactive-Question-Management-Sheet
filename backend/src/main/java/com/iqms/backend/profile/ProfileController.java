@@ -9,6 +9,7 @@ import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.model.Sheet;
 import com.iqms.backend.service.OtpDeliveryService;
 import com.iqms.backend.service.OtpService;
+import com.iqms.backend.service.PremiumAccessService;
 import com.iqms.backend.service.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class ProfileController {
   private final ProfileShareService profileShareService;
   private final OtpService otpService;
   private final OtpDeliveryService otpDeliveryService;
+  private final PremiumAccessService premiumAccessService;
 
   public ProfileController(
       UserRepository userRepository,
@@ -48,13 +50,15 @@ public class ProfileController {
       SheetService sheetService,
       ProfileShareService profileShareService,
       OtpService otpService,
-      OtpDeliveryService otpDeliveryService) {
+      OtpDeliveryService otpDeliveryService,
+      PremiumAccessService premiumAccessService) {
     this.userRepository = userRepository;
     this.currentUser = currentUser;
     this.sheetService = sheetService;
     this.profileShareService = profileShareService;
     this.otpService = otpService;
     this.otpDeliveryService = otpDeliveryService;
+    this.premiumAccessService = premiumAccessService;
   }
 
   @GetMapping
@@ -267,6 +271,9 @@ public class ProfileController {
     payload.put("emailChangesUsed", user.getEmailChangeCount());
     payload.put("emailChangesRemaining", Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()));
     payload.put("requiresGoogleOnboarding", "GOOGLE".equalsIgnoreCase(user.getAuthProvider()) && !user.isGoogleOnboardingComplete());
+    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
+    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
+    payload.put("premiumTrialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());
     payload.put("followers", mapUsersById(user.getFollowerUserIds()));
     payload.put("following", mapUsersById(user.getFollowingUserIds()));
     payload.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());

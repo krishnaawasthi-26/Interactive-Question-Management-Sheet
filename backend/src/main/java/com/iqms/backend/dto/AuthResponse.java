@@ -18,6 +18,9 @@ public class AuthResponse {
   private Integer emailChangesUsed;
   private Integer emailChangesRemaining;
   private Boolean requiresGoogleOnboarding;
+  private Boolean premiumActive;
+  private String premiumUntil;
+  private String premiumTrialEndsAt;
   private String token;
 
   public AuthResponse(
@@ -38,6 +41,9 @@ public class AuthResponse {
       Integer emailChangesUsed,
       Integer emailChangesRemaining,
       Boolean requiresGoogleOnboarding,
+      Boolean premiumActive,
+      String premiumUntil,
+      String premiumTrialEndsAt,
       String token) {
     this.id = id;
     this.name = name;
@@ -56,6 +62,9 @@ public class AuthResponse {
     this.emailChangesUsed = emailChangesUsed;
     this.emailChangesRemaining = emailChangesRemaining;
     this.requiresGoogleOnboarding = requiresGoogleOnboarding;
+    this.premiumActive = premiumActive;
+    this.premiumUntil = premiumUntil;
+    this.premiumTrialEndsAt = premiumTrialEndsAt;
     this.token = token;
   }
 
@@ -76,5 +85,8 @@ public class AuthResponse {
   public Integer getEmailChangesUsed() { return emailChangesUsed; }
   public Integer getEmailChangesRemaining() { return emailChangesRemaining; }
   public Boolean getRequiresGoogleOnboarding() { return requiresGoogleOnboarding; }
+  public Boolean getPremiumActive() { return premiumActive; }
+  public String getPremiumUntil() { return premiumUntil; }
+  public String getPremiumTrialEndsAt() { return premiumTrialEndsAt; }
   public String getToken() { return token; }
 }

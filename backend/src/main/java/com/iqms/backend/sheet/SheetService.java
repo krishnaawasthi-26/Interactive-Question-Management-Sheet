@@ -21,14 +21,17 @@ public class SheetService {
   private final SheetRepository sheetRepository;
   private final UserRepository userRepository;
   private final ActionQueueService actionQueueService;
+  private final PremiumAccessService premiumAccessService;
 
   public SheetService(
       SheetRepository sheetRepository,
       UserRepository userRepository,
-      ActionQueueService actionQueueService) {
+      ActionQueueService actionQueueService,
+      PremiumAccessService premiumAccessService) {
     this.sheetRepository = sheetRepository;
     this.userRepository = userRepository;
     this.actionQueueService = actionQueueService;
+    this.premiumAccessService = premiumAccessService;
   }
 
   public Sheet createSheet(String ownerId, String title) {
@@ -68,6 +71,8 @@ public class SheetService {
         sheet.setTitle(title.trim());
       }
       if (topics != null) {
+        User user = premiumAccessService.findUser(ownerId);
+        premiumAccessService.assertFreeLimits(user, topics);
         sheet.setTopics(topics);
       }
       if (isPublic != null) {

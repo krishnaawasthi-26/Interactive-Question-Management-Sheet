@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
+import { isPremiumActive } from "../services/premium";
 import {
   InsightsHeader,
   KPIStatsRow,
@@ -55,11 +56,28 @@ function LearningInsightsPage({ theme, onThemeChange }) {
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
   const [filters, setFilters] = useState({ dateRange: "all", topic: "all", platform: "all" });
+  const premiumActive = isPremiumActive(currentUser);
 
   useEffect(() => {
     if (!currentUser?.token) return;
     loadSheets(currentUser.token);
   }, [currentUser?.token, loadSheets]);
+
+  if (!premiumActive) {
+    return (
+      <AppShell
+        title="Learning Insights"
+        subtitle="Advanced analytics are premium features"
+        theme={theme}
+        onThemeChange={onThemeChange}
+        userLabel={currentUser?.username || "Account"}
+      >
+        <div className="panel rounded-xl p-5">
+          <p className="text-sm text-[var(--text-secondary)]">🔒 Advanced analytics is a premium feature. Buy premium to unlock full insights.</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   const dashboardData = useMemo(() => {
     const attempts = [];
