@@ -208,31 +208,57 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   setSheetVisibility: async (token, sheetId, isPublic) => {
-    const payload = await buildSafeSheetUpdatePayload({
-      token,
-      sheetId,
-      getState: get,
-      overrideFields: { isPublic },
-      includeContent: false,
-    });
-    const updatedSheet = await saveSheet(token, sheetId, payload);
     set((state) => ({
-      sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet || { isPublic }),
+      sheets: updateSheetInCollection(state.sheets, sheetId, { isPublic }),
     }));
+
+    try {
+      const payload = await buildSafeSheetUpdatePayload({
+        token,
+        sheetId,
+        getState: get,
+        overrideFields: { isPublic },
+      });
+      const updatedSheet = await saveSheet(token, sheetId, payload);
+      if (updatedSheet) {
+        set((state) => ({
+          sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet),
+        }));
+      }
+      return true;
+    } catch (error) {
+      set((state) => ({
+        sheets: updateSheetInCollection(state.sheets, sheetId, { isPublic: !isPublic }),
+      }));
+      throw error;
+    }
   },
 
   setSheetArchived: async (token, sheetId, isArchived) => {
-    const payload = await buildSafeSheetUpdatePayload({
-      token,
-      sheetId,
-      getState: get,
-      overrideFields: { isArchived },
-      includeContent: false,
-    });
-    const updatedSheet = await saveSheet(token, sheetId, payload);
     set((state) => ({
-      sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet || { isArchived }),
+      sheets: updateSheetInCollection(state.sheets, sheetId, { isArchived }),
     }));
+
+    try {
+      const payload = await buildSafeSheetUpdatePayload({
+        token,
+        sheetId,
+        getState: get,
+        overrideFields: { isArchived },
+      });
+      const updatedSheet = await saveSheet(token, sheetId, payload);
+      if (updatedSheet) {
+        set((state) => ({
+          sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet),
+        }));
+      }
+      return true;
+    } catch (error) {
+      set((state) => ({
+        sheets: updateSheetInCollection(state.sheets, sheetId, { isArchived: !isArchived }),
+      }));
+      throw error;
+    }
   },
 
   setSheetTitle: (title) =>

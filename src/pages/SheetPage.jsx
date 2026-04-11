@@ -387,13 +387,35 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
               key: "visibility",
               label: sheet.isPublic ? "Make Private" : "Make Public",
               className: "btn-neutral",
-              onClick: () => setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic),
+              onClick: async () => {
+                try {
+                  await setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic);
+                } catch (error) {
+                  setActiveDialog({
+                    key: "visibility-error",
+                    title: "Could not update visibility",
+                    message: error?.message || "Please try again in a moment.",
+                    actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: closeDialog }],
+                  });
+                }
+              },
             },
             {
               key: "archive",
               label: sheet.isArchived ? "Restore" : "Archive",
               className: "btn-neutral",
-              onClick: () => setSheetArchived(currentUser.token, sheet.id, !sheet.isArchived),
+              onClick: async () => {
+                try {
+                  await setSheetArchived(currentUser.token, sheet.id, !sheet.isArchived);
+                } catch (error) {
+                  setActiveDialog({
+                    key: "archive-error",
+                    title: "Could not update archive state",
+                    message: error?.message || "Please try again in a moment.",
+                    actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: closeDialog }],
+                  });
+                }
+              },
             },
             {
               key: "copy",
