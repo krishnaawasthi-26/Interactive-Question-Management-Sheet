@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import AlertBar from "./AlertBar";
+import NotificationBell from "./NotificationBell";
 
 function AppShell({
   title,
@@ -25,7 +26,17 @@ function AppShell({
     >
       <Sidebar isSidebarOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen((prev) => !prev)} />
       <div className="app-content">
-        <TopBar theme={theme} onThemeChange={onThemeChange} userLabel={userLabel} actions={headerActions} />
+        <TopBar
+          theme={theme}
+          onThemeChange={onThemeChange}
+          userLabel={userLabel}
+          actions={(
+            <>
+              <NotificationBell compact />
+              {headerActions}
+            </>
+          )}
+        />
         <div className="mx-auto w-full max-w-[1400px]">
           <AlertBar message={alert} onDismiss={onDismissAlert} />
 
