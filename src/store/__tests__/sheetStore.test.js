@@ -129,7 +129,7 @@ describe("sheetStore core flows", () => {
     expect(useSheetStore.getState().hasPendingChanges).toBe(true);
   });
 
-  it("keeps existing title/topics when toggling visibility", async () => {
+  it("updates visibility without resending title/topics", async () => {
     useSheetStore.setState({
       sheets: [
         {
@@ -150,12 +150,12 @@ describe("sheetStore core flows", () => {
       "token",
       "sheet-1",
       expect.objectContaining({
-        title: "Sheet A",
-        topics: baseTopics,
         isPublic: true,
         isArchived: false,
       })
     );
+    expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("title");
+    expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("topics");
     expect(useSheetStore.getState().sheets[0].isPublic).toBe(true);
   });
 });
