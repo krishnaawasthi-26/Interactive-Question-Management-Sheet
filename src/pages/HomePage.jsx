@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
 import { famousDsaSheets } from "../data/famousSheets";
 import { navigateTo, ROUTES } from "../services/routes";
@@ -6,9 +6,11 @@ import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 
 function HomePage({ theme, onThemeChange }) {
+  const [copyingSheetId, setCopyingSheetId] = useState(null);
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
+  const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
 
   useEffect(() => {
     if (!currentUser?.token) return;
@@ -42,13 +44,22 @@ function HomePage({ theme, onThemeChange }) {
     },
   ];
 
-  const demoRecentSheets = [
-    { id: "mock-interview-01", title: "Mock Interview Sprint", updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-    { id: "dp-revision-pack", title: "DP Revision Pack", updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
-    { id: "graph-marathon", title: "Graph Marathon", updatedAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString() },
-  ];
+  const copyFamousSheet = async (sheet) => {
+    if (!currentUser?.token) {
+      navigateTo(ROUTES.LOGIN);
+      return;
+    }
 
-  const visibleRecentSheets = currentUser?.token ? recentSheets : demoRecentSheets;
+    setCopyingSheetId(sheet.id);
+    try {
+      const created = await duplicateSheet(currentUser.token, sheet, `${sheet.title} (Copy)`);
+      if (created?.id) {
+        navigateTo(`${ROUTES.APP}/${created.id}`);
+      }
+    } finally {
+      setCopyingSheetId(null);
+    }
+  };
 
   return (
     <AppShell
@@ -61,23 +72,29 @@ function HomePage({ theme, onThemeChange }) {
       <div className="space-y-6">
         <section className="panel rounded-xl p-4">
           <h2 className="mb-3 text-lg font-semibold">Recent Sheets</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {visibleRecentSheets.length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)]">No recent sheets yet.</p>
-            ) : visibleRecentSheets.map((sheet) => (
-              <button
-                key={sheet.id}
-                type="button"
-                className="panel-elevated min-w-72 rounded-lg px-3 py-3 text-left hover:opacity-90"
-                onClick={() => navigateTo(currentUser?.token ? `${ROUTES.APP}/${sheet.id}` : ROUTES.LOGIN)}
-              >
-                <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  Updated: {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleString() : "Unknown"}
-                </p>
-              </button>
-            ))}
-          </div>
+          {!currentUser?.token ? (
+            <p className="text-sm text-[var(--text-secondary)]">
+              Login to see your recent sheets.
+            </p>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {recentSheets.length === 0 ? (
+                <p className="text-sm text-[var(--text-secondary)]">No recent sheets yet.</p>
+              ) : recentSheets.map((sheet) => (
+                <button
+                  key={sheet.id}
+                  type="button"
+                  className="panel-elevated min-w-72 rounded-lg px-3 py-3 text-left hover:opacity-90"
+                  onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}
+                >
+                  <p className="font-medium">{sheet.title || "Untitled Sheet"}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    Updated: {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleString() : "Unknown"}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="panel rounded-xl p-4">
@@ -112,6 +129,14 @@ function HomePage({ theme, onThemeChange }) {
               <article key={sheet.id} className="panel-elevated rounded-lg p-3">
                 <h3 className="font-medium text-[var(--text-primary)]">{sheet.title}</h3>
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">{sheet.description}</p>
+                <button
+                  type="button"
+                  className="btn-neutral mt-3 px-3 py-1.5 text-xs"
+                  onClick={() => copyFamousSheet(sheet)}
+                  disabled={copyingSheetId === sheet.id}
+                >
+                  {copyingSheetId === sheet.id ? "Copying..." : "Copy sample sheet"}
+                </button>
               </article>
             ))}
           </div>

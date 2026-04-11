@@ -1,39 +1,18 @@
 export const famousDsaSheets = [
   {
-    id: "famous-striver-a2z",
-    title: "Striver A2Z (Sample)",
-    description: "Starter sample inspired by Striver's A2Z roadmap.",
+    id: "famous-sample-sheet",
+    title: "Sample Interview Prep Sheet",
+    description: "Free sample sheet you can copy and start editing immediately.",
     topics: [
       {
-        id: "striver-topic-arrays",
-        title: "Arrays",
+        id: "sample-topic-1",
+        title: "Sample Topic",
         subTopics: [
           {
-            id: "striver-sub-arrays-easy",
-            title: "Easy",
+            id: "sample-subtopic-1",
+            title: "Sample Subtopic",
             questions: [
-              { id: "striver-q-two-sum", text: "Two Sum", done: false },
-              { id: "striver-q-best-time-stock", text: "Best Time to Buy and Sell Stock", done: false },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "famous-neetcode-150",
-    title: "NeetCode 150 (Sample)",
-    description: "Starter sample inspired by the NeetCode 150 list.",
-    topics: [
-      {
-        id: "neetcode-topic-sliding-window",
-        title: "Sliding Window",
-        subTopics: [
-          {
-            id: "neetcode-sub-sliding-window-core",
-            title: "Core",
-            questions: [
-              { id: "neetcode-q-longest-substring", text: "Longest Substring Without Repeating Characters", done: false },
+              { id: "sample-question-1", text: "How would you design a random password generator?", done: false },
             ],
           },
         ],
