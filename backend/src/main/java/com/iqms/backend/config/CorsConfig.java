@@ -11,9 +11,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CorsConfig {
 
   private final List<String> allowedOrigins;
+  private final List<String> allowedOriginPatterns;
 
-  public CorsConfig(@Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
+  public CorsConfig(
+      @Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
+          List<String> allowedOrigins,
+      @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*,https://*.vercel.app}")
+          List<String> allowedOriginPatterns) {
     this.allowedOrigins = allowedOrigins;
+    this.allowedOriginPatterns = allowedOriginPatterns;
   }
 
   @Bean
@@ -23,6 +29,7 @@ public class CorsConfig {
       public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
             .allowedOrigins(allowedOrigins.toArray(new String[0]))
+            .allowedOriginPatterns(allowedOriginPatterns.toArray(new String[0]))
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .exposedHeaders("Authorization")
