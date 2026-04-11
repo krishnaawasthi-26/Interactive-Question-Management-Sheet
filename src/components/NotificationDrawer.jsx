@@ -119,7 +119,7 @@ export const mapAlarmNotification = (item) => ({
   title: `${item.mode === "alarm" ? "Alarm" : "Reminder"}: ${item.topicTitle || "Topic"}`,
   subtitle: item.sheetLabel || "Topic scheduler",
   meta: `Scheduled for: ${fmt(item.scheduledFor)}`,
-  status: item.completed ? "completed" : "scheduled",
+  status: item.completed ? "completed" : item.triggeredAt ? "due" : "scheduled",
   link: item.link,
   openable: Boolean(item.link),
   readable: false,

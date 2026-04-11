@@ -158,4 +158,32 @@ describe("sheetStore core flows", () => {
     expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("topics");
     expect(useSheetStore.getState().sheets[0].isPublic).toBe(true);
   });
+
+  it("syncs the fetched sheet metadata into the sheet list when opening a sheet", async () => {
+    useSheetStore.setState({
+      sheets: [
+        {
+          id: "sheet-1",
+          title: "Sheet A",
+          topics: baseTopics,
+          isPublic: true,
+          isArchived: false,
+        },
+      ],
+      activeSheetId: null,
+    });
+
+    getSheet.mockResolvedValue({
+      id: "sheet-1",
+      title: "Sheet A",
+      topics: baseTopics,
+      isPublic: false,
+      isArchived: false,
+      updatedAt: "2026-04-08T00:00:00Z",
+    });
+
+    await useSheetStore.getState().loadSheetById("token", "sheet-1");
+
+    expect(useSheetStore.getState().sheets[0].isPublic).toBe(false);
+  });
 });
