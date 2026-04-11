@@ -2,7 +2,7 @@ import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../..
 import { MAX_SHEETS } from "./constants";
 import { buildSheetSignature, cloneDeep, computeDirtyState, updateSheetInCollection } from "./helpers";
 
-const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideFields }) => {
+const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideFields, includeContent = true }) => {
   const state = getState();
   const listedSheet = state.sheets.find((sheet) => sheet.id === sheetId);
   const activeSheetData = state.activeSheetId === sheetId
@@ -13,13 +13,18 @@ const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideF
   const fallbackTitle = fallbackSheet?.title || "Untitled Sheet";
   const fallbackTopics = fallbackSheet?.topics || [];
 
-  return {
-    title: activeSheetData?.title ?? fallbackTitle,
-    topics: activeSheetData?.topics ?? fallbackTopics,
+  const payload = {
     isPublic: fallbackSheet?.isPublic ?? false,
     isArchived: fallbackSheet?.isArchived ?? false,
     ...overrideFields,
   };
+
+  if (includeContent) {
+    payload.title = activeSheetData?.title ?? fallbackTitle;
+    payload.topics = activeSheetData?.topics ?? fallbackTopics;
+  }
+
+  return payload;
 };
 
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
@@ -190,6 +195,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       sheetId,
       getState: get,
       overrideFields: { title },
+      includeContent: false,
     });
     const updatedSheet = await saveSheet(token, sheetId, payload);
     set((state) => {
@@ -207,6 +213,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       sheetId,
       getState: get,
       overrideFields: { isPublic },
+      includeContent: false,
     });
     const updatedSheet = await saveSheet(token, sheetId, payload);
     set((state) => ({
@@ -220,6 +227,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       sheetId,
       getState: get,
       overrideFields: { isArchived },
+      includeContent: false,
     });
     const updatedSheet = await saveSheet(token, sheetId, payload);
     set((state) => ({
