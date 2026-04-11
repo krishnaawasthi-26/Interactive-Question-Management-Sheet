@@ -460,7 +460,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         theme={theme}
         onThemeChange={onThemeChange}
         userLabel={currentUser?.fullName || currentUser?.email || "Account"}
-        rightPanel={isEditing ? <EditorActionPanel actions={sheetActionButtons} /> : null}
+        rightPanel={<EditorActionPanel actions={sheetActionButtons} />}
         alert={limitWarning}
         onDismissAlert={clearLimitWarning}
       >
