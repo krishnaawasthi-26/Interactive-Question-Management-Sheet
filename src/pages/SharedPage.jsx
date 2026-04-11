@@ -145,6 +145,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       { label: "Website", href: profile?.websiteUrl },
       { label: "GitHub", href: profile?.githubUrl },
       { label: "LinkedIn", href: profile?.linkedinUrl },
+      { label: "Resume", href: profile?.resumeUrl },
     ].filter((item) => item.href);
     const isOwnProfile = currentUser?.username === profile?.username;
     const followers = profile?.followers || [];
@@ -348,7 +349,8 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
 
           {activeProfileTab === "Portfolio" && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              {profile?.bio ? <p className="whitespace-pre-wrap text-sm text-slate-700">{profile.bio}</p> : <p className="text-sm text-slate-500">No bio shared yet.</p>}
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bio</h2>
+              {profile?.bio ? <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{profile.bio}</p> : <p className="mt-2 text-sm text-slate-500">No bio shared yet.</p>}
               {(profile?.institution || profile?.company) && (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {profile?.institution && (

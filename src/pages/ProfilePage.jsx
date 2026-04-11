@@ -69,6 +69,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
     { label: "Website", href: normalizeUrl(profileDetails?.websiteUrl) },
     { label: "GitHub", href: normalizeUrl(profileDetails?.githubUrl) },
     { label: "LinkedIn", href: normalizeUrl(profileDetails?.linkedinUrl) },
+    { label: "Resume", href: normalizeUrl(profileDetails?.resumeUrl) },
   ].filter((item) => item.href);
 
   return (
@@ -156,7 +157,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
           >
             Profile Info
           </button>
-          <p className="text-xs text-zinc-400">Use Profile Info to add bio, institution/company, and links.</p>
+          <p className="text-xs text-zinc-400">Use Profile Info to add bio, institution/company, resume, and links.</p>
           <p className="text-sm text-zinc-300 break-all">Share profile (read-only): {profileShareUrl}</p>
         </div>
 
