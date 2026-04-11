@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { navigateTo, ROUTES } from "../services/routes";
+import { getUserProfileRoute, navigateTo } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 
@@ -98,12 +98,12 @@ function EditProfilePage({ theme, onThemeChange }) {
             className="btn-base btn-success"
             onClick={async () => {
               const isSaved = await updateProfile({ name, username, bio, institution, company, websiteUrl, githubUrl, linkedinUrl, resumeUrl });
-              if (isSaved) navigateTo(ROUTES.PROFILE);
+              if (isSaved) navigateTo(getUserProfileRoute(username));
             }}
           >
             Save Profile
           </button>
-          <button className="btn-base btn-neutral" onClick={() => navigateTo(ROUTES.PROFILE)}>Cancel</button>
+          <button className="btn-base btn-neutral" onClick={() => navigateTo(getUserProfileRoute(currentUser?.username))}>Cancel</button>
         </div>
       </div>
     </AppShell>

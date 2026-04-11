@@ -22,6 +22,12 @@ export const slugifySegment = (value) => {
   return slug || "untitled-sheet";
 };
 
+export const getUserProfileRoute = (username) => {
+  const normalized = `${username || ""}`.trim().toLowerCase();
+  if (!normalized) return ROUTES.PROFILE;
+  return `${ROUTES.PROFILE}/${normalized}`;
+};
+
 export const getCurrentRoute = () => {
   if (typeof window === "undefined") return { route: ROUTES.LOGIN };
 
@@ -35,15 +41,13 @@ export const getCurrentRoute = () => {
   if (path === ROUTES.HOW_TO_USE) return { route: ROUTES.HOW_TO_USE };
   if (path === ROUTES.LEARNING_INSIGHTS) return { route: ROUTES.LEARNING_INSIGHTS };
   if (path === ROUTES.PUBLIC_SHEETS) return { route: ROUTES.PUBLIC_SHEETS };
-  if (path === ROUTES.PROFILE) return { route: ROUTES.PROFILE };
+  if (path === ROUTES.PROFILE || path.startsWith(`${ROUTES.PROFILE}/`)) return { route: ROUTES.PROFILE };
   if (path === ROUTES.EDIT_PROFILE) return { route: ROUTES.EDIT_PROFILE };
   if (path === ROUTES.APP || path.startsWith(`${ROUTES.APP}/`)) return { route: ROUTES.APP };
   if (path === ROUTES.IMPORT || path.startsWith(`${ROUTES.IMPORT}/`)) return { route: ROUTES.IMPORT };
   if (path === ROUTES.EXPORT || path.startsWith(`${ROUTES.EXPORT}/`)) return { route: ROUTES.EXPORT };
   if (path === ROUTES.PREMIUM) return { route: ROUTES.PREMIUM };
   if (path.startsWith(`${ROUTES.SHARED_PREFIX}/`)) return { route: ROUTES.SHARED_PREFIX };
-  if (path.startsWith(`${ROUTES.PROFILE}/`)) return { route: ROUTES.SHARED_PREFIX };
-
   return { route: ROUTES.LOGIN };
 };
 

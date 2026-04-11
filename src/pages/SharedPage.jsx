@@ -13,8 +13,9 @@ import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
+import AppShell from "../components/AppShell";
 
-function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp }) {
+function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
   const shareType = shareTypeProp ?? shareTypeFromRoute;
   const shareId = shareIdProp ?? shareIdFromRoute;
@@ -170,8 +171,8 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     const tabs = ["Sheets", "Activity", "Portfolio", "Stats"];
 
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-6 text-slate-800 md:px-6">
-        <div className="mx-auto max-w-6xl space-y-5">
+      <AppShell title={`@${profile?.username || "profile"}`} subtitle="Public profile view" theme={theme} onThemeChange={onThemeChange} userLabel={currentUser?.username || "Guest"}>
+        <div className="mx-auto max-w-6xl space-y-5 text-slate-800">
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-4">
@@ -436,7 +437,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
             </div>
           </div>
         )}
-      </div>
+      </AppShell>
     );
   }
 

@@ -1,43 +1,18 @@
 import { useMemo } from "react";
-import { getCurrentRoute, navigateTo, ROUTES } from "../services/routes";
+import { getCurrentRoute, getUserProfileRoute, navigateTo, ROUTES } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 
 const sections = [
   {
-    title: "Profile Tracker",
+    title: "Main",
     items: [
-      { label: "Home", route: ROUTES.HOME, icon: "🏠" },
-      { label: "Portfolio", route: ROUTES.PROFILE, icon: "💼" },
-      { label: "Company Wise Kit", route: ROUTES.PUBLIC_SHEETS, icon: "🏢" },
-    ],
-  },
-  {
-    title: "Question Tracker",
-    items: [
-      { label: "My Workspace", route: ROUTES.APP, icon: "🧩" },
-      { label: "Explore Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🧭" },
-      { label: "My Sheets", route: ROUTES.APP, icon: "📚" },
-      { label: "Notes", route: ROUTES.IMPORT, icon: "📝" },
-    ],
-  },
-  {
-    title: "Event Tracker",
-    items: [
-      { label: "Contests", route: ROUTES.HOW_TO_USE, icon: "🏆" },
-      { label: "Leaderboard", route: ROUTES.LEARNING_INSIGHTS, icon: "📈" },
-    ],
-  },
-  {
-    title: "Community",
-    items: [
-      { label: "Help Center", route: ROUTES.CONTACT, icon: "💬" },
-      { label: "Feedback", route: ROUTES.ABOUT, icon: "✉️" },
-    ],
-  },
-  {
-    title: "Support",
-    items: [
-      { label: "How To Use", route: ROUTES.HOW_TO_USE, icon: "❓" },
+      { label: "Learn About Us", route: ROUTES.HOW_TO_USE, icon: "📘" },
+      { label: "About Us", route: ROUTES.ABOUT, icon: "ℹ️" },
+      { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
+      { label: "Alarm", route: ROUTES.APP, icon: "⏰" },
+      { label: "Reminder", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
+      { label: "Notification", route: ROUTES.PUBLIC_SHEETS, icon: "🔔" },
+      { label: "Portfolio (Resume)", route: ROUTES.EDIT_PROFILE, icon: "📄" },
     ],
   },
 ];
@@ -97,6 +72,7 @@ function SidebarSection({ title, items, isOpen, currentRoute }) {
 
 function Sidebar({ isSidebarOpen, onToggle }) {
   const currentRoute = getCurrentRoute().route;
+  const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
 
   const sidebarWidth = useMemo(() => (isSidebarOpen ? "w-[250px]" : "w-[72px]"), [isSidebarOpen]);
@@ -123,7 +99,10 @@ function Sidebar({ isSidebarOpen, onToggle }) {
           <SidebarSection
             key={section.title}
             title={section.title}
-            items={section.items}
+            items={section.items.map((item) => {
+              if (item.route !== ROUTES.PROFILE) return item;
+              return { ...item, route: getUserProfileRoute(currentUser?.username) };
+            })}
             isOpen={isSidebarOpen}
             currentRoute={currentRoute}
           />
@@ -131,21 +110,32 @@ function Sidebar({ isSidebarOpen, onToggle }) {
       </nav>
 
       <div className="mt-3 space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
-        <SidebarItem
-          item={{ label: "Edit Profile", icon: "✏️" }}
-          isOpen={isSidebarOpen}
-          active={currentRoute === ROUTES.EDIT_PROFILE}
-          onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
-        />
-        <SidebarItem
-          item={{ label: "Log Out", icon: "🚪" }}
-          isOpen={isSidebarOpen}
-          active={false}
-          onClick={() => {
-            logout();
-            navigateTo(ROUTES.LOGIN);
-          }}
-        />
+        {currentUser ? (
+          <>
+            <SidebarItem
+              item={{ label: "Edit Profile", icon: "✏️" }}
+              isOpen={isSidebarOpen}
+              active={currentRoute === ROUTES.EDIT_PROFILE}
+              onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}
+            />
+            <SidebarItem
+              item={{ label: "Log Out", icon: "🚪" }}
+              isOpen={isSidebarOpen}
+              active={false}
+              onClick={() => {
+                logout();
+                navigateTo(ROUTES.LOGIN);
+              }}
+            />
+          </>
+        ) : (
+          <SidebarItem
+            item={{ label: "Login", icon: "🔐" }}
+            isOpen={isSidebarOpen}
+            active={currentRoute === ROUTES.LOGIN}
+            onClick={() => navigateTo(ROUTES.LOGIN)}
+          />
+        )}
       </div>
     </aside>
   );
