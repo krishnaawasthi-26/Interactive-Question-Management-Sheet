@@ -50,8 +50,8 @@ public class PremiumController {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("currency", "INR");
     payload.put("plans", new Object[] {
-        Map.of("id", "monthly", "name", "Monthly", "price", 99),
-        Map.of("id", "yearly", "name", "Yearly", "price", 1999),
+        Map.of("id", "monthly", "name", "Monthly", "price", 1),
+        Map.of("id", "yearly", "name", "Yearly", "price", 1),
     });
     return ResponseEntity.ok(payload);
   }
@@ -177,10 +177,10 @@ public class PremiumController {
     }
     String normalized = plan.toLowerCase(Locale.ROOT);
     if ("monthly".equals(normalized)) {
-      return new PlanInfo("monthly", "Monthly", 9900, 30);
+      return new PlanInfo("monthly", "Monthly", 100, 30);
     }
     if ("yearly".equals(normalized)) {
-      return new PlanInfo("yearly", "Yearly", 199900, 365);
+      return new PlanInfo("yearly", "Yearly", 100, 365);
     }
     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported plan.");
   }
