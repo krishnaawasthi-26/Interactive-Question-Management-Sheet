@@ -151,12 +151,39 @@ describe("sheetStore core flows", () => {
       "sheet-1",
       expect.objectContaining({
         isPublic: true,
-        isArchived: false,
       })
     );
     expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("title");
     expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("topics");
+    expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("isArchived");
     expect(useSheetStore.getState().sheets[0].isPublic).toBe(true);
+  });
+
+
+  it("does not include visibility fields during content saves", async () => {
+    useSheetStore.setState({
+      sheets: [
+        {
+          id: "sheet-1",
+          title: "Sheet A",
+          topics: baseTopics,
+          isPublic: false,
+          isArchived: true,
+        },
+      ],
+      activeSheetId: "sheet-1",
+    });
+
+    saveSheet.mockResolvedValue({ id: "sheet-1" });
+
+    await useSheetStore.getState().saveCurrentSheetDraft("token");
+
+    expect(saveSheet.mock.calls[0][2]).toMatchObject({
+      title: "Sheet A",
+      topics: baseTopics,
+    });
+    expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("isPublic");
+    expect(saveSheet.mock.calls[0][2]).not.toHaveProperty("isArchived");
   });
 
   it("syncs the fetched sheet metadata into the sheet list when opening a sheet", async () => {

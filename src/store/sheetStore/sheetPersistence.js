@@ -2,7 +2,13 @@ import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../..
 import { MAX_SHEETS } from "./constants";
 import { buildSheetSignature, cloneDeep, computeDirtyState, updateSheetInCollection } from "./helpers";
 
-const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideFields, includeContent = true }) => {
+const buildSafeSheetUpdatePayload = async ({
+  token,
+  sheetId,
+  getState,
+  overrideFields = {},
+  includeContent = true,
+}) => {
   const state = getState();
   const listedSheet = state.sheets.find((sheet) => sheet.id === sheetId);
   const activeSheetData = state.activeSheetId === sheetId
@@ -13,11 +19,7 @@ const buildSafeSheetUpdatePayload = async ({ token, sheetId, getState, overrideF
   const fallbackTitle = fallbackSheet?.title || "Untitled Sheet";
   const fallbackTopics = fallbackSheet?.topics || [];
 
-  const payload = {
-    isPublic: fallbackSheet?.isPublic ?? false,
-    isArchived: fallbackSheet?.isArchived ?? false,
-    ...overrideFields,
-  };
+  const payload = { ...overrideFields };
 
   if (includeContent) {
     payload.title = activeSheetData?.title ?? fallbackTitle;
