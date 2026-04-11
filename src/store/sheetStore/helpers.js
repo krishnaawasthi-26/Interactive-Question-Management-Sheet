@@ -27,6 +27,20 @@ export const countQuestions = (topics) =>
 export const updateSheetInCollection = (sheets, sheetId, updates) =>
   sheets.map((sheet) => (sheet.id === sheetId ? { ...sheet, ...updates } : sheet));
 
+export const normalizeSheetVisibility = (sheet) => {
+  if (!sheet || typeof sheet !== "object") return sheet;
+
+  const normalized = { ...sheet };
+  if (typeof normalized.isPublic !== "boolean" && typeof normalized.public === "boolean") {
+    normalized.isPublic = normalized.public;
+  }
+  if (typeof normalized.isArchived !== "boolean" && typeof normalized.archived === "boolean") {
+    normalized.isArchived = normalized.archived;
+  }
+
+  return normalized;
+};
+
 export const computeDirtyState = (state, signatureBySheet) =>
   buildSheetSignature(state.sheetTitle, state.topics) !== signatureBySheet.get(state.activeSheetId);
 

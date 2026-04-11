@@ -1,6 +1,12 @@
 import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../../api/sheetApi";
 import { MAX_SHEETS } from "./constants";
-import { buildSheetSignature, cloneDeep, computeDirtyState, updateSheetInCollection } from "./helpers";
+import {
+  buildSheetSignature,
+  cloneDeep,
+  computeDirtyState,
+  normalizeSheetVisibility,
+  updateSheetInCollection,
+} from "./helpers";
 
 const buildSafeSheetUpdatePayload = async ({
   token,
@@ -32,7 +38,7 @@ const buildSafeSheetUpdatePayload = async ({
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
 export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   loadSheets: async (token) => {
-    const sheets = await listSheets(token);
+    const sheets = (await listSheets(token)).map(normalizeSheetVisibility);
     set({ sheets });
     return sheets;
   },
@@ -74,7 +80,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   duplicateSheetById: async (token, sheetId, customTitle) => {
-    const sourceSheet = await getSheet(token, sheetId);
+    const sourceSheet = normalizeSheetVisibility(await getSheet(token, sheetId));
     return get().duplicateSheet(token, sourceSheet, customTitle);
   },
 
@@ -90,7 +96,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   loadSheetById: async (token, sheetId) => {
     set({ isLoading: true, loadError: null });
     try {
-      const sheet = await getSheet(token, sheetId);
+      const sheet = normalizeSheetVisibility(await getSheet(token, sheetId));
       const title = sheet.title || "Question Sheet";
       const topics = sheet.topics || [];
 
@@ -200,7 +206,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       overrideFields: { title },
       includeContent: false,
     });
-    const updatedSheet = await saveSheet(token, sheetId, payload);
+    const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
     set((state) => {
       const nextActiveState = state.activeSheetId === sheetId ? { sheetTitle: title } : {};
       return {
@@ -222,7 +228,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         getState: get,
         overrideFields: { isPublic },
       });
-      const updatedSheet = await saveSheet(token, sheetId, payload);
+      const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
       if (updatedSheet) {
         set((state) => ({
           sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet),
@@ -249,7 +255,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         getState: get,
         overrideFields: { isArchived },
       });
-      const updatedSheet = await saveSheet(token, sheetId, payload);
+      const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
       if (updatedSheet) {
         set((state) => ({
           sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet),

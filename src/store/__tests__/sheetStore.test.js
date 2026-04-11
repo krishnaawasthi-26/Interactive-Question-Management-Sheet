@@ -1,6 +1,6 @@
 import { useSheetStore } from "../sheetStore";
 import { createTopic } from "../../api/questionSheet";
-import { getSheet, saveSheet } from "../../api/sheetApi";
+import { getSheet, listSheets, saveSheet } from "../../api/sheetApi";
 
 vi.mock("../../api/questionSheet", () => ({
   createTopic: vi.fn(),
@@ -127,6 +127,26 @@ describe("sheetStore core flows", () => {
     expect(saved).toBe(false);
     expect(useSheetStore.getState().saveError).toBe("disk full");
     expect(useSheetStore.getState().hasPendingChanges).toBe(true);
+  });
+
+
+  it("normalizes legacy visibility keys when loading sheets", async () => {
+    listSheets.mockResolvedValue([
+      {
+        id: "sheet-1",
+        title: "Sheet A",
+        public: true,
+        archived: false,
+        topics: baseTopics,
+      },
+    ]);
+
+    await useSheetStore.getState().loadSheets("token");
+
+    expect(useSheetStore.getState().sheets[0]).toMatchObject({
+      isPublic: true,
+      isArchived: false,
+    });
   });
 
   it("updates visibility without resending title/topics", async () => {
