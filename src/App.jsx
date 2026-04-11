@@ -128,6 +128,7 @@ function App() {
         <Route path={ROUTES.SIGNUP} element={<SignupRoute theme={theme} onThemeChange={setTheme} />} />
       </Route>
 
+      <Route path={ROUTES.HOME} element={<HomePage theme={theme} onThemeChange={setTheme} />} />
       <Route path={ROUTES.ABOUT} element={<AboutPage theme={theme} onThemeChange={setTheme} />} />
       <Route path={ROUTES.CONTACT} element={<ContactPage theme={theme} onThemeChange={setTheme} />} />
       <Route path={ROUTES.HOW_TO_USE} element={<HowToUsePage theme={theme} onThemeChange={setTheme} />} />
@@ -137,7 +138,6 @@ function App() {
       <Route path={`${ROUTES.PROFILE}/:username`} element={<UserProfileRoute theme={theme} onThemeChange={setTheme} />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path={ROUTES.HOME} element={<HomePage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PREMIUM} element={<PremiumPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PUBLIC_SHEETS} element={<PublicSheetsPage theme={theme} onThemeChange={setTheme} />} />

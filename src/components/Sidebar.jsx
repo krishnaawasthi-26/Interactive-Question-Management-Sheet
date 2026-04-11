@@ -6,6 +6,7 @@ const sections = [
   {
     title: "Main",
     items: [
+      { label: "Home", route: ROUTES.HOME, icon: "🏠" },
       { label: "My Sheets", route: ROUTES.APP, icon: "🗂️" },
       { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
       { label: "Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
