@@ -17,6 +17,7 @@ export const getRelativeTime = (value) => {
 
 export const getNotificationState = (item) => {
   if (item.status === "completed") return "completed";
+  if (item.status === "overdue") return "overdue";
   if (!item.scheduledFor) return item.status || "unread";
   const due = new Date(item.scheduledFor).getTime() <= Date.now();
   if (due && item.status === "unread") return "due";

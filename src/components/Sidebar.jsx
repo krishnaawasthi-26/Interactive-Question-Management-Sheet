@@ -79,7 +79,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
   const sidebarWidth = useMemo(() => (isSidebarOpen ? "w-[250px]" : "w-[72px]"), [isSidebarOpen]);
 
   return (
-    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-hidden rounded-[22px] border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface)_90%,transparent)] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
+    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-hidden rounded-[22px] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_92%,transparent))] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
         <button
           type="button"
@@ -91,7 +91,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
         </button>
         <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidebarOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
           <p className="eyebrow">IQMS</p>
-          <p className="meta-text">Question Tracker</p>
+          <p className="meta-text">DSA Productivity</p>
         </div>
       </div>
 

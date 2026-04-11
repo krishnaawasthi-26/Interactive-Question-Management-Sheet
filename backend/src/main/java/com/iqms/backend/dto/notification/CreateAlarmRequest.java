@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
+import java.util.Map;
 
 public class CreateAlarmRequest {
   @NotBlank
@@ -20,6 +21,7 @@ public class CreateAlarmRequest {
   private String sourceType = "manual";
   private String sourceId;
   private String actionUrl;
+  private Map<String, Object> recurrence;
 
   public String getTitle() { return title; }
   public void setTitle(String title) { this.title = title; }
@@ -35,4 +37,6 @@ public class CreateAlarmRequest {
   public void setSourceId(String sourceId) { this.sourceId = sourceId; }
   public String getActionUrl() { return actionUrl; }
   public void setActionUrl(String actionUrl) { this.actionUrl = actionUrl; }
+  public Map<String, Object> getRecurrence() { return recurrence; }
+  public void setRecurrence(Map<String, Object> recurrence) { this.recurrence = recurrence; }
 }
