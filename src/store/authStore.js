@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { loginUser, loginWithGoogle, requestSignUpOtp, verifySignUpOtp } from "../api/authApi";
+import { loginUser, loginWithGoogle, requestSignUpOtp, signUpUser, verifySignUpOtp } from "../api/authApi";
 import {
   requestEmailChangeOtp as requestEmailChangeOtpApi,
   updateProfile as updateProfileApi,
@@ -76,6 +76,24 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       set({ authError: error.message, authLoading: false });
       return null;
+    }
+  },
+
+  signUp: async ({ name, email, username, password }) => {
+    set({ authLoading: true, authError: null });
+    try {
+      const user = await signUpUser({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        username: username.trim().toLowerCase(),
+        password: password.trim(),
+      });
+      writeCurrentUser(user);
+      set({ currentUser: user, authError: null, authLoading: false });
+      return true;
+    } catch (error) {
+      set({ authError: error.message, authLoading: false });
+      return false;
     }
   },
 

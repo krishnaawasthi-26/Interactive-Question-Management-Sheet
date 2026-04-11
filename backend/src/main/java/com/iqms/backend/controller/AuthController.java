@@ -33,6 +33,11 @@ public class AuthController {
     return ResponseEntity.ok(authService.requestSignUpOtp(request));
   }
 
+  @PostMapping("/signup")
+  public ResponseEntity<AuthResponse> signUp(@Valid @RequestBody SignUpRequest request) {
+    return ResponseEntity.ok(authService.signUp(request));
+  }
+
   @PostMapping("/signup/verify-otp")
   public ResponseEntity<AuthResponse> verifySignUpOtp(@Valid @RequestBody VerifyOtpRequest request) {
     return ResponseEntity.ok(authService.verifySignUpOtp(request));
