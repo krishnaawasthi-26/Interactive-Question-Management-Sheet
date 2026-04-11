@@ -11,9 +11,11 @@ const sections = [
       { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
       { label: "Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
       { label: "Public Sheets", route: ROUTES.PUBLIC_SHEETS, icon: "🔔" },
-      { label: "Portfolio (Resume)", route: ROUTES.EDIT_PROFILE, icon: "📄" },
       { label: "Learn About Us", route: ROUTES.HOW_TO_USE, icon: "📘" },
       { label: "About Us", route: ROUTES.ABOUT, icon: "ℹ️" },
+      { label: "Alerts", route: ROUTES.APP, icon: "🚨" },
+      { label: "Notifications", route: ROUTES.APP, icon: "🔔" },
+      { label: "Alarm", route: ROUTES.APP, icon: "⏰" },
     ],
   },
 ];
