@@ -166,7 +166,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       const now = Date.now();
       const dueAlerts = scheduledTopicAlerts.filter((item) => {
         const scheduledAt = new Date(item.scheduledFor).getTime();
-        return !Number.isNaN(scheduledAt) && scheduledAt <= now && !item.completed;
+        return !Number.isNaN(scheduledAt) && scheduledAt <= now && !item.completed && !item.triggeredAt;
       });
 
       if (!dueAlerts.length) return;
@@ -178,14 +178,21 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           const title = item.mode === "alarm" ? `Alarm: ${item.topicTitle}` : `Reminder: ${item.topicTitle}`;
           const body = `Time for topic "${item.topicTitle}" in your sheet.`;
           new Notification(title, { body, tag: `topic-${item.id}` });
+        } else {
+          setActiveDialog({
+            key: `topic-alert-${item.id}`,
+            title: item.mode === "alarm" ? "Alarm is due" : "Reminder is due",
+            message: `Time for topic "${item.topicTitle}" in your sheet.`,
+            actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: () => setActiveDialog(null) }],
+          });
         }
       });
 
       setScheduledTopicAlerts((current) =>
         current.map((item) => {
           const scheduledAt = new Date(item.scheduledFor).getTime();
-          if (Number.isNaN(scheduledAt) || scheduledAt > now || item.completed) return item;
-          return { ...item, completed: true };
+          if (Number.isNaN(scheduledAt) || scheduledAt > now || item.completed || item.triggeredAt) return item;
+          return { ...item, triggeredAt: new Date(now).toISOString() };
         })
       );
     };
@@ -319,9 +326,10 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         id: `topic-alert-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         topicId,
         topicTitle: topic.title || "Untitled Topic",
-        scheduledFor,
+        scheduledFor: new Date(scheduledFor).toISOString(),
         mode,
         completed: false,
+        triggeredAt: null,
       },
     ]);
   };
@@ -601,7 +609,11 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         open={topicSchedulerState.open}
         mode={topicSchedulerState.mode}
         topics={topics}
-        scheduledAlerts={scheduledTopicAlerts.filter((item) => !item.completed)}
+        scheduledAlerts={scheduledTopicAlerts.filter((item) => {
+          if (item.completed) return false;
+          const scheduledAt = new Date(item.scheduledFor).getTime();
+          return Number.isNaN(scheduledAt) || scheduledAt > Date.now();
+        })}
         onModeChange={(mode) => setTopicSchedulerState((current) => ({ ...current, mode }))}
         onSave={saveTopicAlert}
         onDelete={(id) => setScheduledTopicAlerts((current) => current.filter((item) => item.id !== id))}

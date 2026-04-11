@@ -102,6 +102,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         future: [],
         hasPendingChanges: false,
         saveError: null,
+        sheets: updateSheetInCollection(get().sheets, sheet.id, sheet),
       });
 
       internals.lastPersistedSignatureBySheet.set(sheet.id, buildSheetSignature(title, topics));

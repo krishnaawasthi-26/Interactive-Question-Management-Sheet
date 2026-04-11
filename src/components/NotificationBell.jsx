@@ -119,7 +119,7 @@ function NotificationBell({ compact = false }) {
     if (group === "alarms") {
       const alarms = getLocalAlarmNotifications();
       const nextTime = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-      const updated = alarms.map((item) => (item.id === id ? { ...item, scheduledFor: nextTime } : item));
+      const updated = alarms.map((item) => (item.id === id ? { ...item, scheduledFor: nextTime, triggeredAt: null, completed: false } : item));
       const bySheet = updated.reduce((acc, item) => {
         const sheetId = (item.link || "#/app").replace("#/app/", "").replace("#/app", "sheet-index");
         acc[sheetId] = acc[sheetId] || [];
