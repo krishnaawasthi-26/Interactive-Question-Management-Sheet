@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { archiveNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, snoozeNotification } from "../api/notificationApi";
+import { archiveNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { navigateTo, ROUTES } from "../services/routes";
 import { getNotificationPermissionState, requestNotificationPermission, showDueNowBrowserNotification, subscribeToPushIfPossible } from "../services/notifications";
 import { useAuthStore } from "../store/authStore";
@@ -58,6 +58,12 @@ function NotificationBell({ compact = false }) {
   const onArchive = async (id) => { updateStatusOptimistic(id, "archived"); await archiveNotification(token, id); loadAll(); };
   const onSnooze = async (id, mins) => { await snoozeNotification(token, id, mins); loadAll(); };
   const onMarkAllRead = async () => { await markAllNotificationsRead(token); loadAll(); };
+  const onReschedule = async (id) => {
+    const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
+    if (!input) return;
+    await rescheduleNotification(token, id, new Date(input).toISOString());
+    loadAll();
+  };
   const onEnablePermission = async () => setPermissionState(await requestNotificationPermission());
 
   const sections = useMemo(() => ({
@@ -65,6 +71,7 @@ function NotificationBell({ compact = false }) {
     platform: notifications.filter((n) => n.type === "platform"),
     revision: notifications.filter((n) => n.type === "revision"),
     alarm: notifications.filter((n) => n.type === "alarm"),
+    overdue: notifications.filter((n) => n.status === "overdue"),
   }), [notifications]);
 
   const buttonClass = compact
@@ -91,6 +98,7 @@ function NotificationBell({ compact = false }) {
         onDismiss={onDismiss}
         onArchive={onArchive}
         onSnooze={onSnooze}
+        onReschedule={onReschedule}
         onMarkAllRead={onMarkAllRead}
       />
       {open ? <button className="mt-2 text-xs text-[var(--accent-info)]" onClick={() => navigateTo(ROUTES.NOTIFICATIONS)}>Open all notifications →</button> : null}

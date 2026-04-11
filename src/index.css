@@ -19,6 +19,7 @@
   --accent-danger: #df6d76;
   --accent-success: #5bbb97;
   --accent-warning: #e2b160;
+  --accent-info: #70a7ff;
   --focus-ring: color-mix(in srgb, var(--accent-primary) 58%, transparent);
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -51,6 +52,7 @@
   --accent-danger: #c24141;
   --accent-success: #2f855a;
   --accent-warning: #b7791f;
+  --accent-info: #2563eb;
 }
 
 html,
@@ -110,7 +112,11 @@ body {
 
 .surface-card {
   padding: 18px;
-  box-shadow: 0 8px 24px rgba(4, 10, 22, 0.22);
+  box-shadow: 0 10px 30px rgba(4, 10, 22, 0.26);
+}
+
+.surface-card:hover {
+  border-color: var(--border-strong);
 }
 
 .page-title { font-size: 1.6rem; font-weight: 650; letter-spacing: -0.02em; }

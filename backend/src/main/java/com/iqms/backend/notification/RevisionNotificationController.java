@@ -4,6 +4,7 @@ import com.iqms.backend.dto.notification.CreateAlarmRequest;
 import com.iqms.backend.dto.notification.NotificationActionResponse;
 import com.iqms.backend.dto.notification.NotificationFilterRequest;
 import com.iqms.backend.dto.notification.PushSubscriptionRequest;
+import com.iqms.backend.dto.notification.RescheduleRequest;
 import com.iqms.backend.dto.notification.SnoozeRequest;
 import com.iqms.backend.dto.notification.UnreadCountResponse;
 import com.iqms.backend.model.RevisionNotification;
@@ -93,6 +94,19 @@ public class RevisionNotificationController {
       @PathVariable String notificationId,
       @Valid @RequestBody SnoozeRequest body) {
     return notificationService.snooze(currentUser.getUserId(request), notificationId, body.getMinutes());
+  }
+
+  @PostMapping("/{notificationId}/reschedule")
+  public NotificationActionResponse reschedule(
+      HttpServletRequest request,
+      @PathVariable String notificationId,
+      @Valid @RequestBody RescheduleRequest body) {
+    return notificationService.reschedule(currentUser.getUserId(request), notificationId, body.getScheduledFor());
+  }
+
+  @PostMapping("/{notificationId}/overdue")
+  public NotificationActionResponse markOverdue(HttpServletRequest request, @PathVariable String notificationId) {
+    return notificationService.markOverdue(currentUser.getUserId(request), notificationId);
   }
 
   @PostMapping("/push-subscriptions")

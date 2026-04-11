@@ -1,7 +1,9 @@
 package com.iqms.backend.model;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -26,20 +28,24 @@ public class RevisionNotification {
   private String title;
   private String message;
   @Indexed
-  private String status; // unread | read | archived | dismissed | completed
+  private String status; // unread | read | archived | dismissed | completed | overdue
   private String priority; // low | medium | high
 
   private Instant scheduledFor;
   private Instant deliveredAt;
   private Instant readAt;
+  private Instant completedAt;
+  private Instant snoozedUntil;
 
-  private String sourceType; // sheet | topic | question | system | manual
+  private String sourceType; // sheet | topic | question | system | manual | goal | streak
   private String sourceId;
   private String actionUrl;
   private Map<String, Object> metadata = new HashMap<>();
 
   private boolean isPersistent;
   private Instant expiresAt;
+  private Map<String, Object> recurrence;
+  private List<Map<String, Object>> auditTrail = new ArrayList<>();
 
   private Instant createdAt;
   private Instant updatedAt;
@@ -64,6 +70,10 @@ public class RevisionNotification {
   public void setDeliveredAt(Instant deliveredAt) { this.deliveredAt = deliveredAt; }
   public Instant getReadAt() { return readAt; }
   public void setReadAt(Instant readAt) { this.readAt = readAt; }
+  public Instant getCompletedAt() { return completedAt; }
+  public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+  public Instant getSnoozedUntil() { return snoozedUntil; }
+  public void setSnoozedUntil(Instant snoozedUntil) { this.snoozedUntil = snoozedUntil; }
   public String getSourceType() { return sourceType; }
   public void setSourceType(String sourceType) { this.sourceType = sourceType; }
   public String getSourceId() { return sourceId; }
@@ -76,6 +86,10 @@ public class RevisionNotification {
   public void setPersistent(boolean persistent) { isPersistent = persistent; }
   public Instant getExpiresAt() { return expiresAt; }
   public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
+  public Map<String, Object> getRecurrence() { return recurrence; }
+  public void setRecurrence(Map<String, Object> recurrence) { this.recurrence = recurrence; }
+  public List<Map<String, Object>> getAuditTrail() { return auditTrail; }
+  public void setAuditTrail(List<Map<String, Object>> auditTrail) { this.auditTrail = auditTrail; }
   public Instant getCreatedAt() { return createdAt; }
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }

@@ -5,6 +5,7 @@ import ProgressBar from "../components/ui/ProgressBar";
 import SectionHeader from "../components/ui/SectionHeader";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import { famousDsaSheets } from "../data/famousSheets";
+import { fetchNotifications } from "../api/notificationApi";
 import { navigateTo, ROUTES } from "../services/routes";
 import { calculateSheetProgress } from "../services/progress";
 import { useAuthStore } from "../store/authStore";
@@ -12,6 +13,7 @@ import { useSheetStore } from "../store/sheetStore";
 
 function HomePage({ theme, onThemeChange }) {
   const [copyingSheetId, setCopyingSheetId] = useState(null);
+  const [notificationPreview, setNotificationPreview] = useState({ dueRevisions: [], upcomingAlarms: [] });
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
@@ -20,6 +22,15 @@ function HomePage({ theme, onThemeChange }) {
   useEffect(() => {
     if (!currentUser?.token) return;
     loadSheets(currentUser.token);
+    Promise.all([
+      fetchNotifications(currentUser.token, { type: "revision", status: "due", size: 3 }),
+      fetchNotifications(currentUser.token, { type: "alarm", status: "upcoming", size: 3 }),
+    ]).then(([dueRevisions, upcomingAlarms]) => {
+      setNotificationPreview({
+        dueRevisions: Array.isArray(dueRevisions) ? dueRevisions : [],
+        upcomingAlarms: Array.isArray(upcomingAlarms) ? upcomingAlarms : [],
+      });
+    }).catch(() => undefined);
   }, [currentUser?.token, loadSheets]);
 
   const recentSheets = useMemo(() => [...sheets]
@@ -59,6 +70,15 @@ function HomePage({ theme, onThemeChange }) {
             subtitle={currentUser?.token ? "Continue active practice sessions or copy a curated sheet." : "Log in to sync sheets, track progress, and manage your prep."}
           />
         </SurfaceCard>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <SurfaceCard title="Due revisions" description="Items that need revision now.">
+            {notificationPreview.dueRevisions.length === 0 ? <p className="meta-text">No due revisions right now.</p> : <div className="space-y-2">{notificationPreview.dueRevisions.map((item) => <button key={item.id} type="button" className="surface-card surface-card-elevated w-full text-left" onClick={() => navigateTo(item.actionUrl || ROUTES.NOTIFICATIONS)}><p className="card-title line-clamp-1">{item.title}</p><p className="meta-text">{item.message}</p></button>)}</div>}
+          </SurfaceCard>
+          <SurfaceCard title="Upcoming reminders" description="Next alarms and productivity reminders.">
+            {notificationPreview.upcomingAlarms.length === 0 ? <p className="meta-text">No upcoming reminders.</p> : <div className="space-y-2">{notificationPreview.upcomingAlarms.map((item) => <button key={item.id} type="button" className="surface-card surface-card-elevated w-full text-left" onClick={() => navigateTo(ROUTES.ALARMS)}><p className="card-title line-clamp-1">{item.title}</p><p className="meta-text">{new Date(item.scheduledFor).toLocaleString()}</p></button>)}</div>}
+          </SurfaceCard>
+        </div>
 
         <SurfaceCard title="Recent Sheets" description="Quick access to your latest updated sheets.">
           {!currentUser?.token ? (

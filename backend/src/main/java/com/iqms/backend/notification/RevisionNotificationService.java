@@ -3,7 +3,6 @@ package com.iqms.backend.notification;
 import com.iqms.backend.dto.notification.CreateAlarmRequest;
 import com.iqms.backend.dto.notification.NotificationActionResponse;
 import com.iqms.backend.dto.notification.NotificationFilterRequest;
-import com.iqms.backend.dto.notification.PushSubscriptionRequest;
 import com.iqms.backend.model.PushSubscription;
 import com.iqms.backend.model.RevisionNotification;
 import com.iqms.backend.model.Sheet;
@@ -46,9 +45,7 @@ public class RevisionNotificationService {
   }
 
   public List<RevisionNotification> fetchNotifications(String userId, NotificationFilterRequest filter) {
-    syncNotificationsFromSheets(userId);
-    platformSeedService.seedForUserIfNeeded(userId);
-    deliverDueAlarms(userId);
+    hydrateNotifications(userId);
 
     int size = Math.max(1, Math.min(filter.getSize(), 100));
     int page = Math.max(0, filter.getPage());
@@ -61,15 +58,13 @@ public class RevisionNotificationService {
     notifications.forEach(this::refreshDynamicStatusIfNeeded);
 
     return notifications.stream()
-        .filter((item) -> filter.getStatus() == null || filter.getStatus().isBlank() || filter.getStatus().equals(item.getStatus()))
+        .filter((item) -> matchesStatusFilter(item, filter.getStatus()))
         .sorted(Comparator.comparing(RevisionNotification::getScheduledFor, Comparator.nullsLast(Comparator.reverseOrder())))
         .toList();
   }
 
   public long unreadCount(String userId) {
-    syncNotificationsFromSheets(userId);
-    platformSeedService.seedForUserIfNeeded(userId);
-    deliverDueAlarms(userId);
+    hydrateNotifications(userId);
     return notificationRepository.countVisibleByUserIdAndStatus(userId, "unread", Instant.now());
   }
 
@@ -86,9 +81,11 @@ public class RevisionNotificationService {
     notification.setSourceType(defaultText(body.getSourceType(), "manual"));
     notification.setSourceId(body.getSourceId());
     notification.setActionUrl(body.getActionUrl());
+    notification.setRecurrence(body.getRecurrence());
     notification.setPersistent(true);
     notification.setCreatedAt(now);
     notification.setUpdatedAt(now);
+    appendAudit(notification, "created", Map.of("scheduledFor", String.valueOf(body.getScheduledFor())));
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
@@ -98,6 +95,7 @@ public class RevisionNotificationService {
     notification.setStatus("read");
     notification.setReadAt(Instant.now());
     notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "read", Map.of());
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
@@ -106,7 +104,14 @@ public class RevisionNotificationService {
     RevisionNotification notification = getOwnedNotification(userId, notificationId);
     notification.setStatus("completed");
     notification.setReadAt(Instant.now());
+    notification.setCompletedAt(Instant.now());
     notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "completed", Map.of());
+
+    if (notification.getRecurrence() != null && !notification.getRecurrence().isEmpty()) {
+      rescheduleFromRecurrence(notification);
+    }
+
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
@@ -115,6 +120,7 @@ public class RevisionNotificationService {
     RevisionNotification notification = getOwnedNotification(userId, notificationId);
     notification.setStatus("dismissed");
     notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "dismissed", Map.of());
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
@@ -123,6 +129,7 @@ public class RevisionNotificationService {
     RevisionNotification notification = getOwnedNotification(userId, notificationId);
     notification.setStatus("archived");
     notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "archived", Map.of());
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
@@ -137,10 +144,11 @@ public class RevisionNotificationService {
     Instant now = Instant.now();
     long affected = 0;
     for (RevisionNotification item : current) {
-      if (!"unread".equals(item.getStatus())) continue;
+      if (!"unread".equals(item.getStatus()) && !"overdue".equals(item.getStatus())) continue;
       item.setStatus("read");
       item.setReadAt(now);
       item.setUpdatedAt(now);
+      appendAudit(item, "read", Map.of("bulk", true));
       notificationRepository.save(item);
       affected += 1;
     }
@@ -149,14 +157,37 @@ public class RevisionNotificationService {
 
   public NotificationActionResponse snooze(String userId, String notificationId, int minutes) {
     RevisionNotification notification = getOwnedNotification(userId, notificationId);
+    Instant next = Instant.now().plusSeconds((long) minutes * 60);
     notification.setStatus("unread");
-    notification.setScheduledFor(Instant.now().plusSeconds((long) minutes * 60));
+    notification.setScheduledFor(next);
+    notification.setSnoozedUntil(next);
     notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "snoozed", Map.of("minutes", minutes));
     notificationRepository.save(notification);
     return new NotificationActionResponse(notification.getId(), notification.getStatus());
   }
 
-  public void registerPushSubscription(String userId, PushSubscriptionRequest body) {
+  public NotificationActionResponse reschedule(String userId, String notificationId, Instant scheduledFor) {
+    RevisionNotification notification = getOwnedNotification(userId, notificationId);
+    notification.setStatus("unread");
+    notification.setScheduledFor(scheduledFor);
+    notification.setSnoozedUntil(null);
+    notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "rescheduled", Map.of("scheduledFor", String.valueOf(scheduledFor)));
+    notificationRepository.save(notification);
+    return new NotificationActionResponse(notification.getId(), notification.getStatus());
+  }
+
+  public NotificationActionResponse markOverdue(String userId, String notificationId) {
+    RevisionNotification notification = getOwnedNotification(userId, notificationId);
+    notification.setStatus("overdue");
+    notification.setUpdatedAt(Instant.now());
+    appendAudit(notification, "overdue", Map.of());
+    notificationRepository.save(notification);
+    return new NotificationActionResponse(notification.getId(), notification.getStatus());
+  }
+
+  public void registerPushSubscription(String userId, com.iqms.backend.dto.notification.PushSubscriptionRequest body) {
     PushSubscription subscription = pushSubscriptionRepository
         .findByUserIdAndEndpoint(userId, body.getEndpoint())
         .orElseGet(PushSubscription::new);
@@ -170,6 +201,25 @@ public class RevisionNotificationService {
     subscription.setKeys(body.getKeys());
     subscription.setUpdatedAt(now);
     pushSubscriptionRepository.save(subscription);
+  }
+
+  private void hydrateNotifications(String userId) {
+    syncNotificationsFromSheets(userId);
+    platformSeedService.seedForUserIfNeeded(userId);
+    deliverDueAlarms(userId);
+  }
+
+  private boolean matchesStatusFilter(RevisionNotification item, String filter) {
+    if (filter == null || filter.isBlank()) return true;
+    long now = Instant.now().toEpochMilli();
+    long scheduledFor = item.getScheduledFor() == null ? Long.MAX_VALUE : item.getScheduledFor().toEpochMilli();
+
+    return switch (filter) {
+      case "due" -> ("unread".equals(item.getStatus()) || "overdue".equals(item.getStatus())) && scheduledFor <= now;
+      case "upcoming" -> ("unread".equals(item.getStatus()) || "read".equals(item.getStatus())) && scheduledFor > now;
+      case "overdue" -> "overdue".equals(item.getStatus()) || ("unread".equals(item.getStatus()) && scheduledFor < now - 3_600_000L);
+      default -> filter.equals(item.getStatus());
+    };
   }
 
   private void syncNotificationsFromSheets(String userId) {
@@ -300,16 +350,13 @@ public class RevisionNotificationService {
       notification.setDeliveredAt(now);
     }
 
-    if (notification.getScheduledFor().isBefore(now) && "read".equals(notification.getStatus())) {
-      return;
+    if ("read".equals(notification.getStatus())) return;
+
+    if (notification.getScheduledFor().isBefore(now.minusSeconds(3600)) && "unread".equals(notification.getStatus())) {
+      notification.setStatus("overdue");
     }
 
-    if (notification.getScheduledFor().isBefore(now) && "unread".equals(notification.getStatus())) {
-      // keep unread; frontend can show as due.
-      return;
-    }
-
-    if (notification.getScheduledFor().isAfter(now) && notification.getStatus() == null) {
+    if (notification.getScheduledFor().isAfter(now) && (notification.getStatus() == null || "overdue".equals(notification.getStatus()))) {
       notification.setStatus("unread");
     }
   }
@@ -327,6 +374,38 @@ public class RevisionNotificationService {
       item.setUpdatedAt(Instant.now());
       notificationRepository.save(item);
     }
+  }
+
+  private void appendAudit(RevisionNotification notification, String event, Map<String, Object> details) {
+    List<Map<String, Object>> auditTrail = notification.getAuditTrail() == null ? new ArrayList<>() : notification.getAuditTrail();
+    Map<String, Object> entry = new HashMap<>();
+    entry.put("event", event);
+    entry.put("at", Instant.now().toString());
+    entry.put("details", details == null ? Map.of() : details);
+    auditTrail.add(entry);
+    notification.setAuditTrail(auditTrail);
+  }
+
+  private void rescheduleFromRecurrence(RevisionNotification notification) {
+    Object mode = notification.getRecurrence().get("type");
+    int every = 1;
+    Object rawEvery = notification.getRecurrence().get("every");
+    if (rawEvery instanceof Number number && number.intValue() > 0) {
+      every = number.intValue();
+    }
+
+    Instant base = notification.getScheduledFor() == null ? Instant.now() : notification.getScheduledFor();
+    Instant next;
+    if ("weekly".equals(mode)) {
+      next = base.plusSeconds(7L * 24 * 3600 * every);
+    } else {
+      next = base.plusSeconds(24L * 3600 * every);
+    }
+
+    notification.setScheduledFor(next);
+    notification.setCompletedAt(null);
+    notification.setStatus("unread");
+    appendAudit(notification, "recurring-rescheduled", Map.of("next", next.toString()));
   }
 
   private String normalizePriority(String value) {
