@@ -14,6 +14,9 @@ export const ROUTES = {
   IMPORT: "/import",
   EXPORT: "/export",
   PREMIUM: "/premium",
+  NOTIFICATIONS: "/notifications",
+  ALERTS: "/alerts",
+  ALARMS: "/alarms",
 };
 
 export const slugifySegment = (value) => {
@@ -47,6 +50,9 @@ export const getCurrentRoute = () => {
   if (path === ROUTES.IMPORT || path.startsWith(`${ROUTES.IMPORT}/`)) return { route: ROUTES.IMPORT };
   if (path === ROUTES.EXPORT || path.startsWith(`${ROUTES.EXPORT}/`)) return { route: ROUTES.EXPORT };
   if (path === ROUTES.PREMIUM) return { route: ROUTES.PREMIUM };
+  if (path === ROUTES.NOTIFICATIONS) return { route: ROUTES.NOTIFICATIONS };
+  if (path === ROUTES.ALERTS) return { route: ROUTES.ALERTS };
+  if (path === ROUTES.ALARMS) return { route: ROUTES.ALARMS };
   if (path.startsWith(`${ROUTES.SHARED_PREFIX}/`)) return { route: ROUTES.SHARED_PREFIX };
   return { route: ROUTES.LOGIN };
 };
