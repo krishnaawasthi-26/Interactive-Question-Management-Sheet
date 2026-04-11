@@ -81,7 +81,11 @@ class AuthControllerTest {
   void verifySignupOtpReturnsAuthResponse() throws Exception {
     AuthResponse response = new AuthResponse(
         "u1", "Jane", "jane@example.com", "jane", "2026-04-08T00:00:00Z", "profile_1",
-        null, null, null, null, null, null, "token-1");
+        null, null, null, null, null, null,
+        0, 3, 0, 2,
+        false, false,
+        null, null,
+        "token-1");
     when(authService.verifySignUpOtp(any())).thenReturn(response);
 
     mockMvc.perform(post("/api/auth/signup/verify-otp")
