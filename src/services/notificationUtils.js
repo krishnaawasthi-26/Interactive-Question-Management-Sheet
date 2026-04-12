@@ -1,5 +1,7 @@
 export const NOTIFICATION_TYPES = ["platform", "revision", "alarm"];
 
+export const ACTIVE_NOTIFICATION_STATES = new Set(["unread", "read", "overdue"]);
+
 export const getRelativeTime = (value) => {
   if (!value) return "now";
   const ts = new Date(value).getTime();
@@ -22,6 +24,25 @@ export const getNotificationState = (item) => {
   const due = new Date(item.scheduledFor).getTime() <= Date.now();
   if (due && item.status === "unread") return "due";
   return item.status || "unread";
+};
+
+export const isArchivedNotification = (item) => item?.status === "archived";
+
+export const isActiveNotification = (item) => ACTIVE_NOTIFICATION_STATES.has(item?.status || "unread");
+
+export const buildNotificationSections = (notifications = []) => {
+  const active = notifications.filter(isActiveNotification);
+  const archived = notifications.filter(isArchivedNotification);
+
+  return {
+    all: notifications,
+    active,
+    archived,
+    platform: notifications.filter((n) => n.type === "platform"),
+    revision: notifications.filter((n) => n.type === "revision"),
+    alarm: notifications.filter((n) => n.type === "alarm"),
+    overdue: notifications.filter((n) => n.status === "overdue"),
+  };
 };
 
 export const notificationTypeMeta = {

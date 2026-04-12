@@ -1,9 +1,10 @@
-import { getNotificationState, getRelativeTime, notificationTypeMeta, priorityClass } from "../../services/notificationUtils";
+import { getNotificationState, getRelativeTime, isArchivedNotification, notificationTypeMeta, priorityClass } from "../../services/notificationUtils";
 
-function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchive, onSnooze, onReschedule }) {
+function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchive, onDelete, onSnooze, onReschedule }) {
   const typeMeta = notificationTypeMeta[item.type] || notificationTypeMeta.platform;
   const state = getNotificationState(item);
   const unread = state === "due" || state === "unread" || state === "overdue";
+  const archived = isArchivedNotification(item);
 
   return (
     <article className={`rounded-xl border p-3 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}>
@@ -17,13 +18,14 @@ function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchi
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {item.actionUrl ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onOpen(item)}>Open</button> : null}
-        {(item.status === "unread" || item.status === "overdue") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onRead(item.id)}>Read</button> : null}
-        {item.type === "revision" ? <button className="btn-base btn-success px-2 py-1 text-xs" onClick={() => onDone(item.id)}>Done</button> : null}
-        {(item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onSnooze(item.id, 60)}>+1h</button> : null}
-        {(item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onReschedule(item.id)}>Reschedule</button> : null}
-        <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onDismiss(item.id)}>Dismiss</button>
-        <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onArchive(item.id)}>Archive</button>
+        {item.actionUrl ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onOpen(item)}>View</button> : null}
+        {!archived && (item.status === "unread" || item.status === "overdue") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onRead(item.id)}>Read</button> : null}
+        {!archived && item.type === "revision" ? <button className="btn-base btn-success px-2 py-1 text-xs" onClick={() => onDone(item.id)}>Done</button> : null}
+        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onSnooze(item.id, 60)}>+1h</button> : null}
+        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onReschedule(item.id)}>Reschedule</button> : null}
+        {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onDismiss(item.id)}>Dismiss</button> : null}
+        {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onArchive(item.id)}>Archive</button> : null}
+        <button className="btn-base border-[color-mix(in_srgb,var(--accent-danger)_35%,transparent)] text-[var(--accent-danger)] hover:bg-[color-mix(in_srgb,var(--accent-danger)_10%,transparent)] px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Delete</button>
       </div>
     </article>
   );
