@@ -36,20 +36,20 @@ function TopicReminderAlarmPanel({
       <section className="w-full max-w-xl rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Clock-style topic scheduler</h2>
-          <button type="button" className="btn-neutral px-3 py-1.5 text-sm" onClick={onClose}>Close</button>
+          <button type="button" className="btn-base btn-neutral px-3 py-1.5 text-sm" onClick={onClose}>Close</button>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2">
           <button
             type="button"
-            className={`rounded-xl border px-3 py-2 text-sm ${mode === "reminder" ? "border-[var(--accent-info)] bg-[color-mix(in_srgb,var(--accent-info)_18%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}
+            className={`btn-base rounded-xl px-3 py-2 text-sm ${mode === "reminder" ? "btn-primary" : "btn-outline"}`}
             onClick={() => onModeChange("reminder")}
           >
             ⏰ Reminder
           </button>
           <button
             type="button"
-            className={`rounded-xl border px-3 py-2 text-sm ${mode === "alarm" ? "border-[var(--accent-danger)] bg-[color-mix(in_srgb,var(--accent-danger)_16%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}
+            className={`btn-base rounded-xl px-3 py-2 text-sm ${mode === "alarm" ? "btn-danger" : "btn-outline"}`}
             onClick={() => onModeChange("alarm")}
           >
             🔔 Alarm
@@ -88,7 +88,7 @@ function TopicReminderAlarmPanel({
 
         <button
           type="button"
-          className="btn-primary mt-4 w-full py-2"
+          className="btn-base btn-primary mt-4 w-full py-2"
           onClick={() => {
             if (!selectedTopicId || !scheduledFor) return;
             onSave({ topicId: selectedTopicId, scheduledFor, mode });
@@ -114,7 +114,7 @@ function TopicReminderAlarmPanel({
                   </p>
                   <p className="text-xs text-[var(--text-tertiary)]">{formatTime(item.scheduledFor)}</p>
                 </div>
-                <button type="button" className="btn-neutral px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Remove</button>
+                <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Remove</button>
               </div>
             ))
           )}

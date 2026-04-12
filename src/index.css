@@ -21,6 +21,10 @@
   --accent-warning: #e2b160;
   --accent-info: #70a7ff;
   --focus-ring: color-mix(in srgb, var(--accent-primary) 58%, transparent);
+  --btn-on-primary: #1f1405;
+  --btn-on-success: #062719;
+  --btn-on-danger: #2f080d;
+  --btn-on-warning: #2a1a05;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
@@ -53,6 +57,10 @@
   --accent-success: #2f855a;
   --accent-warning: #b7791f;
   --accent-info: #2563eb;
+  --btn-on-primary: #ffffff;
+  --btn-on-success: #ffffff;
+  --btn-on-danger: #ffffff;
+  --btn-on-warning: #ffffff;
 }
 
 html,
@@ -128,13 +136,27 @@ body {
 
 .btn-base {
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  border: 1px solid var(--btn-border, transparent);
+  background: var(--btn-bg, transparent);
+  color: var(--btn-text, var(--text-primary));
   padding: 8px 14px;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 120ms ease;
+  font-weight: 600;
+  line-height: 1.2;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
-.btn-base:hover { transform: translateY(-1px); }
+.btn-base:hover {
+  transform: translateY(-1px);
+  background: var(--btn-bg-hover, var(--btn-bg, transparent));
+  border-color: var(--btn-border-hover, var(--btn-border, transparent));
+}
+.btn-base:active {
+  transform: translateY(0);
+  background: var(--btn-bg-active, var(--btn-bg-hover, var(--btn-bg, transparent)));
+  border-color: var(--btn-border-active, var(--btn-border-hover, var(--btn-border, transparent)));
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.14);
+}
 .btn-base:focus-visible,
 .field-base:focus-visible,
 button:focus-visible,
@@ -142,38 +164,80 @@ a:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+.btn-base:disabled,
+.btn-base[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 1;
+  color: color-mix(in srgb, var(--text-secondary) 88%, transparent);
+  border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  box-shadow: none;
+  transform: none;
+}
 
 .btn-primary {
-  background: color-mix(in srgb, var(--accent-primary) 24%, var(--surface-elevated));
-  border-color: color-mix(in srgb, var(--accent-primary) 44%, transparent);
-  color: #fcedd1;
+  --btn-bg: var(--accent-primary);
+  --btn-bg-hover: var(--accent-primary-hover);
+  --btn-bg-active: color-mix(in srgb, var(--accent-primary-hover) 84%, black);
+  --btn-border: color-mix(in srgb, var(--accent-primary) 70%, black 14%);
+  --btn-border-hover: color-mix(in srgb, var(--accent-primary-hover) 72%, black 14%);
+  --btn-text: var(--btn-on-primary);
 }
-.btn-primary:hover { background: color-mix(in srgb, var(--accent-primary-hover) 28%, var(--surface-elevated)); }
 
 .btn-neutral {
-  border-color: var(--border-subtle);
-  background: var(--surface-elevated);
-  color: var(--text-primary);
+  --btn-bg: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
+  --btn-bg-hover: color-mix(in srgb, var(--surface-elevated) 82%, white 10%);
+  --btn-bg-active: color-mix(in srgb, var(--surface-elevated) 70%, white 14%);
+  --btn-border: color-mix(in srgb, var(--border-strong) 85%, transparent);
+  --btn-border-hover: var(--border-strong);
+  --btn-text: var(--text-primary);
 }
-.btn-neutral:hover { border-color: var(--border-strong); }
+.btn-secondary { --btn-bg: color-mix(in srgb, var(--surface-soft) 55%, var(--surface-elevated)); --btn-bg-hover: color-mix(in srgb, var(--surface-soft) 75%, var(--surface-elevated)); --btn-border: color-mix(in srgb, var(--border-strong) 78%, transparent); --btn-text: var(--text-primary); }
+.btn-outline {
+  --btn-bg: transparent;
+  --btn-bg-hover: color-mix(in srgb, var(--surface-soft) 65%, transparent);
+  --btn-bg-active: color-mix(in srgb, var(--surface-soft) 84%, transparent);
+  --btn-border: color-mix(in srgb, var(--border-strong) 94%, transparent);
+  --btn-border-hover: color-mix(in srgb, var(--border-strong) 100%, white 10%);
+  --btn-text: var(--text-primary);
+}
 
 .btn-ghost {
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-secondary);
+  --btn-bg: transparent;
+  --btn-bg-hover: color-mix(in srgb, var(--surface-soft) 90%, transparent);
+  --btn-bg-active: color-mix(in srgb, var(--surface-soft) 100%, transparent);
+  --btn-border: transparent;
+  --btn-border-hover: transparent;
+  --btn-text: var(--text-secondary);
 }
-.btn-ghost:hover { background: var(--surface-soft); color: var(--text-primary); }
+.btn-ghost:hover { color: var(--text-primary); }
 
 .btn-danger {
-  border-color: color-mix(in srgb, var(--accent-danger) 55%, transparent);
-  background: color-mix(in srgb, var(--accent-danger) 14%, var(--surface-elevated));
-  color: #ffd4d8;
+  --btn-bg: var(--accent-danger);
+  --btn-bg-hover: color-mix(in srgb, var(--accent-danger) 86%, black 14%);
+  --btn-bg-active: color-mix(in srgb, var(--accent-danger) 74%, black 20%);
+  --btn-border: color-mix(in srgb, var(--accent-danger) 78%, black 14%);
+  --btn-border-hover: color-mix(in srgb, var(--accent-danger) 90%, black 16%);
+  --btn-text: var(--btn-on-danger);
 }
 .btn-success {
-  border-color: color-mix(in srgb, var(--accent-success) 52%, transparent);
-  background: color-mix(in srgb, var(--accent-success) 16%, var(--surface-elevated));
-  color: #d5ffef;
+  --btn-bg: var(--accent-success);
+  --btn-bg-hover: color-mix(in srgb, var(--accent-success) 86%, black 12%);
+  --btn-bg-active: color-mix(in srgb, var(--accent-success) 75%, black 18%);
+  --btn-border: color-mix(in srgb, var(--accent-success) 78%, black 12%);
+  --btn-border-hover: color-mix(in srgb, var(--accent-success) 90%, black 14%);
+  --btn-text: var(--btn-on-success);
 }
+.btn-warning {
+  --btn-bg: var(--accent-warning);
+  --btn-bg-hover: color-mix(in srgb, var(--accent-warning) 86%, black 14%);
+  --btn-bg-active: color-mix(in srgb, var(--accent-warning) 74%, black 20%);
+  --btn-border: color-mix(in srgb, var(--accent-warning) 76%, black 14%);
+  --btn-border-hover: color-mix(in srgb, var(--accent-warning) 90%, black 16%);
+  --btn-text: var(--btn-on-warning);
+}
+.btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 10px; }
+.btn-icon { min-width: 36px; min-height: 36px; padding: 8px; display: inline-flex; align-items: center; justify-content: center; }
 
 .field-base {
   border-radius: var(--radius-md);

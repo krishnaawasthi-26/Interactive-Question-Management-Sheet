@@ -61,7 +61,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
           />
           {isLocked && <p className="text-sm text-[var(--accent-primary)]">{lockMessage}</p>}
           {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
-          <button type="submit" disabled={authLoading || isLocked} className="btn-base btn-primary w-full disabled:opacity-60">
+          <button type="submit" disabled={authLoading || isLocked} className="btn-base btn-primary w-full">
             {isLocked ? `Try again in ${lockSeconds}s` : authLoading ? "Checking account..." : "Login"}
           </button>
         </form>

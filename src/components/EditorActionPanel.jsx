@@ -11,7 +11,7 @@ function ActionButton({ action, variant = "neutral" }) {
       type="button"
       onClick={action.onClick}
       disabled={action.disabled}
-      className={`btn-base w-full text-left disabled:cursor-not-allowed disabled:opacity-45 ${variants[variant]}`}
+      className={`btn-base w-full text-left ${variants[variant]}`}
     >
       {action.label}
     </button>

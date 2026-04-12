@@ -25,7 +25,7 @@ function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchi
         {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onReschedule(item.id)}>Reschedule</button> : null}
         {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onDismiss(item.id)}>Dismiss</button> : null}
         {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onArchive(item.id)}>Archive</button> : null}
-        <button className="btn-base border-[color-mix(in_srgb,var(--accent-danger)_35%,transparent)] text-[var(--accent-danger)] hover:bg-[color-mix(in_srgb,var(--accent-danger)_10%,transparent)] px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Delete</button>
+        <button className="btn-base btn-danger px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Delete</button>
       </div>
     </article>
   );
