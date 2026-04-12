@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import TopicList from "../components/TopicList";
 import {
   fetchPublicProfile,
+  fetchViewerPublicProfile,
   fetchPublicSheet,
   fetchSharedProfile,
   followUser,
@@ -82,6 +83,14 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     return removeKeysRecursively(sharedSheet?.topics || [], disallowedKeys);
   };
 
+  const loadProfileForRoute = async (targetUsername) => {
+    if (!targetUsername) return null;
+    if (currentUser?.token) {
+      return fetchViewerPublicProfile(currentUser.token, targetUsername);
+    }
+    return fetchPublicProfile(targetUsername);
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -92,7 +101,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         }
 
         if (shareType === "public-profile") {
-          const data = await fetchPublicProfile(username);
+          const data = await loadProfileForRoute(username);
           setProfile(data);
           return;
         }
@@ -112,7 +121,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       }
     };
     load();
-  }, [setReadOnlySheet, shareId, shareType, sheetSlug, username]);
+  }, [currentUser?.token, setReadOnlySheet, shareId, shareType, sheetSlug, username]);
 
   useEffect(() => {
     if (!showRemixModal) return;
@@ -148,10 +157,13 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       { label: "LinkedIn", href: profile?.linkedinUrl },
       { label: "Resume", href: profile?.resumeUrl },
     ].filter((item) => item.href);
-    const isOwnProfile = currentUser?.username === profile?.username;
+    const isOwnProfile = Boolean(profile?.viewerIsOwner) || currentUser?.username === profile?.username;
     const followers = profile?.followers || [];
     const following = profile?.following || [];
-    const isFollowingProfile = followers.some((entry) => entry.username === currentUser?.username);
+    const isFollowingProfile = typeof profile?.viewerFollowsProfile === "boolean"
+      ? profile.viewerFollowsProfile
+      : followers.some((entry) => entry.username === currentUser?.username);
+    const profileFollowsViewer = Boolean(profile?.profileFollowsViewer);
     const publicSheets = profile?.sheets || [];
     const profileName = profile?.name || profile?.username || "Create Sheets user";
     const recentSheets = [...publicSheets]
@@ -196,6 +208,33 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                   )}
                 </div>
               </div>
+              {currentUser?.token && !isOwnProfile && (
+                <div className="flex flex-col items-end gap-2">
+                  {profileFollowsViewer && <span className="meta-text text-xs">Follows you</span>}
+                  <button
+                    className="btn-base btn-primary min-w-28"
+                    type="button"
+                    disabled={followPending}
+                    onClick={async () => {
+                      if (!profile?.username) return;
+                      setFollowPending(true);
+                      try {
+                        if (isFollowingProfile) {
+                          await unfollowUser(currentUser.token, profile.username);
+                        } else {
+                          await followUser(currentUser.token, profile.username);
+                        }
+                        const refreshed = await loadProfileForRoute(profile.username);
+                        setProfile(refreshed);
+                      } finally {
+                        setFollowPending(false);
+                      }
+                    }}
+                  >
+                    {followPending ? "Loading..." : isFollowingProfile ? "Unfollow" : "Follow"}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
@@ -237,30 +276,6 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               >
                 Copies: {totalCopyCount}
               </button>
-              {currentUser?.token && !isOwnProfile && (
-                <button
-                  className="btn-base btn-primary w-full px-3 py-2 text-left text-sm"
-                  type="button"
-                  disabled={followPending}
-                  onClick={async () => {
-                    if (!profile?.username) return;
-                    setFollowPending(true);
-                    try {
-                      if (isFollowingProfile) {
-                        await unfollowUser(currentUser.token, profile.username);
-                      } else {
-                        await followUser(currentUser.token, profile.username);
-                      }
-                      const refreshed = await fetchPublicProfile(profile.username);
-                      setProfile(refreshed);
-                    } finally {
-                      setFollowPending(false);
-                    }
-                  }}
-                >
-                  {followPending ? "Saving..." : isFollowingProfile ? "Unfollow" : "Follow"}
-                </button>
-              )}
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-4">

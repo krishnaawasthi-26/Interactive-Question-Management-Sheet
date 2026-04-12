@@ -191,6 +191,12 @@ public class ProfileController {
     return ResponseEntity.ok(profileShareService.getPublicProfile(username));
   }
 
+  @GetMapping("/view/{username}")
+  public ResponseEntity<Map<String, Object>> getPublicProfileForViewer(HttpServletRequest request, @PathVariable String username) {
+    String viewerUserId = currentUser.getUserId(request);
+    return ResponseEntity.ok(profileShareService.getPublicProfileForViewer(username, viewerUserId));
+  }
+
   @GetMapping("/public/{username}/{sheetSlug}")
   public ResponseEntity<Sheet> getPublicSheet(@PathVariable String username, @PathVariable String sheetSlug) {
     return ResponseEntity.ok(profileShareService.getPublicSheet(username, sheetSlug));

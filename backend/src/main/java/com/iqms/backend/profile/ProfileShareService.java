@@ -55,6 +55,10 @@ public class ProfileShareService {
   }
 
   public Map<String, Object> getPublicProfile(String username) {
+    return getPublicProfileForViewer(username, null);
+  }
+
+  public Map<String, Object> getPublicProfileForViewer(String username, String viewerUserId) {
     User user = userRepository
         .findByUsername(username.toLowerCase())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared profile not found."));
@@ -79,6 +83,18 @@ public class ProfileShareService {
         .toList();
 
     Map<String, Object> profile = buildPublicProfile(user, publicSheets.size());
+    if (viewerUserId != null) {
+      boolean viewerIsOwner = viewerUserId.equals(user.getId());
+      boolean viewerFollowsProfile = user.getFollowerUserIds() != null && user.getFollowerUserIds().contains(viewerUserId);
+      boolean profileFollowsViewer = userRepository
+          .findById(viewerUserId)
+          .map(viewer -> viewer.getFollowerUserIds() != null && viewer.getFollowerUserIds().contains(user.getId()))
+          .orElse(false);
+
+      profile.put("viewerIsOwner", viewerIsOwner);
+      profile.put("viewerFollowsProfile", viewerFollowsProfile);
+      profile.put("profileFollowsViewer", profileFollowsViewer);
+    }
     profile.put("sheets", sheets);
     return profile;
   }
