@@ -29,6 +29,8 @@ class SheetServiceTest {
   @Mock private SheetRepository sheetRepository;
   @Mock private UserRepository userRepository;
   @Mock private ActionQueueService actionQueueService;
+  @Mock private PremiumAccessService premiumAccessService;
+  @Mock private SheetCollaborationService collaborationService;
 
   @InjectMocks private SheetService sheetService;
 
@@ -44,6 +46,8 @@ class SheetServiceTest {
   @Test
   void createSheetUsesDefaultTitleWhenBlank() {
     when(sheetRepository.save(any(Sheet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(collaborationService.canView(any(), any())).thenReturn(true);
+    when(collaborationService.canEdit(any(), any())).thenReturn(true);
 
     Sheet created = sheetService.createSheet("owner-1", "   ");
 
@@ -59,8 +63,13 @@ class SheetServiceTest {
     sheet.setOwnerId("owner-1");
     sheet.setTitle("Old");
 
-    when(sheetRepository.findByIdAndOwnerId("sheet-1", "owner-1")).thenReturn(Optional.of(sheet));
+    when(sheetRepository.findById("sheet-1")).thenReturn(Optional.of(sheet));
+    com.iqms.backend.model.User owner = new com.iqms.backend.model.User();
+    owner.setId("owner-1");
+    when(premiumAccessService.findUser("owner-1")).thenReturn(owner);
     when(sheetRepository.save(any(Sheet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(collaborationService.canView(any(), any())).thenReturn(true);
+    when(collaborationService.canEdit(any(), any())).thenReturn(true);
 
     Sheet updated = sheetService.updateOwnedSheet(
         "owner-1",
@@ -92,7 +101,10 @@ class SheetServiceTest {
     Sheet sheet = new Sheet();
     sheet.setId("sheet-1");
     sheet.setOwnerId("owner-1");
-    when(sheetRepository.findByIdAndOwnerId("sheet-1", "owner-1")).thenReturn(Optional.of(sheet));
+    when(sheetRepository.findById("sheet-1")).thenReturn(Optional.of(sheet));
+    com.iqms.backend.model.User owner = new com.iqms.backend.model.User();
+    owner.setId("owner-1");
+    when(premiumAccessService.findUser("owner-1")).thenReturn(owner);
 
     sheetService.deleteOwnedSheet("owner-1", "sheet-1");
 

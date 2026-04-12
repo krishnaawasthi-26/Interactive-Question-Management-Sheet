@@ -25,7 +25,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             "/api/profile/**",
             "/api/sheets/**",
             "/api/premium/create-order",
-            "/api/premium/verify")
+            "/api/premium/verify",
+            "/api/premium/status",
+            "/api/teams/**")
         .excludePathPatterns(
             "/api/profile/shared/**",
             "/api/profile/public/**",
