@@ -24,7 +24,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
           <input type="text" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_-]+" disabled={authLoading} value={form.username} placeholder="Unique name (used in shareable URL)" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, username: event.target.value })); }} className="field-base w-full" />
           <input type="password" required minLength={6} disabled={authLoading} value={form.password} placeholder="Password" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, password: event.target.value })); }} className="field-base w-full" />
           {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
-          <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full disabled:opacity-60">{authLoading ? "Creating account..." : "Create account"}</button>
+          <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full">{authLoading ? "Creating account..." : "Create account"}</button>
         </form>
         <button type="button" disabled={authLoading} onClick={onGoToLogin} className="mt-4 text-sm text-[var(--accent-info)]">Already have an account? Login</button>
       </div>

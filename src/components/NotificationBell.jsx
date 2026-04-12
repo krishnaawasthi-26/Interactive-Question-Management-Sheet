@@ -70,8 +70,8 @@ function NotificationBell({ compact = false }) {
   const sections = useMemo(() => buildNotificationSections(notifications), [notifications]);
 
   const buttonClass = compact
-    ? "relative rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-sm"
-    : "relative flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm text-[var(--text-secondary)] hover:border-[var(--border-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]";
+    ? "btn-base btn-outline relative px-3 py-2 text-sm"
+    : "btn-base btn-ghost relative flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm";
 
   return (
     <div className="relative">

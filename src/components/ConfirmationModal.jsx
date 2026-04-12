@@ -30,7 +30,7 @@ function ConfirmationModal({
               type="button"
               onClick={action.onClick}
               disabled={isBusy || action.disabled}
-              className={`btn-base px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-45 ${toneClassByVariant[action.variant || "neutral"]}`}
+              className={`btn-base px-3 py-2 text-sm ${toneClassByVariant[action.variant || "neutral"]}`}
             >
               {action.label}
             </button>

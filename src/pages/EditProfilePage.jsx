@@ -40,7 +40,7 @@ function EditProfilePage({ theme, onThemeChange }) {
           <div className="rounded-lg border border-[var(--border-color)] p-3">
             {!emailVerificationId ? (
               <button
-                className="btn-base btn-primary disabled:opacity-60"
+                className="btn-base btn-primary"
                 disabled={isEmailLocked}
                 onClick={async () => {
                   const result = await requestEmailChangeOtp({ email });

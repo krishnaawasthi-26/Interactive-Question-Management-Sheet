@@ -123,7 +123,7 @@ function PremiumPage({ theme, onThemeChange }) {
           <article key={plan.id} className="panel-elevated rounded-xl p-5">
             <h2 className="text-xl font-semibold">{plan.name}</h2>
             <p className="mt-2 text-3xl font-bold">₹{((plan.price || 0) / 100).toFixed(2)}</p>
-            <button type="button" className="btn-primary mt-4 w-full py-2" onClick={() => buyPlan(plan.id)} disabled={busyPlan === plan.id}>
+            <button type="button" className="btn-base btn-primary mt-4 w-full py-2" onClick={() => buyPlan(plan.id)} disabled={busyPlan === plan.id}>
               {busyPlan === plan.id ? "Processing..." : "Buy Premium"}
             </button>
           </article>

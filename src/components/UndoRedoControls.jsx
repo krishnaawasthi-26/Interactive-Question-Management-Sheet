@@ -12,7 +12,7 @@ function UndoRedoControls() {
         type="button"
         onClick={undo}
         disabled={!canUndo}
-        className="rounded-md border border-gray-700 px-3 py-1 text-sm text-gray-200 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-base btn-neutral px-3 py-1 text-sm"
       >
         Undo
       </button>
@@ -20,7 +20,7 @@ function UndoRedoControls() {
         type="button"
         onClick={redo}
         disabled={!canRedo}
-        className="rounded-md border border-gray-700 px-3 py-1 text-sm text-gray-200 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-base btn-neutral px-3 py-1 text-sm"
       >
         Redo
       </button>
