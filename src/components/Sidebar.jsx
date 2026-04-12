@@ -29,7 +29,7 @@ function SidebarItem({ item, isOpen, active, onClick }) {
   return (
     <button
       type="button"
-      title={!isOpen ? item.label : undefined}
+      aria-label={item.label}
       onClick={onClick}
       className={`group relative flex w-full items-center rounded-xl border px-2.5 py-2.5 text-sm transition-all duration-200 ${
         isOpen ? "justify-start gap-3" : "justify-center"
@@ -43,6 +43,16 @@ function SidebarItem({ item, isOpen, active, onClick }) {
       <span className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
         {item.label}
       </span>
+
+      {!isOpen ? (
+        <span
+          role="tooltip"
+          aria-hidden="true"
+          className="pointer-events-none absolute left-[calc(100%+0.65rem)] top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface-elevated)_96%,black)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] opacity-0 shadow-xl transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+        >
+          {item.label}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -79,7 +89,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
   const sidebarWidth = useMemo(() => (isSidebarOpen ? "w-[250px]" : "w-[72px]"), [isSidebarOpen]);
 
   return (
-    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-hidden rounded-[22px] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_92%,transparent))] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
+    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-visible rounded-[22px] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_92%,transparent))] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
         <button
           type="button"
