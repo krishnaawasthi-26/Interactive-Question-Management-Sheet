@@ -17,7 +17,7 @@ function AppShell({
   children,
   contentClassName = "",
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div

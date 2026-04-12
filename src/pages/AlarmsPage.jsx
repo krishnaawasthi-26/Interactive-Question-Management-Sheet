@@ -22,6 +22,7 @@ function AlarmsPage({ theme, onThemeChange }) {
   const [scheduledFor, setScheduledFor] = useState("");
   const [recurrenceType, setRecurrenceType] = useState("none");
   const [recurrenceEvery, setRecurrenceEvery] = useState(1);
+  const [formMessage, setFormMessage] = useState("");
 
   const load = async () => {
     const data = await fetchNotifications(token, { type: "alarm", size: 100 });
@@ -40,17 +41,43 @@ function AlarmsPage({ theme, onThemeChange }) {
   }, [items]);
 
   const createReminder = async () => {
-    if (!title.trim() || !message.trim() || !scheduledFor) return;
-    const payload = {
-      title,
-      message,
-      scheduledFor: new Date(scheduledFor).toISOString(),
-      sourceType: "manual",
-    };
-    if (recurrenceType !== "none") payload.recurrence = { type: recurrenceType, every: Number(recurrenceEvery) || 1 };
-    await createAlarmNotification(token, payload);
-    setTitle(""); setMessage(""); setScheduledFor(""); setRecurrenceType("none");
-    load();
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setFormMessage("Please enter a title before creating a reminder.");
+      return;
+    }
+    if (!scheduledFor) {
+      setFormMessage("Please choose a date and time.");
+      return;
+    }
+
+    const scheduledInstant = new Date(scheduledFor);
+    if (Number.isNaN(scheduledInstant.getTime()) || scheduledInstant.getTime() <= Date.now()) {
+      setFormMessage("Pick a valid future date and time.");
+      return;
+    }
+
+    try {
+      const payload = {
+        title: trimmedTitle,
+        message: message.trim() || `Reminder for: ${trimmedTitle}`,
+        scheduledFor: scheduledInstant.toISOString(),
+        sourceType: "manual",
+      };
+      if (recurrenceType !== "none") {
+        payload.recurrence = { type: recurrenceType, every: Number(recurrenceEvery) || 1 };
+      }
+      await createAlarmNotification(token, payload);
+      setTitle("");
+      setMessage("");
+      setScheduledFor("");
+      setRecurrenceType("none");
+      setRecurrenceEvery(1);
+      setFormMessage("Reminder created successfully.");
+      load();
+    } catch (error) {
+      setFormMessage(error?.message || "Could not create reminder. Please try again.");
+    }
   };
 
   const ReminderRow = ({ item }) => <div className="rounded-xl border border-[var(--border-subtle)] p-3">
@@ -78,15 +105,16 @@ function AlarmsPage({ theme, onThemeChange }) {
           {quickPresets.map((preset) => <button key={preset.label} className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => setScheduledFor(preset.getDate().toISOString().slice(0, 16))}>{preset.label}</button>)}
         </div>
         <div className="grid gap-2 md:grid-cols-5">
-          <input className="field-base" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <input className="field-base" placeholder="Note" value={message} onChange={(e) => setMessage(e.target.value)} />
-          <input className="field-base" type="datetime-local" value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} />
-          <select className="field-base" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
+          <input className="field-base" placeholder="Title" value={title} onChange={(e) => { setTitle(e.target.value); setFormMessage(""); }} />
+          <input className="field-base" placeholder="Note (optional)" value={message} onChange={(e) => { setMessage(e.target.value); setFormMessage(""); }} />
+          <input className="field-base" type="datetime-local" value={scheduledFor} onChange={(e) => { setScheduledFor(e.target.value); setFormMessage(""); }} />
+          <select className="field-base" value={recurrenceType} onChange={(e) => { setRecurrenceType(e.target.value); setFormMessage(""); }}>
             <option value="none">No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
           </select>
           <button className="btn-base btn-success" onClick={createReminder}>Create reminder</button>
         </div>
         {recurrenceType !== "none" ? <input className="field-base mt-2 w-40" type="number" min="1" value={recurrenceEvery} onChange={(e) => setRecurrenceEvery(e.target.value)} /> : null}
+        {formMessage ? <p className="mt-2 text-sm text-[var(--text-secondary)]">{formMessage}</p> : null}
       </SurfaceCard>
 
       <SurfaceCard title="Overdue" description="Recover missed reminders quickly.">{groups.overdue.length ? <div className="space-y-3">{groups.overdue.map((item) => <ReminderRow key={item.id} item={item} />)}</div> : <p className="meta-text">No overdue reminders.</p>}</SurfaceCard>
