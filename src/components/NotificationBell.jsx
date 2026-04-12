@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { archiveNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
+import { getNotificationPermissionState, requestNotificationPermission, subscribeToPushIfPossible } from "../services/notifications";
 import { navigateTo, ROUTES } from "../services/routes";
-import { getNotificationPermissionState, requestNotificationPermission, showDueNowBrowserNotification, subscribeToPushIfPossible } from "../services/notifications";
+import { sortNotificationsLatestFirst } from "../services/reminderNotifications";
 import { useAuthStore } from "../store/authStore";
 import NotificationDrawer from "./NotificationDrawer";
 
@@ -13,21 +14,15 @@ function NotificationBell({ compact = false }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [permissionState, setPermissionState] = useState(() => getNotificationPermissionState());
-  const announcedDueRef = useRef(new Set());
 
   const loadAll = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
       const [items, countResponse] = await Promise.all([fetchNotifications(token, { size: 60 }), fetchUnreadCount(token)]);
-      const next = Array.isArray(items) ? items : [];
+      const next = sortNotificationsLatestFirst(Array.isArray(items) ? items : []);
       setNotifications(next);
       setUnreadCount(countResponse?.unreadCount ?? 0);
-      next.filter((item) => item.type === "revision" && item.status === "unread" && new Date(item.scheduledFor).getTime() <= Date.now()).forEach((item) => {
-        if (announcedDueRef.current.has(item.id)) return;
-        announcedDueRef.current.add(item.id);
-        showDueNowBrowserNotification({ ...item, link: item.actionUrl, revisionNumber: item.metadata?.revisionNumber, sheetTitle: item.metadata?.sheetTitle });
-      });
       setError("");
     } catch (loadErr) {
       setError(loadErr.message || "Failed to load notifications.");
