@@ -67,7 +67,7 @@ function PremiumPage({ theme, onThemeChange }) {
           key: order.razorpayKeyId,
           amount: order.amount,
           currency: order.currency,
-          name: "IQMS Premium",
+          name: "Create Sheets Premium",
           description: `${selectedPlan.name} premium plan`,
           order_id: order.orderId,
           prefill: {

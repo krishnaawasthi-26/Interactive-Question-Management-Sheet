@@ -90,7 +90,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
           ☰
         </button>
         <div className={`overflow-hidden whitespace-nowrap transition-all duration-200 ${isSidebarOpen ? "w-auto opacity-100" : "w-0 opacity-0"}`}>
-          <p className="eyebrow">IQMS</p>
+          <p className="eyebrow">Create Sheets</p>
           <p className="meta-text">DSA Productivity</p>
         </div>
       </div>

@@ -79,7 +79,7 @@ cp .env.example .env
 ```
 
 Variables:
-- `MONGODB_URI` (default example: `mongodb://localhost:27017/iqms`)
+- `MONGODB_URI` (default example: `mongodb://localhost:27017/create-sheets`)
 - `APP_AUTH_SECRET` (required for real deployments)
 - `RAZORPAY_KEY_ID` (Razorpay API key id, safe to share with frontend through backend response)
 - `RAZORPAY_KEY_SECRET` (Razorpay API secret, **keep only on backend/server env**)

@@ -153,7 +153,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     const following = profile?.following || [];
     const isFollowingProfile = followers.some((entry) => entry.username === currentUser?.username);
     const publicSheets = profile?.sheets || [];
-    const profileName = profile?.name || profile?.username || "IQMS user";
+    const profileName = profile?.name || profile?.username || "Create Sheets user";
     const recentSheets = [...publicSheets]
       .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
       .slice(0, 3);
@@ -428,7 +428,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                       {entry.sheetTitle ? (
                         <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
                       ) : (
-                        <p className="text-xs text-zinc-400">{entry.name ? entry.name : "IQMS user"}</p>
+                        <p className="text-xs text-zinc-400">{entry.name ? entry.name : "Create Sheets user"}</p>
                       )}
                     </div>
                   ))}

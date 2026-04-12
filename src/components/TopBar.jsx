@@ -5,7 +5,7 @@ function TopBar({ theme = "dark", onThemeChange, userLabel = "Account", actions 
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_20%,transparent),var(--surface))] text-sm shadow">📘</div>
           <div className="min-w-0">
-            <p className="eyebrow">IQMS Workspace</p>
+            <p className="eyebrow">Create Sheets Workspace</p>
             <p className="truncate text-sm text-[var(--text-secondary)]">Focused interview-prep operating system</p>
           </div>
         </div>

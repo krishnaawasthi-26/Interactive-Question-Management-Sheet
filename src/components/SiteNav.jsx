@@ -15,7 +15,7 @@ function SiteNav() {
     <>
       <nav className="panel mb-4 p-3 lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">IQMS</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">Create Sheets</p>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {primaryLinks.map((link) => {
@@ -38,7 +38,7 @@ function SiteNav() {
 
       <aside className="fixed bottom-6 left-6 top-6 z-40 hidden w-64 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 lg:block">
         <div className="mb-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">IQMS</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Create Sheets</p>
           <h1 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Question Sheets</h1>
         </div>
 
