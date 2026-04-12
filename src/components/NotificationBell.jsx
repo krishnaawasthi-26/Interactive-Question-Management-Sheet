@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { archiveNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
+import { archiveNotification, deleteNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { getNotificationPermissionState, requestNotificationPermission, subscribeToPushIfPossible } from "../services/notifications";
+import { buildNotificationSections } from "../services/notificationUtils";
 import { navigateTo, ROUTES } from "../services/routes";
 import { sortNotificationsLatestFirst } from "../services/reminderNotifications";
 import { useAuthStore } from "../store/authStore";
@@ -19,7 +20,7 @@ function NotificationBell({ compact = false }) {
     if (!token) return;
     setLoading(true);
     try {
-      const [items, countResponse] = await Promise.all([fetchNotifications(token, { size: 60 }), fetchUnreadCount(token)]);
+      const [items, countResponse] = await Promise.all([fetchNotifications(token, { size: 100 }), fetchUnreadCount(token)]);
       const next = sortNotificationsLatestFirst(Array.isArray(items) ? items : []);
       setNotifications(next);
       setUnreadCount(countResponse?.unreadCount ?? 0);
@@ -47,27 +48,26 @@ function NotificationBell({ compact = false }) {
   }, [permissionState, token]);
 
   const updateStatusOptimistic = (id, status) => setNotifications((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
+  const removeOptimistic = (id) => setNotifications((current) => current.filter((item) => item.id !== id));
+
   const onRead = async (id) => { updateStatusOptimistic(id, "read"); await markNotificationRead(token, id); loadAll(); };
   const onDone = async (id) => { updateStatusOptimistic(id, "completed"); await markNotificationDone(token, id); loadAll(); };
   const onDismiss = async (id) => { updateStatusOptimistic(id, "dismissed"); await dismissNotification(token, id); loadAll(); };
   const onArchive = async (id) => { updateStatusOptimistic(id, "archived"); await archiveNotification(token, id); loadAll(); };
+  const onDelete = async (id) => { removeOptimistic(id); await deleteNotification(token, id); loadAll(); };
   const onSnooze = async (id, mins) => { await snoozeNotification(token, id, mins); loadAll(); };
   const onMarkAllRead = async () => { await markAllNotificationsRead(token); loadAll(); };
+
   const onReschedule = async (id) => {
     const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
     if (!input) return;
     await rescheduleNotification(token, id, new Date(input).toISOString());
     loadAll();
   };
+
   const onEnablePermission = async () => setPermissionState(await requestNotificationPermission());
 
-  const sections = useMemo(() => ({
-    all: notifications,
-    platform: notifications.filter((n) => n.type === "platform"),
-    revision: notifications.filter((n) => n.type === "revision"),
-    alarm: notifications.filter((n) => n.type === "alarm"),
-    overdue: notifications.filter((n) => n.status === "overdue"),
-  }), [notifications]);
+  const sections = useMemo(() => buildNotificationSections(notifications), [notifications]);
 
   const buttonClass = compact
     ? "relative rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-sm"
@@ -92,6 +92,7 @@ function NotificationBell({ compact = false }) {
         onDone={onDone}
         onDismiss={onDismiss}
         onArchive={onArchive}
+        onDelete={onDelete}
         onSnooze={onSnooze}
         onReschedule={onReschedule}
         onMarkAllRead={onMarkAllRead}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
 import NotificationItemCard from "../components/ui/NotificationItemCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
-import { archiveNotification, dismissNotification, fetchNotificationPreferences, fetchNotifications, markAllNotificationsRead, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification, updateNotificationPreferences } from "../api/notificationApi";
+import { archiveNotification, deleteNotification, dismissNotification, fetchNotificationPreferences, fetchNotifications, markAllNotificationsRead, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification, updateNotificationPreferences } from "../api/notificationApi";
 import { navigateTo } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 
@@ -30,7 +30,7 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
   useEffect(() => { load().catch(() => setLoading(false)); }, [token, typeFilter, statusFilter]);
 
   const typeTabs = useMemo(() => ["all", "platform", "revision", "alarm"], []);
-  const statusTabs = useMemo(() => ["all", "unread", "due", "upcoming", "overdue", "completed"], []);
+  const statusTabs = useMemo(() => ["all", "unread", "due", "upcoming", "overdue", "completed", "archived"], []);
 
   const savePreference = async (patch) => {
     if (!token) return;
@@ -88,6 +88,7 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
               }}
               onDismiss={async (id) => { await dismissNotification(token, id); load(); }}
               onArchive={async (id) => { await archiveNotification(token, id); load(); }}
+              onDelete={async (id) => { await deleteNotification(token, id); setItems((current) => current.filter((entry) => entry.id !== id)); }}
             />
           ))}
           {!loading && items.length === 0 ? <div className="rounded-xl border border-dashed border-[var(--border-subtle)] p-8 text-center text-[var(--text-tertiary)]">No notifications found.</div> : null}
