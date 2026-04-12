@@ -50,6 +50,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const [scheduledTopicAlerts, setScheduledTopicAlerts] = useState([]);
 
   const currentUser = useAuthStore((state) => state.currentUser);
+  const logout = useAuthStore((state) => state.logout);
   const addTopic = useSheetStore((state) => state.addTopic);
   const loadSheetById = useSheetStore((state) => state.loadSheetById);
   const loadSheets = useSheetStore((state) => state.loadSheets);
@@ -350,12 +351,15 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       });
     } catch (error) {
       const isUnauthorized = error?.status === 401 || /unauthorized/i.test(error?.message || "");
+      if (isUnauthorized) {
+        logout();
+        navigateTo(ROUTES.LOGIN);
+        return;
+      }
       setActiveDialog({
         key: "topic-alert-save-error",
-        title: isUnauthorized ? "Unauthorized" : "Could not save reminder",
-        message: isUnauthorized
-          ? "Unauthorized when setting reminder. Please sign in again and retry."
-          : (error?.message || "Could not save reminder right now. Please try again."),
+        title: "Could not save reminder",
+        message: error?.message || "Could not save reminder right now. Please try again.",
         actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: () => setActiveDialog(null) }],
       });
     }
