@@ -25,6 +25,7 @@ function AlarmsPage({ theme, onThemeChange }) {
   const [recurrenceType, setRecurrenceType] = useState("none");
   const [recurrenceEvery, setRecurrenceEvery] = useState(1);
   const [formMessage, setFormMessage] = useState("");
+  const isSessionExpiredError = (error) => error?.status === 401;
 
   const load = async () => {
     if (!token) return;
@@ -33,7 +34,7 @@ function AlarmsPage({ theme, onThemeChange }) {
       const data = await fetchNotifications(token, { type: "alarm", size: 100 });
       setItems(Array.isArray(data) ? data : []);
     } catch (error) {
-      if (error?.status === 401 || /unauthorized/i.test(error?.message || "")) {
+      if (isSessionExpiredError(error)) {
         logout();
         navigateTo(ROUTES.LOGIN);
         return;
@@ -95,7 +96,7 @@ function AlarmsPage({ theme, onThemeChange }) {
       setFormMessage("Reminder created successfully.");
       load();
     } catch (error) {
-      if (error?.status === 401 || /unauthorized/i.test(error?.message || "")) {
+      if (isSessionExpiredError(error)) {
         logout();
         setFormMessage("Your session has expired. Please sign in again and retry.");
         navigateTo(ROUTES.LOGIN);
