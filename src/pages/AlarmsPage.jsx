@@ -76,6 +76,10 @@ function AlarmsPage({ theme, onThemeChange }) {
       setFormMessage("Reminder created successfully.");
       load();
     } catch (error) {
+      if (error?.status === 401 || /unauthorized/i.test(error?.message || "")) {
+        setFormMessage("Unauthorized when setting reminder. Please sign in again and retry.");
+        return;
+      }
       setFormMessage(error?.message || "Could not create reminder. Please try again.");
     }
   };
