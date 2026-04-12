@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PremiumAccessService {
+  private static final boolean FORCE_PREMIUM_FOR_ALL_USERS = true;
   public static final int FREE_TOPIC_LIMIT = 30;
   public static final int FREE_SUBTOPIC_LIMIT = 50;
   public static final int FREE_QUESTION_LIMIT = 100;
@@ -32,6 +33,8 @@ public class PremiumAccessService {
   }
 
   public boolean isPremiumActive(User user) {
+    if (FORCE_PREMIUM_FOR_ALL_USERS) return true;
+
     Instant now = Instant.now();
     Instant premiumUntil = user.getPremiumUntil();
     Instant trialUntil = user.getPremiumTrialEndsAt();

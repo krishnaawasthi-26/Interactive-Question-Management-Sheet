@@ -1,4 +1,7 @@
 export const isPremiumActive = (user) => {
+  const forcePremiumForAllUsers = true;
+  if (forcePremiumForAllUsers) return true;
+
   if (!user) return false;
 
   if (user.premiumActive) return true;

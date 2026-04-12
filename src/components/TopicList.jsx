@@ -40,6 +40,7 @@ function TopicList({
   const [resourceEditorByQuestion, setResourceEditorByQuestion] = useState({});
   const [resourceDraftByQuestion, setResourceDraftByQuestion] = useState({});
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
+  const [activeNotesPreview, setActiveNotesPreview] = useState(null);
   const normalizeText = (value) =>
     value.trim().toLowerCase().replace(/\s+/g, " ");
   const normalizedQuery = normalizeText(searchQuery);
@@ -488,7 +489,15 @@ function TopicList({
                                                                 {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Link</a>}
                                                                 {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Article</a>}
                                                                 {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Video</a>}
-                                                                {q.notes && <span className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Notes added</span>}
+                                                                {q.notes && (
+                                                                  <button
+                                                                    type="button"
+                                                                    onClick={() => setActiveNotesPreview({ questionText: q.text, notes: q.notes })}
+                                                                    className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
+                                                                  >
+                                                                    Notes
+                                                                  </button>
+                                                                )}
                                                               </div>
                                                             )}
 
@@ -629,6 +638,28 @@ function TopicList({
             setActiveAttempt(null);
           }}
         />
+      )}
+      {activeNotesPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 backdrop-blur-sm">
+          <div className="panel w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Problem Notes</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">{activeNotesPreview.questionText}</p>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto whitespace-pre-wrap rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-3 text-sm text-[var(--text-primary)]">
+              {activeNotesPreview.notes}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveNotesPreview(null)}
+                className="btn-base btn-neutral px-3 py-2 text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
