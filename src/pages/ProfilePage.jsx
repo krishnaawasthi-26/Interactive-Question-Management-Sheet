@@ -247,7 +247,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
                   {engagementViewer.users.map((entry, index) => (
                     <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="surface-card surface-card-elevated p-3 text-sm">
                       <p className="card-title">@{entry.username}</p>
-                      <p className="meta-text">{entry.sheetTitle ? `Sheet: ${entry.sheetTitle || "Untitled Sheet"}` : (entry.name || "IQMS user")}</p>
+                      <p className="meta-text">{entry.sheetTitle ? `Sheet: ${entry.sheetTitle || "Untitled Sheet"}` : (entry.name || "Create Sheets user")}</p>
                     </div>
                   ))}
                 </div>

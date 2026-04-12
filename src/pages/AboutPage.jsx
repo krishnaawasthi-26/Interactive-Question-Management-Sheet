@@ -18,11 +18,11 @@ const featureBlocks = [
 
 function AboutPage({ theme, onThemeChange }) {
   return (
-    <AppShell title="About Us" subtitle="Why IQMS exists and how it supports interview prep" theme={theme} onThemeChange={onThemeChange}>
+    <AppShell title="About Us" subtitle="Why Create Sheets exists and how it supports interview prep" theme={theme} onThemeChange={onThemeChange}>
       <div className="space-y-4">
         <SurfaceCard elevated title="Our Mission" description="Build a calm, reliable workspace for consistent interview preparation.">
           <p className="meta-text">
-            IQMS is designed for structured practice workflows where users can maintain evolving sheets, monitor progress, and keep focus on long-term improvement.
+            Create Sheets is designed for structured practice workflows where users can maintain evolving sheets, monitor progress, and keep focus on long-term improvement.
           </p>
         </SurfaceCard>
 
