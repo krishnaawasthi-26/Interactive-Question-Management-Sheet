@@ -4,6 +4,7 @@ import SurfaceCard from "../components/ui/SurfaceCard";
 import { archiveNotification, createAlarmNotification, dismissNotification, fetchNotifications, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { useAuthStore } from "../store/authStore";
 import { getRelativeTime } from "../services/notificationUtils";
+import { navigateTo, ROUTES } from "../services/routes";
 
 const quickPresets = [
   { label: "in 1 hour", getDate: () => new Date(Date.now() + 60 * 60 * 1000) },
@@ -16,6 +17,7 @@ const quickPresets = [
 function AlarmsPage({ theme, onThemeChange }) {
   const token = useAuthStore((s) => s.currentUser?.token);
   const userLabel = useAuthStore((s) => s.currentUser?.username || "Account");
+  const logout = useAuthStore((s) => s.logout);
   const [items, setItems] = useState([]);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -25,8 +27,19 @@ function AlarmsPage({ theme, onThemeChange }) {
   const [formMessage, setFormMessage] = useState("");
 
   const load = async () => {
-    const data = await fetchNotifications(token, { type: "alarm", size: 100 });
-    setItems(Array.isArray(data) ? data : []);
+    if (!token) return;
+
+    try {
+      const data = await fetchNotifications(token, { type: "alarm", size: 100 });
+      setItems(Array.isArray(data) ? data : []);
+    } catch (error) {
+      if (error?.status === 401 || /unauthorized/i.test(error?.message || "")) {
+        logout();
+        navigateTo(ROUTES.LOGIN);
+        return;
+      }
+      setFormMessage(error?.message || "Could not load reminders right now.");
+    }
   };
 
   useEffect(() => { if (token) load(); }, [token]);
@@ -57,6 +70,12 @@ function AlarmsPage({ theme, onThemeChange }) {
       return;
     }
 
+    if (!token) {
+      setFormMessage("Your session has expired. Please sign in again and retry.");
+      navigateTo(ROUTES.LOGIN);
+      return;
+    }
+
     try {
       const payload = {
         title: trimmedTitle,
@@ -77,7 +96,9 @@ function AlarmsPage({ theme, onThemeChange }) {
       load();
     } catch (error) {
       if (error?.status === 401 || /unauthorized/i.test(error?.message || "")) {
-        setFormMessage("Unauthorized when setting reminder. Please sign in again and retry.");
+        logout();
+        setFormMessage("Your session has expired. Please sign in again and retry.");
+        navigateTo(ROUTES.LOGIN);
         return;
       }
       setFormMessage(error?.message || "Could not create reminder. Please try again.");
