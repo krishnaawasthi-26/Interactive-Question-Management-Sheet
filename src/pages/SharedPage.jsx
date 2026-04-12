@@ -169,14 +169,19 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     const activityFeed = [...downloadedActivity, ...copiedActivity].slice(0, 20);
 
     const tabs = ["Sheets", "Activity", "Portfolio", "Stats"];
+    const cardClassName = "surface-card p-5";
+    const elevatedCardClassName = "surface-card surface-card-elevated p-4";
+    const statPillClassName = "btn-base btn-neutral w-full px-3 py-2 text-left text-sm";
+    const tabButtonBaseClassName = "btn-base rounded-lg px-4 py-2 text-sm font-medium";
+    const linkButtonClassName = "btn-base btn-neutral rounded-lg px-3 py-1 text-sm";
 
     return (
       <AppShell title={`@${profile?.username || "profile"}`} subtitle="Public profile view" theme={theme} onThemeChange={onThemeChange} userLabel={currentUser?.username || "Guest"}>
-        <div className="mx-auto max-w-6xl space-y-5 text-slate-800">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mx-auto max-w-6xl space-y-5 text-[var(--text-primary)]">
+          <section className={cardClassName}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-xl font-semibold text-sky-700">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-info)_16%,var(--surface-elevated))] text-xl font-semibold text-[color-mix(in_srgb,var(--accent-info)_62%,white)]">
                   {profileName
                     .split(" ")
                     .slice(0, 2)
@@ -184,10 +189,10 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                     .join("")}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-slate-900">{profileName}</h1>
-                  <p className="mt-1 text-sm text-slate-600">@{profile?.username || "unknown"}</p>
+                  <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{profileName}</h1>
+                  <p className="meta-text mt-1">@{profile?.username || "unknown"}</p>
                   {(profile?.institution || profile?.company) && (
-                    <p className="mt-1 text-sm text-slate-500">{[profile?.institution, profile?.company].filter(Boolean).join(" · ")}</p>
+                    <p className="meta-text mt-1">{[profile?.institution, profile?.company].filter(Boolean).join(" · ")}</p>
                   )}
                 </div>
               </div>
@@ -195,7 +200,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
 
             <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-5">
               <button
-                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
+                className={statPillClassName}
                 type="button"
                 onClick={() =>
                   setEngagementViewer({
@@ -207,7 +212,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 Followers: {profile?.followersCount ?? followers.length}
               </button>
               <button
-                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
+                className={statPillClassName}
                 type="button"
                 onClick={() =>
                   setEngagementViewer({
@@ -219,14 +224,14 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 Following: {profile?.followingCount ?? following.length}
               </button>
               <button
-                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
+                className={statPillClassName}
                 type="button"
                 onClick={() => setEngagementViewer({ title: "Downloaded by", users: allDownloadedUsers })}
               >
                 Downloads: {totalDownloadCount}
               </button>
               <button
-                className="rounded-lg border border-slate-200 px-3 py-2 text-left text-slate-700 hover:border-sky-300 hover:bg-sky-50"
+                className={statPillClassName}
                 type="button"
                 onClick={() => setEngagementViewer({ title: "Copied by", users: allCopiedUsers })}
               >
@@ -234,7 +239,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               </button>
               {currentUser?.token && !isOwnProfile && (
                 <button
-                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-left text-blue-700 hover:bg-blue-100"
+                  className="btn-base btn-primary w-full px-3 py-2 text-left text-sm"
                   type="button"
                   disabled={followPending}
                   onClick={async () => {
@@ -258,13 +263,13 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               )}
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-4">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   type="button"
-                  className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                    tab === activeProfileTab ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                  className={`${tabButtonBaseClassName} ${
+                    tab === activeProfileTab ? "btn-primary text-white" : "btn-ghost text-[var(--text-secondary)]"
                   }`}
                   onClick={() => setActiveProfileTab(tab)}
                 >
@@ -277,16 +282,16 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
           {activeProfileTab === "Sheets" && (
             <section className="grid gap-5 lg:grid-cols-[2fr_1fr]">
               <div className="space-y-5">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold text-slate-900">Recently updated sheets</h2>
+                <div className={cardClassName}>
+                  <h2 className="section-title text-lg">Recently updated sheets</h2>
                   {recentSheets.length === 0 ? (
-                    <p className="mt-3 text-sm text-slate-500">No public sheets yet.</p>
+                    <p className="meta-text mt-3">No public sheets yet.</p>
                   ) : (
                     <div className="mt-4 grid gap-3 md:grid-cols-3">
                       {recentSheets.map((sheet) => (
-                        <div key={sheet.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="font-medium text-slate-800">{sheet.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">
+                        <div key={sheet.id} className={elevatedCardClassName}>
+                          <p className="card-title">{sheet.title}</p>
+                          <p className="meta-text mt-1 text-xs">
                             {sheet.updatedAt ? new Date(sheet.updatedAt).toLocaleDateString() : "No update date"}
                           </p>
                         </div>
@@ -295,21 +300,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold text-slate-900">Public sheets</h2>
+                <div className={cardClassName}>
+                  <h2 className="section-title text-lg">Public sheets</h2>
                   <div className="mt-4 space-y-2">
                     {publicSheets.length === 0 ? (
-                      <p className="text-sm text-slate-500">No public sheets shared yet.</p>
+                      <p className="meta-text">No public sheets shared yet.</p>
                     ) : (
                       publicSheets.map((sheet) => (
-                        <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3" key={sheet.id}>
-                          <a href={`#/shared/sheet/${sheet.shareId}`} className="font-medium text-slate-800 underline-offset-2 hover:underline">
+                        <div className="surface-card surface-card-elevated flex items-center justify-between gap-3 p-3" key={sheet.id}>
+                          <a href={`#/shared/sheet/${sheet.shareId}`} className="card-title underline-offset-2 hover:underline">
                             {sheet.title}
                           </a>
                           {profile?.username && (
                             <a
                               href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
-                              className="text-sm text-slate-500 underline-offset-2 hover:text-blue-600 hover:underline"
+                              className="text-sm text-[var(--text-secondary)] underline-offset-2 hover:text-[var(--accent-info)] hover:underline"
                             >
                               Open clean URL
                             </a>
@@ -322,24 +327,24 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               </div>
 
               <aside>
-                <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50 via-white to-sky-100 p-5 shadow-sm">
-                  <p className="text-sm text-slate-600">Profile overview</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">{profile?.totalSheets ?? publicSheets.length} public sheets</p>
-                  <p className="mt-1 text-sm text-slate-600">{totalDownloadCount} total downloads · {totalCopyCount} total copies</p>
+                <div className={`${cardClassName} bg-[linear-gradient(145deg,color-mix(in_srgb,var(--accent-info)_12%,var(--surface-elevated)),color-mix(in_srgb,var(--surface)_90%,transparent))]`}>
+                  <p className="meta-text text-sm">Profile overview</p>
+                  <p className="section-title mt-2 text-lg">{profile?.totalSheets ?? publicSheets.length} public sheets</p>
+                  <p className="meta-text mt-1">{totalDownloadCount} total downloads · {totalCopyCount} total copies</p>
                 </div>
               </aside>
             </section>
           )}
 
           {activeProfileTab === "Activity" && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900">Recent activity</h2>
+            <section className={cardClassName}>
+              <h2 className="section-title text-lg">Recent activity</h2>
               {activityFeed.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No public engagement recorded yet.</p>
+                <p className="meta-text mt-3">No public engagement recorded yet.</p>
               ) : (
-                <ul className="mt-4 space-y-2 text-sm text-slate-700">
+                <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
                   {activityFeed.map((activity) => (
-                    <li key={activity.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <li key={activity.id} className={elevatedCardClassName}>
                       {activity.text}
                     </li>
                   ))}
@@ -349,21 +354,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
           )}
 
           {activeProfileTab === "Portfolio" && (
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bio</h2>
-              {profile?.bio ? <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{profile.bio}</p> : <p className="mt-2 text-sm text-slate-500">No bio shared yet.</p>}
+            <section className={cardClassName}>
+              <h2 className="caption-text text-sm">Bio</h2>
+              {profile?.bio ? <p className="meta-text mt-2 whitespace-pre-wrap text-sm">{profile.bio}</p> : <p className="meta-text mt-2 text-sm">No bio shared yet.</p>}
               {(profile?.institution || profile?.company) && (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {profile?.institution && (
-                    <div className="rounded-md border border-slate-200 px-3 py-2">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Institution</p>
-                      <p className="text-slate-700">{profile.institution}</p>
+                    <div className={elevatedCardClassName}>
+                      <p className="caption-text text-xs">Institution</p>
+                      <p className="meta-text text-sm text-[var(--text-primary)]">{profile.institution}</p>
                     </div>
                   )}
                   {profile?.company && (
-                    <div className="rounded-md border border-slate-200 px-3 py-2">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">Company</p>
-                      <p className="text-slate-700">{profile.company}</p>
+                    <div className={elevatedCardClassName}>
+                      <p className="caption-text text-xs">Company</p>
+                      <p className="meta-text text-sm text-[var(--text-primary)]">{profile.company}</p>
                     </div>
                   )}
                 </div>
@@ -376,7 +381,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                       href={link.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-slate-200 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
+                      className={linkButtonClassName}
                     >
                       {link.label}
                     </a>
@@ -394,9 +399,9 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 { label: "Downloads", value: totalDownloadCount },
                 { label: "Copies", value: totalCopyCount },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">{stat.label}</p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{stat.value}</p>
+                <div key={stat.label} className={cardClassName}>
+                  <p className="caption-text text-xs">{stat.label}</p>
+                  <p className="section-title mt-2 text-2xl">{stat.value}</p>
                 </div>
               ))}
             </section>
