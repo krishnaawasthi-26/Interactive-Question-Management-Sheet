@@ -30,11 +30,14 @@ public class CreatorDiscoveryService {
             b.getFollowerUserIds() == null ? 0 : b.getFollowerUserIds().size(),
             a.getFollowerUserIds() == null ? 0 : a.getFollowerUserIds().size()))
         .limit(20)
-        .map(user -> Map.of(
-            "username", user.getUsername(),
-            "name", user.getName() == null ? user.getUsername() : user.getName(),
-            "bio", user.getBio() == null ? "" : user.getBio(),
-            "followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size()))
+        .map(user -> {
+          Map<String, Object> row = new LinkedHashMap<>();
+          row.put("username", user.getUsername());
+          row.put("name", user.getName() == null ? user.getUsername() : user.getName());
+          row.put("bio", user.getBio() == null ? "" : user.getBio());
+          row.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
+          return row;
+        })
         .toList();
 
     List<Map<String, Object>> trendingSheets = publicSheets.stream()
