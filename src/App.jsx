@@ -19,6 +19,7 @@ import SharedPage from "./pages/SharedPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
 import { ProtectedRoute, PublicOnlyRoute } from "./components/routing/ProtectedRoute";
+import ReminderNotificationCenter from "./components/ReminderNotificationCenter";
 import { getUserProfileRoute, ROUTES } from "./services/routes";
 import { useAuthStore } from "./store/authStore";
 
@@ -88,6 +89,15 @@ function PublicProfileRoute({ theme, onThemeChange }) {
   return <SharedPage shareType="public-profile" username={username} theme={theme} onThemeChange={onThemeChange} />;
 }
 
+function ProtectedAppLayout() {
+  return (
+    <>
+      <ReminderNotificationCenter />
+      <ProtectedRoute />
+    </>
+  );
+}
+
 function OwnProfileRedirectRoute() {
   const currentUser = useAuthStore((state) => state.currentUser);
   return <Navigate to={getUserProfileRoute(currentUser?.username)} replace />;
@@ -140,7 +150,7 @@ function App() {
       <Route path={`${ROUTES.PROFILE}/:username/:sheetSlug`} element={<PublicSheetRoute theme={theme} onThemeChange={setTheme} />} />
       <Route path={`${ROUTES.PROFILE}/:username`} element={<UserProfileRoute theme={theme} onThemeChange={setTheme} />} />
 
-      <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedAppLayout />}>
         <Route path={ROUTES.LEARNING_INSIGHTS} element={<LearningInsightsPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PREMIUM} element={<PremiumPage theme={theme} onThemeChange={setTheme} />} />
         <Route path={ROUTES.PUBLIC_SHEETS} element={<PublicSheetsPage theme={theme} onThemeChange={setTheme} />} />
