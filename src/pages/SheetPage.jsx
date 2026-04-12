@@ -82,6 +82,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const focusProblemId = new URLSearchParams(window.location.search).get("problemId");
   const topicAlertStorageKey = `iqms-topic-alerts:${sheetId || "sheet-index"}`;
   const premiumActive = isPremiumActive(currentUser);
+  const isSessionExpiredError = (error) => error?.status === 401;
 
   useEffect(() => {
     if (!sheetId || !currentUser?.token) return;
@@ -350,8 +351,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         actionUrl: sheetId ? `/app/${sheetId}` : "/app",
       });
     } catch (error) {
-      const isUnauthorized = error?.status === 401 || /unauthorized/i.test(error?.message || "");
-      if (isUnauthorized) {
+      if (isSessionExpiredError(error)) {
         logout();
         navigateTo(ROUTES.LOGIN);
         return;
