@@ -337,7 +337,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       },
     ]);
 
-    if (currentUser?.token) {
+    if (!currentUser?.token) return;
+
+    try {
       await createAlarmNotification(currentUser.token, {
         title: `${mode === "alarm" ? "Alarm" : "Reminder"}: ${topic.title || "Topic"}`,
         message: `Time for ${topic.title || "topic"} in ${sheetTitle || "your sheet"}.`,
@@ -345,6 +347,16 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         sourceType: "topic",
         sourceId: topicId,
         actionUrl: sheetId ? `/app/${sheetId}` : "/app",
+      });
+    } catch (error) {
+      const isUnauthorized = error?.status === 401 || /unauthorized/i.test(error?.message || "");
+      setActiveDialog({
+        key: "topic-alert-save-error",
+        title: isUnauthorized ? "Unauthorized" : "Could not save reminder",
+        message: isUnauthorized
+          ? "Unauthorized when setting reminder. Please sign in again and retry."
+          : (error?.message || "Could not save reminder right now. Please try again."),
+        actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: () => setActiveDialog(null) }],
       });
     }
   };
