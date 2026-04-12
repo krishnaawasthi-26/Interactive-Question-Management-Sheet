@@ -274,6 +274,8 @@ public class ProfileController {
     payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
     payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
     payload.put("premiumTrialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());
+    payload.put("planTier", user.getPlanTier());
+    payload.put("subscriptionStatus", user.getSubscriptionStatus());
     payload.put("followers", mapUsersById(user.getFollowerUserIds()));
     payload.put("following", mapUsersById(user.getFollowingUserIds()));
     payload.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());

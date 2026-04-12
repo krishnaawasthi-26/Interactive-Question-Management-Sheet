@@ -1,12 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
-import { createPremiumOrder, verifyPremiumPayment } from "../api/premiumApi";
+import { createPremiumOrder, fetchPremiumPlans, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
-
-const plans = [
-  { id: "monthly", name: "Monthly", price: "₹1", amountInPaise: 100 },
-  { id: "yearly", name: "Yearly", price: "₹1", amountInPaise: 100 },
-];
 
 const loadRazorpayCheckoutScript = () =>
   new Promise((resolve, reject) => {
@@ -40,6 +35,19 @@ function PremiumPage({ theme, onThemeChange }) {
   const currentUser = useAuthStore((state) => state.currentUser);
   const [busyPlan, setBusyPlan] = useState(null);
   const [message, setMessage] = useState("");
+  const [plans, setPlans] = useState([]);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const payload = await fetchPremiumPlans();
+        setPlans(payload?.plans || []);
+      } catch {
+        setMessage("Unable to load plans.");
+      }
+    };
+    loadPlans();
+  }, []);
 
   const buyPlan = async (planId) => {
     if (!currentUser?.token) return;
@@ -52,14 +60,13 @@ function PremiumPage({ theme, onThemeChange }) {
       }
 
       await loadRazorpayCheckoutScript();
-
       const order = await createPremiumOrder(currentUser.token, planId);
 
       await new Promise((resolve, reject) => {
         const razorpay = new window.Razorpay({
           key: order.razorpayKeyId,
-          amount: order.amount ?? selectedPlan.amountInPaise,
-          currency: order.currency ?? "INR",
+          amount: order.amount,
+          currency: order.currency,
           name: "IQMS Premium",
           description: `${selectedPlan.name} premium plan`,
           order_id: order.orderId,
@@ -105,16 +112,17 @@ function PremiumPage({ theme, onThemeChange }) {
   return (
     <AppShell
       title="Premium Plans"
-      subtitle="Unlock reminders, analytics, and advanced editing features"
+      subtitle="Unlock advanced analytics, AI, collaboration, and classroom growth"
       theme={theme}
       onThemeChange={onThemeChange}
       userLabel={currentUser?.username || "Account"}
     >
+      {plans.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">Loading plans...</p> : null}
       <div className="grid gap-4 md:grid-cols-2">
         {plans.map((plan) => (
           <article key={plan.id} className="panel-elevated rounded-xl p-5">
             <h2 className="text-xl font-semibold">{plan.name}</h2>
-            <p className="mt-2 text-3xl font-bold">{plan.price}</p>
+            <p className="mt-2 text-3xl font-bold">₹{((plan.price || 0) / 100).toFixed(2)}</p>
             <button type="button" className="btn-primary mt-4 w-full py-2" onClick={() => buyPlan(plan.id)} disabled={busyPlan === plan.id}>
               {busyPlan === plan.id ? "Processing..." : "Buy Premium"}
             </button>

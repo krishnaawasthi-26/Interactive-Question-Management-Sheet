@@ -42,6 +42,8 @@ public class ProfileShareService {
           sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
           sharedSheet.put("downloadedByUsernames", sheet.getDownloadedByUsernames());
           sharedSheet.put("copiedByUsernames", sheet.getCopiedByUsernames());
+          sharedSheet.put("parentSheetId", sheet.getParentSheetId());
+          sharedSheet.put("remixSourceOwnerId", sheet.getRemixSourceOwnerId());
           return sharedSheet;
         })
         .toList();
@@ -70,6 +72,8 @@ public class ProfileShareService {
           sharedSheet.put("updatedAt", sheet.getUpdatedAt() == null ? null : sheet.getUpdatedAt().toString());
           sharedSheet.put("downloadedByUsernames", sheet.getDownloadedByUsernames());
           sharedSheet.put("copiedByUsernames", sheet.getCopiedByUsernames());
+          sharedSheet.put("parentSheetId", sheet.getParentSheetId());
+          sharedSheet.put("remixSourceOwnerId", sheet.getRemixSourceOwnerId());
           return sharedSheet;
         })
         .toList();
@@ -100,6 +104,8 @@ public class ProfileShareService {
 
   private Map<String, Object> buildPublicProfile(User user, int totalSheets) {
     Map<String, Object> profile = new LinkedHashMap<>();
+    int totalViews = sheetService.listSheetsForOwner(user.getId()).stream().mapToInt(sheet -> sheet.getDownloadedByUsernames() == null ? 0 : sheet.getDownloadedByUsernames().size()).sum();
+    int totalCopies = sheetService.listSheetsForOwner(user.getId()).stream().mapToInt(sheet -> sheet.getCopiedByUsernames() == null ? 0 : sheet.getCopiedByUsernames().size()).sum();
     profile.put("name", user.getName());
     profile.put("username", user.getUsername());
     profile.put("bio", user.getBio());
@@ -114,6 +120,8 @@ public class ProfileShareService {
     profile.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
     profile.put("followingCount", user.getFollowingUserIds() == null ? 0 : user.getFollowingUserIds().size());
     profile.put("copiedSheetsCount", user.getCopiedSheetIds() == null ? 0 : user.getCopiedSheetIds().size());
+    profile.put("creatorTotalViews", totalViews);
+    profile.put("creatorTotalCopies", totalCopies);
     return profile;
   }
 

@@ -26,8 +26,13 @@ public class Sheet {
   private Instant updatedAt;
   private boolean isPublic;
   private boolean isArchived;
+  private String visibility = "private";
+  private boolean commentsEnabled = true;
+  private String parentSheetId;
+  private String remixSourceOwnerId;
   private List<String> downloadedByUsernames = new ArrayList<>();
   private List<String> copiedByUsernames = new ArrayList<>();
+  private List<Collaborator> collaborators = new ArrayList<>();
 
   private List<Map<String, Object>> topics = new ArrayList<>();
 
@@ -57,4 +62,27 @@ public class Sheet {
   public void setDownloadedByUsernames(List<String> downloadedByUsernames) { this.downloadedByUsernames = downloadedByUsernames; }
   public List<String> getCopiedByUsernames() { return copiedByUsernames; }
   public void setCopiedByUsernames(List<String> copiedByUsernames) { this.copiedByUsernames = copiedByUsernames; }
+  public String getVisibility() { return visibility; }
+  public void setVisibility(String visibility) { this.visibility = visibility; }
+  public boolean isCommentsEnabled() { return commentsEnabled; }
+  public void setCommentsEnabled(boolean commentsEnabled) { this.commentsEnabled = commentsEnabled; }
+  public String getParentSheetId() { return parentSheetId; }
+  public void setParentSheetId(String parentSheetId) { this.parentSheetId = parentSheetId; }
+  public String getRemixSourceOwnerId() { return remixSourceOwnerId; }
+  public void setRemixSourceOwnerId(String remixSourceOwnerId) { this.remixSourceOwnerId = remixSourceOwnerId; }
+  public List<Collaborator> getCollaborators() { return collaborators; }
+  public void setCollaborators(List<Collaborator> collaborators) { this.collaborators = collaborators == null ? new ArrayList<>() : collaborators; }
+
+  public static class Collaborator {
+    private String userId;
+    private String role;
+    private Instant invitedAt;
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public Instant getInvitedAt() { return invitedAt; }
+    public void setInvitedAt(Instant invitedAt) { this.invitedAt = invitedAt; }
+  }
 }

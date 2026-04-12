@@ -43,6 +43,8 @@ public class User {
   private Set<String> copiedSheetIds = new LinkedHashSet<>();
   private Instant premiumUntil;
   private Instant premiumTrialEndsAt;
+  private String planTier = "free";
+  private String subscriptionStatus = "active";
 
   public String getId() {
     return id;
@@ -226,5 +228,21 @@ public class User {
 
   public void setPremiumTrialEndsAt(Instant premiumTrialEndsAt) {
     this.premiumTrialEndsAt = premiumTrialEndsAt;
+  }
+
+  public String getPlanTier() {
+    return planTier;
+  }
+
+  public void setPlanTier(String planTier) {
+    this.planTier = planTier;
+  }
+
+  public String getSubscriptionStatus() {
+    return subscriptionStatus;
+  }
+
+  public void setSubscriptionStatus(String subscriptionStatus) {
+    this.subscriptionStatus = subscriptionStatus;
   }
 }

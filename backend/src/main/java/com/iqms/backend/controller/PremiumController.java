@@ -50,9 +50,21 @@ public class PremiumController {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("currency", "INR");
     payload.put("plans", new Object[] {
-        Map.of("id", "monthly", "name", "Monthly", "price", 1),
-        Map.of("id", "yearly", "name", "Yearly", "price", 1),
+        Map.of("id", "monthly", "name", "Monthly", "price", 9900),
+        Map.of("id", "yearly", "name", "Yearly", "price", 79900),
     });
+    return ResponseEntity.ok(payload);
+  }
+
+  @GetMapping("/status")
+  public ResponseEntity<Map<String, Object>> status(HttpServletRequest request) {
+    User user = premiumAccessService.findUser(currentUser.getUserId(request));
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
+    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
+    payload.put("trialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());
+    payload.put("planTier", user.getPlanTier());
+    payload.put("subscriptionStatus", user.getSubscriptionStatus());
     return ResponseEntity.ok(payload);
   }
 
@@ -167,6 +179,8 @@ public class PremiumController {
 
     user.setPremiumUntil(nextPremiumUntil);
     user.setPremiumTrialEndsAt(null);
+    user.setPlanTier("premium");
+    user.setSubscriptionStatus("active");
     userRepository.save(user);
 
   }
@@ -177,10 +191,10 @@ public class PremiumController {
     }
     String normalized = plan.toLowerCase(Locale.ROOT);
     if ("monthly".equals(normalized)) {
-      return new PlanInfo("monthly", "Monthly", 100, 30);
+      return new PlanInfo("monthly", "Monthly", 9900, 30);
     }
     if ("yearly".equals(normalized)) {
-      return new PlanInfo("yearly", "Yearly", 100, 365);
+      return new PlanInfo("yearly", "Yearly", 79900, 365);
     }
     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported plan.");
   }

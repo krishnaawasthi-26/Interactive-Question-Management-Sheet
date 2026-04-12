@@ -1,8 +1,6 @@
 export const isPremiumActive = (user) => {
   if (!user) return false;
 
-  // Testing mode: treat every signed-in username as premium.
-  if (typeof user.username === "string" && user.username.trim()) return true;
   if (user.premiumActive) return true;
 
   const now = Date.now();
