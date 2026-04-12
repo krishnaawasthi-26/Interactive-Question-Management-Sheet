@@ -24,6 +24,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         .addPathPatterns(
             "/api/profile/**",
             "/api/sheets/**",
+            "/api/notifications/**",
+            "/api/notification-preferences/**",
             "/api/premium/create-order",
             "/api/premium/verify",
             "/api/premium/status",
