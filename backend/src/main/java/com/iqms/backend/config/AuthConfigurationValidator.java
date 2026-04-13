@@ -42,10 +42,7 @@ public class AuthConfigurationValidator {
         errors.add("APP_MAIL_PASSWORD is missing.");
       }
       if (mailProperties.getFromAddress().isBlank()) {
-        errors.add("APP_MAIL_FROM_ADDRESS is missing.");
-      }
-      if (mailProperties.getFromName().isBlank()) {
-        errors.add("APP_MAIL_FROM_NAME is missing.");
+        errors.add("APP_MAIL_FROM is missing.");
       }
     }
 
