@@ -2,7 +2,6 @@ package com.iqms.backend.config.properties;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -12,27 +11,23 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "app.mail")
 public class MailProperties {
 
-  @NotBlank(message = "APP_MAIL_HOST is required")
   private String host;
 
   @Min(value = 1, message = "APP_MAIL_PORT must be between 1 and 65535")
   @Max(value = 65535, message = "APP_MAIL_PORT must be between 1 and 65535")
   private int port = 587;
 
-  @NotBlank(message = "APP_MAIL_USERNAME is required")
   private String username;
 
-  @NotBlank(message = "APP_MAIL_PASSWORD is required")
   private String password;
 
-  @NotBlank(message = "APP_MAIL_FROM_ADDRESS is required")
   private String fromAddress;
 
-  @NotBlank(message = "APP_MAIL_FROM_NAME is required")
   private String fromName;
 
   private boolean auth = true;
   private boolean starttls = true;
+  private boolean enabled = false;
 
   public String getHost() {
     return host;
@@ -96,5 +91,13 @@ public class MailProperties {
 
   public void setStarttls(boolean starttls) {
     this.starttls = starttls;
+  }
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 }
