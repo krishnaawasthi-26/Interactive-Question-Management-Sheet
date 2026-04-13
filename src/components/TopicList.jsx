@@ -8,9 +8,11 @@ function TopicList({
   searchQuery = "",
   onlyExactMatch = false,
   allowProgressToggle = true,
+  allowReorder = true,
   focusProblemId = null,
   premiumActive = false,
   onPremiumLocked,
+  onRequireCopy,
 }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
@@ -78,6 +80,7 @@ function TopicList({
     setExpandedSubtopics({ ...expandedSubtopics, [id]: !expandedSubtopics[id] });
 
   const handleDragEnd = (result) => {
+    if (!allowReorder || !isEditing) return;
     const { source, destination, type } = result;
     if (!destination) return;
 
@@ -120,7 +123,10 @@ function TopicList({
   };
 
   const handleToggleProgress = (topicId, subId, question, topicTitle, subTopicTitle) => {
-    if (!allowProgressToggle) return;
+    if (!allowProgressToggle) {
+      onRequireCopy?.();
+      return;
+    }
     if (!premiumActive) {
       onPremiumLocked?.("Attempt duration and reminder features are premium.");
       return;
@@ -180,13 +186,14 @@ function TopicList({
                 key={topic.id}
                 draggableId={topic.id.toString()}
                 index={tIndex}
+                isDragDisabled={!isEditing || !allowReorder}
               >
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="cursor-grab active:cursor-grabbing rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55"
+                    className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55`}
                   >
                     {/* Topic */}
                     <div className="mb-1.5 flex items-center justify-between gap-3">
@@ -241,7 +248,7 @@ function TopicList({
                       )}
                     </div>
 
-                    {(expandedTopics[topic.id] || shouldExpandAll || !isEditing) && (
+                    {(expandedTopics[topic.id] || shouldExpandAll) && (
                       <>
                         {isEditing && (
                           <div className="mb-2 mt-2 flex gap-2">
@@ -285,13 +292,13 @@ function TopicList({
                               className="space-y-2 pl-4"
                             >
                               {topic.subTopics.map((sub, sIndex) => (
-                                <Draggable key={sub.id} draggableId={sub.id.toString()} index={sIndex}>
+                                <Draggable key={sub.id} draggableId={sub.id.toString()} index={sIndex} isDragDisabled={!isEditing || !allowReorder}>
                                   {(provided) => (
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
-                                      className="cursor-grab active:cursor-grabbing rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/60 py-1"
+                                      className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/60 py-1`}
                                     >
                                       <div className="flex items-center justify-between gap-3 p-2">
                                         <div className="flex items-center flex-1">
@@ -345,7 +352,7 @@ function TopicList({
                                         )}
                                       </div>
 
-                                      {(expandedSubtopics[sub.id] || shouldExpandAll || !isEditing) && (
+                                      {(expandedSubtopics[sub.id] || shouldExpandAll) && (
                                         <>
                                           {isEditing && (
                                             <div className="flex gap-2 mt-1 mb-1">
@@ -391,14 +398,14 @@ function TopicList({
                                                 className="space-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-soft)] px-2 py-2"
                                               >
                                                 {sub.questions.map((q, qIndex) => (
-                                                  <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex}>
+                                                  <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled={!isEditing || !allowReorder}>
                                                     {(provided) => (
                                                       <li
                                                         data-problem-id={String(q.id)}
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         {...provided.dragHandleProps}
-                                                        className="cursor-grab active:cursor-grabbing rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60"
+                                                        className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60`}
                                                       >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
@@ -423,13 +430,12 @@ function TopicList({
                                                               <span className="flex flex-1 items-start gap-2">
                                                                 <button
                                                                   type="button"
-                                                                  disabled={!allowProgressToggle}
                                                                   onClick={() => handleToggleProgress(topic.id, sub.id, q, topic.title, sub.title)}
                                                                   className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${
                                                                     q.done
                                                                       ? "border-emerald-500 bg-emerald-500 text-white"
                                                                       : "border-zinc-500 bg-transparent text-transparent"
-                                                                  } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-not-allowed opacity-70"}`}
+                                                                  } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-pointer opacity-85"}`}
                                                                   aria-label={q.done ? "Mark as not done" : "Mark as done"}
                                                                   title={q.done ? "Solved" : "Unsolved"}
                                                                 >

@@ -1,16 +1,21 @@
 package com.iqms.backend.service;
 
 import com.iqms.backend.dto.sheet.SheetEngagementResponse;
+import com.iqms.backend.model.SheetCopyEvent;
 import com.iqms.backend.model.Sheet;
 import com.iqms.backend.model.User;
 import com.iqms.backend.queue.ActionQueueService;
+import com.iqms.backend.repository.SheetCopyEventRepository;
 import com.iqms.backend.repository.SheetRepository;
 import com.iqms.backend.repository.UserRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class SheetService {
 
   private final SheetRepository sheetRepository;
+  private final SheetCopyEventRepository sheetCopyEventRepository;
   private final UserRepository userRepository;
   private final ActionQueueService actionQueueService;
   private final PremiumAccessService premiumAccessService;
@@ -26,11 +32,13 @@ public class SheetService {
 
   public SheetService(
       SheetRepository sheetRepository,
+      SheetCopyEventRepository sheetCopyEventRepository,
       UserRepository userRepository,
       ActionQueueService actionQueueService,
       PremiumAccessService premiumAccessService,
       SheetCollaborationService collaborationService) {
     this.sheetRepository = sheetRepository;
+    this.sheetCopyEventRepository = sheetCopyEventRepository;
     this.userRepository = userRepository;
     this.actionQueueService = actionQueueService;
     this.premiumAccessService = premiumAccessService;
@@ -167,6 +175,94 @@ public class SheetService {
     Sheet saved = sheetRepository.save(remixed);
     collaborationService.track(sourceSheetId, actorUserId, "sheet_remixed", Map.of("newSheetId", saved.getId()));
     return saved;
+  }
+
+  public Sheet copyPublicSheet(String actorUserId, String sourceSheetId, String title) {
+    Sheet source = sheetRepository.findById(sourceSheetId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source sheet not found."));
+    if (!("public".equals(source.getVisibility()) || "unlisted".equals(source.getVisibility()) || source.isPublic())) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sheet is not public.");
+    }
+
+    SheetCopyEvent existingEvent = sheetCopyEventRepository
+        .findBySourceSheetIdAndCopiedByUserId(sourceSheetId, actorUserId)
+        .orElse(null);
+    if (existingEvent != null && existingEvent.getCopiedSheetId() != null) {
+      return sheetRepository.findById(existingEvent.getCopiedSheetId()).orElseGet(() -> createCopy(source, actorUserId, title));
+    }
+
+    return createCopy(source, actorUserId, title);
+  }
+
+  private Sheet createCopy(Sheet source, String actorUserId, String title) {
+    String copyTitle = title == null || title.isBlank() ? source.getTitle() + " (Copy)" : title.trim();
+    Sheet copied = createSheet(actorUserId, copyTitle);
+    copied.setTopics(stripProgressData(source.getTopics()));
+    copied.setParentSheetId(source.getId());
+    copied.setRemixSourceOwnerId(source.getOwnerId());
+    copied.setUpdatedAt(Instant.now());
+    Sheet saved = sheetRepository.save(copied);
+
+    User user = userRepository.findById(actorUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+    if (user.getCopiedSheetIds().add(source.getId())) {
+      userRepository.save(user);
+    }
+    recordCopy(source.getId(), user.getUsername());
+
+    SheetCopyEvent event = new SheetCopyEvent();
+    event.setSourceSheetId(source.getId());
+    event.setSourceOwnerId(source.getOwnerId());
+    event.setCopiedByUserId(actorUserId);
+    event.setCopiedSheetId(saved.getId());
+    event.setCopiedAt(Instant.now());
+    try {
+      sheetCopyEventRepository.save(event);
+    } catch (DuplicateKeyException ignored) {
+      // Idempotent duplicate copy attempts from retries/double-clicks.
+    }
+
+    collaborationService.track(source.getId(), actorUserId, "sheet_copied", Map.of("newSheetId", saved.getId()));
+    return saved;
+  }
+
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> stripProgressData(List<Map<String, Object>> topics) {
+    Set<String> progressKeys = new HashSet<>(List.of(
+        "done",
+        "progress",
+        "progressPercent",
+        "attemptLog",
+        "revisionCompleted",
+        "revisionDone",
+        "reminderCompleted",
+        "completedAt",
+        "completedOn",
+        "lastAttemptAt",
+        "streak",
+        "history"));
+
+    return (List<Map<String, Object>>) sanitizeProgress(topics, progressKeys);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object sanitizeProgress(Object node, Set<String> progressKeys) {
+    if (node instanceof List<?> list) {
+      List<Object> sanitized = new ArrayList<>();
+      for (Object item : list) {
+        sanitized.add(sanitizeProgress(item, progressKeys));
+      }
+      return sanitized;
+    }
+    if (!(node instanceof Map<?, ?> map)) return node;
+
+    Map<String, Object> sanitized = new java.util.LinkedHashMap<>();
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      String key = String.valueOf(entry.getKey());
+      if (progressKeys.contains(key)) continue;
+      sanitized.put(key, (Object) sanitizeProgress(entry.getValue(), progressKeys));
+    }
+    return sanitized;
   }
 
   public SheetEngagementResponse trackEngagement(String actorUserId, String sheetId, String action) {
