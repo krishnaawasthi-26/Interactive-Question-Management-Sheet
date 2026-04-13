@@ -1,7 +1,7 @@
 package com.iqms.backend.service;
 
+import com.iqms.backend.config.properties.OtpProperties;
 import java.security.SecureRandom;
-import org.springframework.beans.factory.annotation.Value;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -16,10 +16,10 @@ public class OtpService {
   private static final long OTP_TTL_SECONDS = 600;
   private final SecureRandom secureRandom = new SecureRandom();
   private final Map<String, OtpRecord> otpRecords = new ConcurrentHashMap<>();
-  private final String otpBypassKey;
+  private final OtpProperties otpProperties;
 
-  public OtpService(@Value("${app.auth.otp-bypass-key:}") String otpBypassKey) {
-    this.otpBypassKey = normalizeOtp(otpBypassKey);
+  public OtpService(OtpProperties otpProperties) {
+    this.otpProperties = otpProperties;
   }
 
   public OtpChallenge issueOtp(String email, String purpose, String payloadKey) {
@@ -39,16 +39,19 @@ public class OtpService {
       otpRecords.remove(verificationId);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired. Please request a new one.");
     }
+
     String normalizedOtp = normalizeOtp(otp);
-    if (!record.code().equals(otp) && !isBypassOtp(normalizedOtp)) {
+    if (!record.code().equals(normalizedOtp) && !isBypassOtp(normalizedOtp)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid OTP. Please try again.");
     }
+
     otpRecords.remove(verificationId);
     return record;
   }
 
   private boolean isBypassOtp(String normalizedOtp) {
-    return !otpBypassKey.isBlank() && otpBypassKey.equals(normalizedOtp);
+    String bypassKey = otpProperties.getBypassKey();
+    return !bypassKey.isBlank() && bypassKey.equals(normalizedOtp);
   }
 
   private String normalizeOtp(String value) {

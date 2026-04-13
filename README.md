@@ -98,16 +98,30 @@ Google Sign-In now uses backend runtime configuration only (no built-in sample c
 Required backend env vars:
 
 - `APP_AUTH_GOOGLE_CLIENT_ID` (Web OAuth client id from Google Cloud Console)
+- `APP_MAIL_HOST`
+- `APP_MAIL_PORT` (typically `587` for STARTTLS)
+- `APP_MAIL_USERNAME`
+- `APP_MAIL_PASSWORD`
+- `APP_MAIL_FROM_ADDRESS`
+- `APP_MAIL_FROM_NAME`
 
 Optional backend env vars:
 
 - `APP_AUTH_OTP_BYPASS_KEY` (only for OTP testing; never exposed to frontend)
+- `APP_MAIL_AUTH` (default: `true`)
+- `APP_MAIL_STARTTLS` (default: `true`)
 
 Run backend with explicit env values:
 
 ```bash
 cd backend
 APP_AUTH_GOOGLE_CLIENT_ID="<your-web-client-id>.apps.googleusercontent.com" \
+APP_MAIL_HOST="smtp.gmail.com" \
+APP_MAIL_PORT="587" \
+APP_MAIL_USERNAME="<smtp-username>" \
+APP_MAIL_PASSWORD="<smtp-password-or-app-password>" \
+APP_MAIL_FROM_ADDRESS="<from-email>" \
+APP_MAIL_FROM_NAME="IQMS" \
 APP_AUTH_OTP_BYPASS_KEY="<optional-otp-bypass-key>" \
 MONGODB_URI="<your-mongodb-uri>" \
 mvn spring-boot:run
@@ -128,8 +142,8 @@ Google setup checklist (for `Error 401: invalid_client` / `no registered origin`
 
 OTP note:
 
-- By default this project logs generated OTP values in backend logs (`OtpDeliveryService`) rather than sending real emails.
-- If you do not receive an OTP email, check the backend console logs for the generated OTP code.
+- OTP delivery now uses SMTP (`OtpDeliveryService`) and fails the request if email delivery fails.
+- For Gmail, use an App Password (not your normal account password) in `APP_MAIL_PASSWORD`.
 
 ## Local development steps
 
