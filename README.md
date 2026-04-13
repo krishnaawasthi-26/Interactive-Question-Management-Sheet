@@ -120,6 +120,17 @@ cd /workspace/Interactive-Question-Management-Sheet
 npm run dev
 ```
 
+Google setup checklist (for `Error 401: invalid_client` / `no registered origin`):
+
+- Create an OAuth **Web application** credential (not Android/iOS/Desktop).
+- Add your frontend URL to **Authorized JavaScript origins** (for local dev: `http://localhost:5173`).
+- Use that same client ID in backend env var `APP_AUTH_GOOGLE_CLIENT_ID`.
+
+OTP note:
+
+- By default this project logs generated OTP values in backend logs (`OtpDeliveryService`) rather than sending real emails.
+- If you do not receive an OTP email, check the backend console logs for the generated OTP code.
+
 ## Local development steps
 
 ### 1) Start backend

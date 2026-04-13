@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { loadGoogleAuthConfig } from "../config/authConfig";
+import { getGoogleAuthErrorMessage } from "../utils/googleAuthError";
 import AppShell from "../components/AppShell";
 
 function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
@@ -53,6 +54,10 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
           if (!response?.credential) return;
           const success = await loginWithGoogle({ idToken: response.credential });
           if (success) onLoginSuccess();
+        },
+        error_callback: (error) => {
+          setGoogleConfigError(getGoogleAuthErrorMessage(error));
+          setGoogleReady(false);
         },
       });
       googleButtonRef.current.innerHTML = "";
