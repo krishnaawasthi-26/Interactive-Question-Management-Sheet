@@ -79,7 +79,7 @@ public class AuthService {
 
     return new OtpChallengeResponse(
         challenge.verificationId(),
-        "OTP generated for account verification. If email delivery is not configured, check backend logs.");
+        "OTP sent to your email address for account verification.");
   }
 
   public AuthResponse signUp(SignUpRequest request) {

@@ -1,7 +1,7 @@
 package com.iqms.backend.service;
 
+import com.iqms.backend.config.properties.GoogleOAuthProperties;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -11,16 +11,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class GoogleTokenVerifier {
 
   private final RestClient restClient;
-  private final String googleClientId;
+  private final GoogleOAuthProperties googleOAuthProperties;
 
-  public GoogleTokenVerifier(@Value("${app.auth.google-client-id:}") String googleClientId) {
+  public GoogleTokenVerifier(GoogleOAuthProperties googleOAuthProperties) {
     this.restClient = RestClient.create();
-    this.googleClientId = googleClientId == null ? "" : googleClientId.trim();
-    if (this.googleClientId.isBlank()) {
-      throw new IllegalStateException(
-          "Google Sign-In requires APP_AUTH_GOOGLE_CLIENT_ID to be set to a Web OAuth client id."
-      );
-    }
+    this.googleOAuthProperties = googleOAuthProperties;
   }
 
   public GoogleProfile verify(String idToken) {
@@ -35,7 +30,7 @@ public class GoogleTokenVerifier {
     }
 
     String audience = String.valueOf(response.getOrDefault("aud", ""));
-    if (!googleClientId.equals(audience)) {
+    if (!googleOAuthProperties.getClientId().equals(audience)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token audience mismatch.");
     }
 

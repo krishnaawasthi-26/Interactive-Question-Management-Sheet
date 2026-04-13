@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iqms.backend.config.properties.GoogleOAuthProperties;
 import com.iqms.backend.dto.AuthResponse;
 import com.iqms.backend.dto.OtpChallengeResponse;
 import com.iqms.backend.exception.GlobalExceptionHandler;
@@ -32,6 +33,7 @@ class AuthControllerTest {
 
   @MockitoBean private AuthService authService;
   @MockitoBean private RequestFingerprintService requestFingerprintService;
+  @MockitoBean private GoogleOAuthProperties googleOAuthProperties;
 
   @Test
   void requestSignupOtpReturnsChallengeForValidPayload() throws Exception {
