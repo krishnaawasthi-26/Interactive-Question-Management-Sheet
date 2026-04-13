@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { loadGoogleAuthConfig } from "../config/authConfig";
+import { getGoogleAuthErrorMessage } from "../utils/googleAuthError";
 import AppShell from "../components/AppShell";
 
 function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
@@ -13,6 +14,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
   const [form, setForm] = useState({ name: "", email: "", username: "", password: "" });
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
   const googleButtonRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
   const [googleConfigError, setGoogleConfigError] = useState("");
@@ -46,6 +48,10 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
           if (!response?.credential) return;
           const success = await loginWithGoogle({ idToken: response.credential });
           if (success) onSignUpSuccess();
+        },
+        error_callback: (error) => {
+          setGoogleConfigError(getGoogleAuthErrorMessage(error));
+          setGoogleReady(false);
         },
       });
       googleButtonRef.current.innerHTML = "";
@@ -82,6 +88,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
     const challenge = await requestSignUpOtp(form);
     if (challenge?.verificationId) {
       setVerificationId(challenge.verificationId);
+      setOtpMessage(challenge.message || "");
     }
   };
 
@@ -105,11 +112,14 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
           </form>
         ) : (
           <form className="space-y-3" onSubmit={submitOtpVerification}>
-            <p className="text-sm text-[var(--text-muted)]">OTP sent to <span className="font-semibold">{form.email}</span>. Enter the OTP to complete sign up.</p>
+            <p className="text-sm text-[var(--text-muted)]">
+              OTP sent to <span className="font-semibold">{form.email}</span>. Enter the OTP to complete sign up.
+            </p>
+            {otpMessage && <p className="text-xs text-[var(--text-muted)]">{otpMessage}</p>}
             <input type="text" required disabled={authLoading} value={otp} placeholder="Enter OTP" onChange={(event) => { clearAuthError(); setOtp(event.target.value); }} className="field-base w-full" />
             {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
             <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full">{authLoading ? "Verifying OTP..." : "Verify OTP & Create account"}</button>
-            <button type="button" disabled={authLoading} className="btn-base w-full" onClick={() => { setVerificationId(""); setOtp(""); }}>
+            <button type="button" disabled={authLoading} className="btn-base w-full" onClick={() => { setVerificationId(""); setOtp(""); setOtpMessage(""); }}>
               Back
             </button>
           </form>

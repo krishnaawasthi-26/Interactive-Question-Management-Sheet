@@ -77,7 +77,9 @@ public class AuthService {
     OtpService.OtpChallenge challenge = otpService.issueOtp(normalizedEmail, OTP_PURPOSE_SIGNUP, signUpPayloadId);
     otpDeliveryService.sendOtp(normalizedEmail, "signup", challenge.code());
 
-    return new OtpChallengeResponse(challenge.verificationId(), "OTP sent to your email for account verification.");
+    return new OtpChallengeResponse(
+        challenge.verificationId(),
+        "OTP generated for account verification. If email delivery is not configured, check backend logs.");
   }
 
   public AuthResponse signUp(SignUpRequest request) {
