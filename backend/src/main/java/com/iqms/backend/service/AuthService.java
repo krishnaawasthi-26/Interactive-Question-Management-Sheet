@@ -31,6 +31,7 @@ public class AuthService {
   private final OtpService otpService;
   private final OtpDeliveryService otpDeliveryService;
   private final PremiumAccessService premiumAccessService;
+  private final GoogleTokenVerifier googleTokenVerifier;
   private final Map<String, PendingSignUp> pendingSignUps = new ConcurrentHashMap<>();
 
   public AuthService(
@@ -40,7 +41,8 @@ public class AuthService {
       PasswordEncoder passwordEncoder,
       OtpService otpService,
       OtpDeliveryService otpDeliveryService,
-      PremiumAccessService premiumAccessService) {
+      PremiumAccessService premiumAccessService,
+      GoogleTokenVerifier googleTokenVerifier) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.loginAttemptService = loginAttemptService;
@@ -48,6 +50,7 @@ public class AuthService {
     this.otpService = otpService;
     this.otpDeliveryService = otpDeliveryService;
     this.premiumAccessService = premiumAccessService;
+    this.googleTokenVerifier = googleTokenVerifier;
   }
 
   public OtpChallengeResponse requestSignUpOtp(SignUpRequest request) {
@@ -166,9 +169,42 @@ public class AuthService {
   }
 
   public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
-    throw new ResponseStatusException(
-        HttpStatus.SERVICE_UNAVAILABLE,
-        "Google login is temporarily disabled. Please use username/email and password.");
+    GoogleTokenVerifier.GoogleProfile profile = googleTokenVerifier.verify(request.getIdToken());
+
+    User existingGoogleUser = userRepository.findByGoogleSubject(profile.subject()).orElse(null);
+    if (existingGoogleUser != null) {
+      return toResponse(existingGoogleUser);
+    }
+
+    User emailUser = userRepository.findByEmail(profile.email()).orElse(null);
+    if (emailUser != null) {
+      if (!"GOOGLE".equalsIgnoreCase(emailUser.getAuthProvider())) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "An account with this email already exists. Please login with password.");
+      }
+      emailUser.setGoogleSubject(profile.subject());
+      User updated = userRepository.save(emailUser);
+      return toResponse(updated);
+    }
+
+    User user = new User();
+    user.setName(profile.name());
+    user.setEmail(profile.email());
+    user.setUsername(generateUniqueUsername(profile.email()));
+    user.setAuthProvider("GOOGLE");
+    user.setGoogleSubject(profile.subject());
+    user.setProfileShareId("profile_" + UUID.randomUUID().toString().replace("-", ""));
+    user.setCreatedAt(Instant.now());
+    user.setUsernameChangeCount(0);
+    user.setEmailChangeCount(0);
+    user.setGoogleOnboardingComplete(true);
+    user.setBio("Signed up with Google");
+    user.setCompany("Google");
+    user.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
+
+    User created = userRepository.save(user);
+    return toResponse(created);
   }
 
   private AuthResponse toResponse(User user) {
@@ -212,6 +248,28 @@ public class AuthService {
           "Username can use lowercase letters, numbers, _ and - (3-30 chars).");
     }
     return normalized;
+  }
+
+  private String generateUniqueUsername(String email) {
+    String local = email.contains("@") ? email.substring(0, email.indexOf('@')) : email;
+    String base = local.toLowerCase().replaceAll("[^a-z0-9_-]", "");
+    if (base.length() < 3) {
+      base = "googleuser";
+    }
+    if (base.length() > 24) {
+      base = base.substring(0, 24);
+    }
+
+    String candidate = base;
+    int suffix = 1;
+    while (userRepository.findByUsername(candidate).isPresent()) {
+      String suffixText = "_" + suffix;
+      int maxBaseLength = Math.max(3, 30 - suffixText.length());
+      String trimmedBase = base.length() > maxBaseLength ? base.substring(0, maxBaseLength) : base;
+      candidate = trimmedBase + suffixText;
+      suffix++;
+    }
+    return candidate;
   }
 
   private record PendingSignUp(String name, String email, String username, String encodedPassword) {}

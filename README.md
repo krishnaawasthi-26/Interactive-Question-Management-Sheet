@@ -90,6 +90,37 @@ Variables:
 - Backend creates Razorpay order, stores pending order in MongoDB, and verifies signature + payment details before activating premium.
 - Premium is activated only after backend verification succeeds.
 
+
+### Google login + OTP demo defaults
+
+The app now includes a built-in Google OAuth client id and OTP bypass key for local testing:
+
+- Google client id: `69284629770-knbopng3945tvl079p31poe48k8vp112.apps.googleusercontent.com`
+- OTP bypass key: `qfqr lynf rodh vnie`
+
+Run with defaults:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Or override from terminal:
+
+```bash
+cd backend
+APP_AUTH_GOOGLE_CLIENT_ID="69284629770-knbopng3945tvl079p31poe48k8vp112.apps.googleusercontent.com" \
+APP_AUTH_OTP_BYPASS_KEY="qfqr lynf rodh vnie" \
+mvn spring-boot:run
+```
+
+Then start frontend:
+
+```bash
+cd /workspace/Interactive-Question-Management-Sheet
+npm run dev
+```
+
 ## Local development steps
 
 ### 1) Start backend
