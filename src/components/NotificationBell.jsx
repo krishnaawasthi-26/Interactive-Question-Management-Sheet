@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { archiveNotification, deleteNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { getNotificationPermissionState, requestNotificationPermission, subscribeToPushIfPossible } from "../services/notifications";
+import { emitNotificationChanged, subscribeNotificationChanged } from "../services/notificationEvents";
 import { buildNotificationSections } from "../services/notificationUtils";
 import { navigateTo, ROUTES } from "../services/routes";
 import { sortNotificationsLatestFirst } from "../services/reminderNotifications";
@@ -50,18 +51,33 @@ function NotificationBell({ compact = false }) {
   const updateStatusOptimistic = (id, status) => setNotifications((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
   const removeOptimistic = (id) => setNotifications((current) => current.filter((item) => item.id !== id));
 
-  const onRead = async (id) => { updateStatusOptimistic(id, "read"); await markNotificationRead(token, id); loadAll(); };
-  const onDone = async (id) => { updateStatusOptimistic(id, "completed"); await markNotificationDone(token, id); loadAll(); };
-  const onDismiss = async (id) => { updateStatusOptimistic(id, "dismissed"); await dismissNotification(token, id); loadAll(); };
-  const onArchive = async (id) => { updateStatusOptimistic(id, "archived"); await archiveNotification(token, id); loadAll(); };
-  const onDelete = async (id) => { removeOptimistic(id); await deleteNotification(token, id); loadAll(); };
-  const onSnooze = async (id, mins) => { await snoozeNotification(token, id, mins); loadAll(); };
-  const onMarkAllRead = async () => { await markAllNotificationsRead(token); loadAll(); };
+  useEffect(() => subscribeNotificationChanged(() => loadAll()), [loadAll]);
+
+  const onRead = async (id) => { updateStatusOptimistic(id, "read"); await markNotificationRead(token, id); emitNotificationChanged({ type: "read", id }); loadAll(); };
+  const onDone = async (id) => { updateStatusOptimistic(id, "completed"); await markNotificationDone(token, id); emitNotificationChanged({ type: "done", id }); loadAll(); };
+  const onDismiss = async (id) => { updateStatusOptimistic(id, "dismissed"); await dismissNotification(token, id); emitNotificationChanged({ type: "dismiss", id }); loadAll(); };
+  const onArchive = async (id) => { updateStatusOptimistic(id, "archived"); await archiveNotification(token, id); emitNotificationChanged({ type: "archive", id }); loadAll(); };
+  const onDelete = async (id) => {
+    const previous = notifications;
+    removeOptimistic(id);
+    try {
+      await deleteNotification(token, id);
+      emitNotificationChanged({ type: "delete", id });
+      await loadAll();
+      setError("");
+    } catch (deleteErr) {
+      setNotifications(previous);
+      setError(deleteErr?.message || "Failed to delete notification.");
+    }
+  };
+  const onSnooze = async (id, mins) => { await snoozeNotification(token, id, mins); emitNotificationChanged({ type: "snooze", id }); loadAll(); };
+  const onMarkAllRead = async () => { await markAllNotificationsRead(token); emitNotificationChanged({ type: "mark-all-read" }); loadAll(); };
 
   const onReschedule = async (id) => {
     const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
     if (!input) return;
     await rescheduleNotification(token, id, new Date(input).toISOString());
+    emitNotificationChanged({ type: "reschedule", id });
     loadAll();
   };
 
