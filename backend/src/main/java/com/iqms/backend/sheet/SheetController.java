@@ -136,6 +136,15 @@ public class SheetController {
     return ResponseEntity.ok(sheetService.remixSheet(currentUser.getUserId(request), sheetId, title));
   }
 
+  @PostMapping("/{sheetId}/copy")
+  public ResponseEntity<Sheet> copyPublicSheet(
+      HttpServletRequest request,
+      @PathVariable String sheetId,
+      @RequestBody(required = false) Map<String, String> body) {
+    String title = body == null ? null : body.get("title");
+    return ResponseEntity.ok(sheetService.copyPublicSheet(currentUser.getUserId(request), sheetId, title));
+  }
+
   @DeleteMapping("/{sheetId}")
   public ResponseEntity<Void> deleteSheet(HttpServletRequest request, @PathVariable String sheetId) {
     sheetService.deleteOwnedSheet(currentUser.getUserId(request), sheetId);

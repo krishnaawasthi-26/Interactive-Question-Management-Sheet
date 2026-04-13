@@ -9,3 +9,5 @@ export const removeSheet = (token, sheetId) => authRequest(`/api/sheets/${sheetI
 export const getSharedSheet = (shareId) => authRequest(`/api/sheets/shared/${shareId}`);
 export const trackSheetEngagement = (token, sheetId, action) =>
   authRequest(`/api/sheets/${sheetId}/engagement`, "POST", { action }, token);
+export const copyPublicSheet = (token, sheetId, title) =>
+  authRequest(`/api/sheets/${sheetId}/copy`, "POST", title ? { title } : {}, token);

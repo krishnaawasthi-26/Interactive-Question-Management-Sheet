@@ -9,7 +9,7 @@ import {
   followUser,
   unfollowUser,
 } from "../api/profileApi";
-import { getSharedSheet, trackSheetEngagement } from "../api/sheetApi";
+import { copyPublicSheet, getSharedSheet, trackSheetEngagement } from "../api/sheetApi";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
@@ -30,58 +30,13 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   const [showRemixModal, setShowRemixModal] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("Sheets");
   const [remixTitle, setRemixTitle] = useState("");
-  const [includeLinks, setIncludeLinks] = useState(true);
-  const [includeNotes, setIncludeNotes] = useState(true);
   const [keepAttribution, setKeepAttribution] = useState(true);
   const [copyPending, setCopyPending] = useState(false);
+  const [copyPromptOpen, setCopyPromptOpen] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const setReadOnlySheet = useSheetStore((state) => state.setReadOnlySheet);
-  const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
-
-  const removeKeysRecursively = (value, disallowedKeys) => {
-    if (Array.isArray(value)) {
-      return value.map((entry) => removeKeysRecursively(entry, disallowedKeys));
-    }
-
-    if (!value || typeof value !== "object") {
-      return value;
-    }
-
-    return Object.entries(value).reduce((acc, [key, entry]) => {
-      if (disallowedKeys.has(key)) return acc;
-      acc[key] = removeKeysRecursively(entry, disallowedKeys);
-      return acc;
-    }, {});
-  };
-
-  const getRemixTopics = () => {
-    const disallowedKeys = new Set();
-    if (!includeLinks) {
-      disallowedKeys.add("link");
-      disallowedKeys.add("links");
-      disallowedKeys.add("resource");
-      disallowedKeys.add("resources");
-      disallowedKeys.add("resourceUrl");
-      disallowedKeys.add("resourceUrls");
-      disallowedKeys.add("url");
-      disallowedKeys.add("urls");
-    }
-    if (!includeNotes) {
-      disallowedKeys.add("note");
-      disallowedKeys.add("notes");
-      disallowedKeys.add("personalNote");
-      disallowedKeys.add("personalNotes");
-      disallowedKeys.add("description");
-    }
-
-    if (disallowedKeys.size === 0) {
-      return sharedSheet?.topics || [];
-    }
-
-    return removeKeysRecursively(sharedSheet?.topics || [], disallowedKeys);
-  };
 
   const loadProfileForRoute = async (targetUsername) => {
     if (!targetUsername) return null;
@@ -127,6 +82,34 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     if (!showRemixModal) return;
     setRemixTitle(sharedSheet?.title ? `${sharedSheet.title} (Copy)` : "");
   }, [showRemixModal, sharedSheet]);
+
+  useEffect(() => {
+    if (shareType !== "public-sheet" || !sharedSheet?.id || !currentUser?.username || !username) return;
+    if (`${currentUser.username}`.toLowerCase() !== `${username}`.toLowerCase()) return;
+    navigateTo(`${ROUTES.APP}/${sharedSheet.id}`);
+  }, [currentUser?.username, shareType, sharedSheet?.id, username]);
+
+  const isOwnerViewingSheet = Boolean(
+    sharedSheet &&
+    currentUser &&
+    (sharedSheet.ownerId === currentUser.id
+      || `${currentUser.username || ""}`.toLowerCase() === `${username || ""}`.toLowerCase())
+  );
+
+  const handleCopySheet = async ({ sourceSheetId, customTitle = null } = {}) => {
+    const effectiveSourceSheetId = sourceSheetId || sharedSheet?.id;
+    if (!currentUser?.token || !effectiveSourceSheetId) return;
+    setCopyPending(true);
+    try {
+      const copied = await copyPublicSheet(currentUser.token, effectiveSourceSheetId, customTitle || undefined);
+      if (!copied?.id) return;
+      setShowRemixModal(false);
+      setCopyPromptOpen(false);
+      navigateTo(`${ROUTES.APP}/${copied.id}`);
+    } finally {
+      setCopyPending(false);
+    }
+  };
 
   if (error) return <div className="p-6 text-red-300">{error}</div>;
 
@@ -323,17 +306,33 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                     ) : (
                       publicSheets.map((sheet) => (
                         <div className="surface-card surface-card-elevated flex items-center justify-between gap-3 p-3" key={sheet.id}>
-                          <a href={`#/shared/sheet/${sheet.shareId}`} className="card-title underline-offset-2 hover:underline">
-                            {sheet.title}
-                          </a>
-                          {profile?.username && (
-                            <a
-                              href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
-                              className="text-sm text-[var(--text-secondary)] underline-offset-2 hover:text-[var(--accent-info)] hover:underline"
-                            >
-                              Open clean URL
+                          <div className="flex items-center gap-3">
+                            <a href={`#/shared/sheet/${sheet.shareId}`} className="card-title underline-offset-2 hover:underline">
+                              {sheet.title}
                             </a>
-                          )}
+                            {profile?.username && (
+                              <a
+                                href={`/profile/${profile.username}/${slugifySegment(sheet.title)}`}
+                                className="text-sm text-[var(--text-secondary)] underline-offset-2 hover:text-[var(--accent-info)] hover:underline"
+                              >
+                                Open clean URL
+                              </a>
+                            )}
+                          </div>
+                          {currentUser?.token && !isOwnProfile ? (
+                            <button
+                              type="button"
+                              className="btn-base btn-primary px-3 py-1.5 text-sm"
+                              onClick={async () => {
+                                await handleCopySheet({
+                                  sourceSheetId: sheet.id,
+                                  customTitle: `${sheet.title || "Untitled Sheet"} (Copy)`,
+                                });
+                              }}
+                            >
+                              Copy Sheet
+                            </button>
+                          ) : null}
                         </div>
                       ))
                     )}
@@ -462,14 +461,19 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   }
 
   return (
-    <div className="min-h-screen bg-[var(--app-bg)] p-6 text-[var(--text-primary)]">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{sheetTitle} (Read only)</h1>
-        <div className="flex flex-wrap items-center gap-2">
+    <AppShell
+      title={sharedSheet?.title || sheetTitle}
+      subtitle={isOwnerViewingSheet ? "Owner view" : "Public read-only view"}
+      theme={theme}
+      onThemeChange={onThemeChange}
+      userLabel={currentUser?.username || "Guest"}
+      headerActions={(
+        <div className="flex items-center gap-2">
+          {!isOwnerViewingSheet && <span className="rounded-full border border-[var(--border-subtle)] px-2 py-1 text-xs text-[var(--text-secondary)]">Read only</span>}
           {currentUser?.token && sharedSheet && (
             <button
               type="button"
-              className="rounded border border-emerald-600/40 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-300"
+              className="btn-base btn-neutral px-3 py-1.5 text-sm"
               onClick={async () => {
                 try {
                   await trackSheetEngagement(currentUser.token, sharedSheet.id, "download");
@@ -482,19 +486,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               Download JSON
             </button>
           )}
-          {currentUser?.token && sharedSheet && (
-            <button
-              type="button"
-              className="rounded border border-amber-600/40 bg-amber-500/10 px-3 py-1 text-sm text-amber-300"
-              onClick={() => setShowRemixModal(true)}
-            >
-              Copy to my sheets
+          {currentUser?.token && sharedSheet && !isOwnerViewingSheet && (
+            <button type="button" className="btn-base btn-primary px-3 py-1.5 text-sm" onClick={() => setShowRemixModal(true)}>
+              Copy Sheet
             </button>
           )}
         </div>
-      </div>
-      <TopicList isEditing={false} allowProgressToggle={false} />
-      {showRemixModal && (
+      )}
+    >
+      <TopicList
+        isEditing={isOwnerViewingSheet}
+        allowReorder={isOwnerViewingSheet}
+        allowProgressToggle={isOwnerViewingSheet}
+        onRequireCopy={() => setCopyPromptOpen(true)}
+      />
+      {showRemixModal && !isOwnerViewingSheet && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100/65 p-4 backdrop-blur-sm">
           <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4">
@@ -520,14 +526,6 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               />
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={includeLinks} onChange={(event) => setIncludeLinks(event.target.checked)} />
-                  Include Links &amp; Resources
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={includeNotes} onChange={(event) => setIncludeNotes(event.target.checked)} />
-                  Include Personal Notes
-                </label>
-                <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={keepAttribution}
@@ -545,28 +543,10 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 disabled={copyPending}
                 onClick={async () => {
                   if (!currentUser?.token || !sharedSheet) return;
-                  setCopyPending(true);
-                  try {
-                    try {
-                      await trackSheetEngagement(currentUser.token, sharedSheet.id, "copy");
-                    } catch {
-                      // no-op; copy should not be blocked
-                    }
-                    const computedTitle = remixTitle.trim() || `${sharedSheet.title || "Untitled Sheet"} (Copy)`;
-                    const copied = await duplicateSheet(
-                      currentUser.token,
-                      {
-                        ...sharedSheet,
-                        topics: getRemixTopics(),
-                      },
-                      `${computedTitle}${keepAttribution && username ? ` (Remix of @${username})` : ""}`
-                    );
-                    if (!copied) return;
-                    setShowRemixModal(false);
-                    navigateTo(`${ROUTES.APP}/${copied.id}`);
-                  } finally {
-                    setCopyPending(false);
-                  }
+                  const computedTitle = remixTitle.trim() || `${sharedSheet.title || "Untitled Sheet"} (Copy)`;
+                  await handleCopySheet({
+                    customTitle: `${computedTitle}${keepAttribution && username ? ` (Remix of @${username})` : ""}`,
+                  });
                 }}
               >
                 {copyPending ? "Creating..." : "Create Remix"}
@@ -575,7 +555,23 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
           </div>
         </div>
       )}
-    </div>
+      {copyPromptOpen && !isOwnerViewingSheet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
+          <div className="surface-card w-full max-w-md p-5">
+            <h3 className="section-title text-lg">Copy this sheet to track your own progress.</h3>
+            <p className="meta-text mt-2 text-sm">This public sheet is read-only. Create your own copy to mark questions complete.</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" className="btn-base btn-neutral px-3 py-2 text-sm" onClick={() => setCopyPromptOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className="btn-base btn-primary px-3 py-2 text-sm" disabled={copyPending} onClick={() => handleCopySheet()}>
+                {copyPending ? "Copying..." : "Copy Sheet"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </AppShell>
   );
 }
 
