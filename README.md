@@ -91,26 +91,25 @@ Variables:
 - Premium is activated only after backend verification succeeds.
 
 
-### Google login + OTP demo defaults
+### Google login configuration (required)
 
-The app now includes a built-in Google OAuth client id and OTP bypass key for local testing:
+Google Sign-In now uses backend runtime configuration only (no built-in sample credentials).
 
-- Google client id: `69284629770-knbopng3945tvl079p31poe48k8vp112.apps.googleusercontent.com`
-- OTP bypass key: `qfqr lynf rodh vnie`
+Required backend env vars:
 
-Run with defaults:
+- `APP_AUTH_GOOGLE_CLIENT_ID` (Web OAuth client id from Google Cloud Console)
 
-```bash
-cd backend
-mvn spring-boot:run
-```
+Optional backend env vars:
 
-Or override from terminal:
+- `APP_AUTH_OTP_BYPASS_KEY` (only for OTP testing; never exposed to frontend)
+
+Run backend with explicit env values:
 
 ```bash
 cd backend
-APP_AUTH_GOOGLE_CLIENT_ID="69284629770-knbopng3945tvl079p31poe48k8vp112.apps.googleusercontent.com" \
-APP_AUTH_OTP_BYPASS_KEY="qfqr lynf rodh vnie" \
+APP_AUTH_GOOGLE_CLIENT_ID="<your-web-client-id>.apps.googleusercontent.com" \
+APP_AUTH_OTP_BYPASS_KEY="<optional-otp-bypass-key>" \
+MONGODB_URI="<your-mongodb-uri>" \
 mvn spring-boot:run
 ```
 

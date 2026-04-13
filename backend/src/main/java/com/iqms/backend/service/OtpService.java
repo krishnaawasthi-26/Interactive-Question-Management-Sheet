@@ -18,7 +18,7 @@ public class OtpService {
   private final Map<String, OtpRecord> otpRecords = new ConcurrentHashMap<>();
   private final String otpBypassKey;
 
-  public OtpService(@Value("${app.auth.otp-bypass-key:qfqr lynf rodh vnie}") String otpBypassKey) {
+  public OtpService(@Value("${app.auth.otp-bypass-key:}") String otpBypassKey) {
     this.otpBypassKey = normalizeOtp(otpBypassKey);
   }
 

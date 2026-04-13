@@ -1,6 +1,7 @@
 package com.iqms.backend.controller;
 
 import com.iqms.backend.dto.AuthResponse;
+import com.iqms.backend.dto.GoogleAuthConfigResponse;
 import com.iqms.backend.dto.GoogleLoginRequest;
 import com.iqms.backend.dto.OtpChallengeResponse;
 import com.iqms.backend.dto.LoginRequest;
@@ -10,7 +11,9 @@ import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +25,15 @@ public class AuthController {
 
   private final AuthService authService;
   private final RequestFingerprintService requestFingerprintService;
+  private final String googleClientId;
 
-  public AuthController(AuthService authService, RequestFingerprintService requestFingerprintService) {
+  public AuthController(
+      AuthService authService,
+      RequestFingerprintService requestFingerprintService,
+      @Value("${app.auth.google-client-id:}") String googleClientId) {
     this.authService = authService;
     this.requestFingerprintService = requestFingerprintService;
+    this.googleClientId = googleClientId == null ? "" : googleClientId.trim();
   }
 
   @PostMapping("/signup/request-otp")
@@ -49,6 +57,15 @@ public class AuthController {
       HttpServletRequest servletRequest) {
     String deviceKey = requestFingerprintService.fingerprint(servletRequest);
     return ResponseEntity.ok(authService.login(request, deviceKey));
+  }
+
+
+  @GetMapping("/google/config")
+  public ResponseEntity<GoogleAuthConfigResponse> googleConfig() {
+    if (googleClientId.isBlank()) {
+      throw new IllegalStateException("Google Sign-In is disabled: APP_AUTH_GOOGLE_CLIENT_ID is missing.");
+    }
+    return ResponseEntity.ok(new GoogleAuthConfigResponse(googleClientId));
   }
 
   @PostMapping("/google")

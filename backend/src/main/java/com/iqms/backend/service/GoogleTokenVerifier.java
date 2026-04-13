@@ -16,6 +16,11 @@ public class GoogleTokenVerifier {
   public GoogleTokenVerifier(@Value("${app.auth.google-client-id:}") String googleClientId) {
     this.restClient = RestClient.create();
     this.googleClientId = googleClientId == null ? "" : googleClientId.trim();
+    if (this.googleClientId.isBlank()) {
+      throw new IllegalStateException(
+          "Google Sign-In requires APP_AUTH_GOOGLE_CLIENT_ID to be set to a Web OAuth client id."
+      );
+    }
   }
 
   public GoogleProfile verify(String idToken) {
@@ -30,7 +35,7 @@ public class GoogleTokenVerifier {
     }
 
     String audience = String.valueOf(response.getOrDefault("aud", ""));
-    if (!googleClientId.isBlank() && !googleClientId.equals(audience)) {
+    if (!googleClientId.equals(audience)) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token audience mismatch.");
     }
 

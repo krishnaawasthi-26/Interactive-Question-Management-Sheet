@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { GOOGLE_CLIENT_ID } from "../config/authConfig";
+import { loadGoogleAuthConfig } from "../config/authConfig";
 import AppShell from "../components/AppShell";
 
 function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
@@ -14,6 +14,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const [now, setNow] = useState(() => Date.now());
   const googleButtonRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const [googleConfigError, setGoogleConfigError] = useState("");
   const lockSeconds = Math.max(0, Math.ceil((loginBlockedUntil - now) / 1000));
   const isLocked = lockSeconds > 0;
 
@@ -34,10 +35,20 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
       document.body.appendChild(script);
     }
 
-    const setupGoogle = () => {
+    const setupGoogle = async () => {
       if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+
+      let googleConfig;
+      try {
+        googleConfig = await loadGoogleAuthConfig();
+      } catch (error) {
+        setGoogleConfigError(error?.message || "Google Sign-In configuration failed to load.");
+        setGoogleReady(false);
+        return;
+      }
+
       window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: googleConfig.clientId,
         callback: async (response) => {
           if (!response?.credential) return;
           const success = await loginWithGoogle({ idToken: response.credential });
@@ -52,17 +63,18 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
         shape: "rectangular",
         width: "320",
       });
+      setGoogleConfigError("");
       setGoogleReady(true);
     };
 
     if (script.getAttribute("data-loaded") === "true") {
-      setupGoogle();
+      void setupGoogle();
       return;
     }
 
     const onGoogleScriptLoad = () => {
       script.setAttribute("data-loaded", "true");
-      setupGoogle();
+      void setupGoogle();
     };
 
     script.addEventListener("load", onGoogleScriptLoad);
@@ -121,7 +133,11 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
 
         <div className="my-4 text-center text-xs text-[var(--text-muted)]">OR</div>
         <div className="flex justify-center" ref={googleButtonRef} />
-        {!googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>}
+        {googleConfigError ? (
+          <p className="mt-2 text-center text-xs text-[var(--accent-danger)]">{googleConfigError}</p>
+        ) : (
+          !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>
+        )}
 
         <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="mt-4 text-sm text-[var(--accent-info)]">
           Don&apos;t have an account? Sign up
