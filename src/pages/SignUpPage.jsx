@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { GOOGLE_CLIENT_ID, OTP_BYPASS_KEY } from "../config/authConfig";
+import { loadGoogleAuthConfig } from "../config/authConfig";
 import AppShell from "../components/AppShell";
 
 function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
@@ -15,6 +15,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
   const [verificationId, setVerificationId] = useState("");
   const googleButtonRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
+  const [googleConfigError, setGoogleConfigError] = useState("");
 
   useEffect(() => {
     const scriptId = "google-identity-service";
@@ -27,10 +28,20 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
       document.body.appendChild(script);
     }
 
-    const setupGoogle = () => {
+    const setupGoogle = async () => {
       if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+
+      let googleConfig;
+      try {
+        googleConfig = await loadGoogleAuthConfig();
+      } catch (error) {
+        setGoogleConfigError(error?.message || "Google Sign-In configuration failed to load.");
+        setGoogleReady(false);
+        return;
+      }
+
       window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: googleConfig.clientId,
         callback: async (response) => {
           if (!response?.credential) return;
           const success = await loginWithGoogle({ idToken: response.credential });
@@ -45,17 +56,18 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
         shape: "rectangular",
         width: "320",
       });
+      setGoogleConfigError("");
       setGoogleReady(true);
     };
 
     if (script.getAttribute("data-loaded") === "true") {
-      setupGoogle();
+      void setupGoogle();
       return;
     }
 
     const onGoogleScriptLoad = () => {
       script.setAttribute("data-loaded", "true");
-      setupGoogle();
+      void setupGoogle();
     };
 
     script.addEventListener("load", onGoogleScriptLoad);
@@ -95,7 +107,6 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
           <form className="space-y-3" onSubmit={submitOtpVerification}>
             <p className="text-sm text-[var(--text-muted)]">OTP sent to <span className="font-semibold">{form.email}</span>. Enter the OTP to complete sign up.</p>
             <input type="text" required disabled={authLoading} value={otp} placeholder="Enter OTP" onChange={(event) => { clearAuthError(); setOtp(event.target.value); }} className="field-base w-full" />
-            <p className="text-xs text-[var(--text-muted)]">Dev bypass key: <span className="font-mono">{OTP_BYPASS_KEY}</span></p>
             {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
             <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full">{authLoading ? "Verifying OTP..." : "Verify OTP & Create account"}</button>
             <button type="button" disabled={authLoading} className="btn-base w-full" onClick={() => { setVerificationId(""); setOtp(""); }}>
@@ -106,7 +117,11 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
 
         <div className="my-4 text-center text-xs text-[var(--text-muted)]">OR</div>
         <div className="flex justify-center" ref={googleButtonRef} />
-        {!googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google signup...</p>}
+        {googleConfigError ? (
+          <p className="mt-2 text-center text-xs text-[var(--accent-danger)]">{googleConfigError}</p>
+        ) : (
+          !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google signup...</p>
+        )}
 
         <button type="button" disabled={authLoading} onClick={onGoToLogin} className="mt-4 text-sm text-[var(--accent-info)]">Already have an account? Login</button>
       </div>
