@@ -30,6 +30,7 @@ function SidebarItem({ item, isOpen, active, onClick }) {
     <button
       type="button"
       aria-label={item.label}
+      title={!isOpen ? item.label : undefined}
       onClick={onClick}
       className={`group relative flex w-full items-center rounded-xl border px-2.5 py-2.5 text-sm transition-all duration-200 ${
         isOpen ? "justify-start gap-3" : "justify-center"
@@ -48,7 +49,7 @@ function SidebarItem({ item, isOpen, active, onClick }) {
         <span
           role="tooltip"
           aria-hidden="true"
-          className="pointer-events-none absolute left-[calc(100%+0.65rem)] top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface-elevated)_96%,black)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] opacity-0 shadow-xl transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+          className="pointer-events-none absolute left-[calc(100%+0.65rem)] top-1/2 z-[70] -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--surface-elevated)_96%,black)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] opacity-0 shadow-xl ring-1 ring-black/5 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
         >
           {item.label}
         </span>
@@ -105,7 +106,7 @@ function Sidebar({ isSidebarOpen, onToggle }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto pr-1">
+      <nav className="flex-1 space-y-4 overflow-visible pr-2">
         {sections.map((section) => (
           <SidebarSection
             key={section.title}
