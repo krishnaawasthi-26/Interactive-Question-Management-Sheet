@@ -175,19 +175,32 @@ public class AuthService {
 
     User existingGoogleUser = userRepository.findByGoogleSubject(profile.subject()).orElse(null);
     if (existingGoogleUser != null) {
+      if (!profile.emailVerified()) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google account email is not verified.");
+      }
       return toResponse(existingGoogleUser);
     }
 
-    User emailUser = userRepository.findByEmail(profile.email()).orElse(null);
+    User emailUser = userRepository.findByEmailIgnoreCase(profile.email()).orElse(null);
     if (emailUser != null) {
-      if (!"GOOGLE".equalsIgnoreCase(emailUser.getAuthProvider())) {
+      if (!profile.emailVerified()) {
+        throw new ResponseStatusException(
+            HttpStatus.UNAUTHORIZED,
+            "Google account email is not verified. Please login with password.");
+      }
+      if (emailUser.getGoogleSubject() != null && !profile.subject().equals(emailUser.getGoogleSubject())) {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
-            "An account with this email already exists. Please login with password.");
+            "This email is already linked with a different Google account.");
       }
+
       emailUser.setGoogleSubject(profile.subject());
       User updated = userRepository.save(emailUser);
       return toResponse(updated);
+    }
+
+    if (!profile.emailVerified()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google account email is not verified.");
     }
 
     User user = new User();

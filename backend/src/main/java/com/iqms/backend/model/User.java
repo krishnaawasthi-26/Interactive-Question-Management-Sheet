@@ -23,6 +23,8 @@ public class User {
 
   private String password;
   private String authProvider;
+
+  @Indexed(unique = true, sparse = true)
   private String googleSubject;
 
   @Indexed(unique = true)
