@@ -132,6 +132,8 @@ mvn spring-boot:run
 
 Backend runs at `http://localhost:8080`.
 
+If Maven reports a missing file like `backend/backend/pom.xml`, you are launching from the wrong directory (or with an extra `-f backend/pom.xml`). Run from the repository root exactly as shown above (`cd backend` once, then `mvn spring-boot:run`).
+
 ### 2) Start frontend
 
 ```bash
