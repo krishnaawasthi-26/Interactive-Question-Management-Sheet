@@ -2,6 +2,7 @@ package com.iqms.backend.service;
 
 import com.iqms.backend.config.properties.MailProperties;
 import jakarta.mail.internet.MimeMessage;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -33,20 +34,54 @@ public class OtpDeliveryService {
       MimeMessage message = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
       helper.setTo(email);
-      helper.setFrom(mailProperties.getFromAddress(), mailProperties.getFromName());
+      String fromAddress = resolveFromAddress();
+      helper.setFrom(fromAddress, mailProperties.getFromName());
       helper.setSubject("IQMS verification code");
       helper.setText(buildOtpMessage(otp, purpose));
       mailSender.send(message);
       LOGGER.info("OTP email sent for purpose={} to={}", purpose, maskEmail(email));
     } catch (MailException ex) {
-      LOGGER.error("OTP email delivery failed for purpose={} to={}: {}", purpose, maskEmail(email), ex.getMessage());
+      LOGGER.error(
+          "OTP email delivery failed for purpose={} to={} exceptionClass={} message={}",
+          purpose,
+          maskEmail(email),
+          ex.getClass().getName(),
+          ex.getMessage(),
+          ex);
       throw new ResponseStatusException(
           HttpStatus.SERVICE_UNAVAILABLE,
-          "Failed to send OTP email. Check SMTP settings and provider access.");
+          "Failed to send OTP email via SMTP: "
+              + buildFailureReason(ex)
+              + ". Check APP_MAIL_* configuration and SMTP provider access.");
     } catch (Exception ex) {
-      LOGGER.error("OTP email composition failed for purpose={} to={}: {}", purpose, maskEmail(email), ex.getMessage());
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to compose OTP email.");
+      LOGGER.error(
+          "OTP email composition failed for purpose={} to={} exceptionClass={} message={}",
+          purpose,
+          maskEmail(email),
+          ex.getClass().getName(),
+          ex.getMessage(),
+          ex);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Failed to compose OTP email: " + buildFailureReason(ex) + ".");
     }
+  }
+
+  private String resolveFromAddress() {
+    if (!mailProperties.getFromAddress().isBlank()) {
+      return mailProperties.getFromAddress();
+    }
+    return mailProperties.getUsername();
+  }
+
+  private String buildFailureReason(Exception ex) {
+    String topLevel = ex.getClass().getSimpleName() + ": " + Optional.ofNullable(ex.getMessage()).orElse("(no message)");
+    Throwable cause = ex.getCause();
+    if (cause == null) {
+      return topLevel;
+    }
+    return topLevel + " | cause=" + cause.getClass().getSimpleName() + ": "
+        + Optional.ofNullable(cause.getMessage()).orElse("(no message)");
   }
 
   private String buildOtpMessage(String otp, String purpose) {
