@@ -34,6 +34,7 @@ class AuthServiceTest {
   @Mock private PasswordEncoder passwordEncoder;
   @Mock private OtpService otpService;
   @Mock private OtpDeliveryService otpDeliveryService;
+  @Mock private PremiumAccessService premiumAccessService;
   @Mock private GoogleTokenVerifier googleTokenVerifier;
 
   @InjectMocks private AuthService authService;
@@ -42,6 +43,7 @@ class AuthServiceTest {
 
   @BeforeEach
   void setUp() {
+    when(premiumAccessService.isPremiumActive(any())).thenReturn(false);
     signUpRequest = new SignUpRequest();
     signUpRequest.setName("Jane Doe");
     signUpRequest.setEmail("jane@example.com");
