@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
 import NotificationItemCard from "../components/ui/NotificationItemCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import { archiveNotification, deleteNotification, dismissNotification, fetchNotificationPreferences, fetchNotifications, markAllNotificationsRead, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification, updateNotificationPreferences } from "../api/notificationApi";
+import { emitNotificationChanged, subscribeNotificationChanged } from "../services/notificationEvents";
 import { navigateTo } from "../services/routes";
+import { sortNotificationsLatestFirst } from "../services/reminderNotifications";
 import { useAuthStore } from "../store/authStore";
 
 function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = "Notifications" }) {
@@ -14,20 +16,23 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
   const [typeFilter, setTypeFilter] = useState(defaultType);
   const [statusFilter, setStatusFilter] = useState("all");
   const [preferences, setPreferences] = useState(null);
+  const [error, setError] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     const params = { size: 100 };
     if (typeFilter !== "all") params.type = typeFilter;
     if (statusFilter !== "all") params.status = statusFilter;
     const [data, prefs] = await Promise.all([fetchNotifications(token, params), fetchNotificationPreferences(token)]);
-    setItems(Array.isArray(data) ? data : []);
+    setItems(sortNotificationsLatestFirst(Array.isArray(data) ? data : []));
     setPreferences(prefs || null);
+    setError("");
     setLoading(false);
-  };
+  }, [statusFilter, token, typeFilter]);
 
-  useEffect(() => { load().catch(() => setLoading(false)); }, [token, typeFilter, statusFilter]);
+  useEffect(() => { load().catch(() => setLoading(false)); }, [load]);
+  useEffect(() => subscribeNotificationChanged(() => load()), [load]);
 
   const typeTabs = useMemo(() => ["all", "platform", "revision", "alarm"], []);
   const statusTabs = useMemo(() => ["all", "unread", "due", "upcoming", "overdue", "completed", "archived"], []);
@@ -47,7 +52,7 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
           </div>
           <div className="flex flex-wrap gap-2">
             {statusTabs.map((tab) => <button key={tab} onClick={() => setStatusFilter(tab)} className={`btn-base btn-neutral px-3 py-1.5 text-xs ${statusFilter === tab ? "border-[var(--accent-primary)]" : ""}`}>{tab}</button>)}
-            <button className="btn-base btn-neutral px-3 py-1.5 text-xs" onClick={async () => { await markAllNotificationsRead(token); load(); }}>Mark all read</button>
+            <button className="btn-base btn-neutral px-3 py-1.5 text-xs" onClick={async () => { await markAllNotificationsRead(token); emitNotificationChanged({ type: "mark-all-read" }); load(); }}>Mark all read</button>
           </div>
         </SurfaceCard>
 
@@ -71,24 +76,37 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
         </SurfaceCard>
 
         {loading ? <p>Loading…</p> : null}
+        {error ? <p className="text-sm text-[var(--accent-danger)]">{error}</p> : null}
         <div className="space-y-3">
           {items.map((item) => (
             <NotificationItemCard
               key={item.id}
               item={item}
               onOpen={(entry) => entry.actionUrl && navigateTo(entry.actionUrl)}
-              onRead={async (id) => { await markNotificationRead(token, id); load(); }}
-              onDone={async (id) => { await markNotificationDone(token, id); load(); }}
-              onSnooze={async (id, minutes) => { await snoozeNotification(token, id, minutes); load(); }}
+              onRead={async (id) => { await markNotificationRead(token, id); emitNotificationChanged({ type: "read", id }); load(); }}
+              onDone={async (id) => { await markNotificationDone(token, id); emitNotificationChanged({ type: "done", id }); load(); }}
+              onSnooze={async (id, minutes) => { await snoozeNotification(token, id, minutes); emitNotificationChanged({ type: "snooze", id }); load(); }}
               onReschedule={async (id) => {
                 const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
                 if (!input) return;
                 await rescheduleNotification(token, id, new Date(input).toISOString());
+                emitNotificationChanged({ type: "reschedule", id });
                 load();
               }}
-              onDismiss={async (id) => { await dismissNotification(token, id); load(); }}
-              onArchive={async (id) => { await archiveNotification(token, id); load(); }}
-              onDelete={async (id) => { await deleteNotification(token, id); setItems((current) => current.filter((entry) => entry.id !== id)); }}
+              onDismiss={async (id) => { await dismissNotification(token, id); emitNotificationChanged({ type: "dismiss", id }); load(); }}
+              onArchive={async (id) => { await archiveNotification(token, id); emitNotificationChanged({ type: "archive", id }); load(); }}
+              onDelete={async (id) => {
+                const previous = items;
+                setItems((current) => current.filter((entry) => entry.id !== id));
+                try {
+                  await deleteNotification(token, id);
+                  emitNotificationChanged({ type: "delete", id });
+                  setError("");
+                } catch (deleteErr) {
+                  setItems(previous);
+                  setError(deleteErr?.message || "Failed to delete notification.");
+                }
+              }}
             />
           ))}
           {!loading && items.length === 0 ? <div className="rounded-xl border border-dashed border-[var(--border-subtle)] p-8 text-center text-[var(--text-tertiary)]">No notifications found.</div> : null}
