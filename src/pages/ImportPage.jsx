@@ -28,8 +28,9 @@ function ImportPage({ theme, onThemeChange, onBack }) {
       await setFullSheet(validation.normalized);
       setErrors([]);
       setMessage("Sheet imported successfully.");
-    } catch {
-      setErrors(["Invalid JSON file."]);
+    } catch (error) {
+      console.error("[Import] Unable to parse JSON file", error);
+      setErrors(["Invalid JSON file. Please ensure the file contains valid JSON text."]);
       setMessage("");
     }
   };

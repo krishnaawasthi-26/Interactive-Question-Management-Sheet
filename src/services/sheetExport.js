@@ -1,10 +1,4 @@
-const buildExportPayload = ({ sheetTitle, topics }) => ({
-  id: `sheet_${Date.now()}`,
-  name: sheetTitle,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  topics,
-});
+import { buildSheetExportPayload, normalizeTopicsForExport } from "./sheetTransfer";
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -33,31 +27,38 @@ const sanitizeUrl = (value = "") => {
   return "";
 };
 
-const buildQuestionMarkup = (question) => {
+const buildQuestionMarkup = (question, questionIndex) => {
   const safeQuestionText = escapeHtml(question.text || "");
   const safeLink = sanitizeUrl(question.link);
+  const questionLabel = `${questionIndex + 1}. ${safeQuestionText || "Untitled question"}`;
 
   if (!safeLink) {
-    return `<li>${safeQuestionText}</li>`;
+    return `<li>${questionLabel}</li>`;
   }
 
-  return `<li>${safeQuestionText} <a href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer">(Open link)</a></li>`;
+  return `<li>${questionLabel} <a href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer">(Open link)</a></li>`;
 };
 
-const buildPrintableDocument = ({ sheetTitle, topics }) => {
+export const buildPrintableDocument = ({ sheetTitle, topics }) => {
   const safeSheetTitle = escapeHtml(sheetTitle || "Question Sheet");
-  const content = topics
+  const orderedTopics = normalizeTopicsForExport(topics);
+
+  const content = orderedTopics
     .map(
-      (topic) => `
-        <section>
-          <h2>${escapeHtml(topic.title || "Untitled topic")}</h2>
+      (topic, topicIndex) => `
+        <section class="topic-section">
+          <h2>${topicIndex + 1}. ${escapeHtml(topic.title || "Untitled topic")}</h2>
           ${(topic.subTopics || [])
             .map(
-              (subTopic) => `
-                <h3>${escapeHtml(subTopic.title || "Untitled subtopic")}</h3>
-                <ol>
-                  ${(subTopic.questions || []).map((question) => buildQuestionMarkup(question)).join("")}
-                </ol>
+              (subTopic, subTopicIndex) => `
+                <section class="subtopic-section">
+                  <h3>${topicIndex + 1}.${subTopicIndex + 1} ${escapeHtml(subTopic.title || "Untitled subtopic")}</h3>
+                  <ol>
+                    ${(subTopic.questions || [])
+                      .map((question, questionIndex) => buildQuestionMarkup(question, questionIndex))
+                      .join("")}
+                  </ol>
+                </section>
               `
             )
             .join("")}
@@ -76,9 +77,11 @@ const buildPrintableDocument = ({ sheetTitle, topics }) => {
           @page { margin: 16mm; }
           body { font-family: Arial, sans-serif; padding: 0; color: #111; line-height: 1.45; }
           h1 { margin-bottom: 24px; font-size: 28px; }
-          h2 { margin-top: 20px; margin-bottom: 8px; font-size: 20px; page-break-after: avoid; }
-          h3 { margin-top: 12px; margin-bottom: 6px; font-size: 16px; page-break-after: avoid; }
-          ol { margin-top: 8px; }
+          .topic-section { margin-top: 20px; break-inside: avoid-page; }
+          .subtopic-section { margin-top: 10px; margin-left: 16px; break-inside: avoid-page; }
+          h2 { margin: 0 0 8px 0; font-size: 20px; font-weight: 700; page-break-after: avoid; }
+          h3 { margin: 0 0 6px 0; font-size: 16px; font-weight: 600; page-break-after: avoid; }
+          ol { margin-top: 8px; padding-left: 20px; }
           li { margin-bottom: 6px; }
           a { color: #1d4ed8; text-decoration: underline; word-break: break-word; }
         </style>
@@ -117,7 +120,7 @@ const triggerPrint = async (printWindow) => {
 };
 
 export const exportSheetAsJson = ({ sheetTitle, topics }) => {
-  const payload = buildExportPayload({ sheetTitle, topics });
+  const payload = buildSheetExportPayload({ sheetTitle, topics });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
