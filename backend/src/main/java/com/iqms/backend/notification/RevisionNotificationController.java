@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,8 +85,9 @@ public class RevisionNotificationController {
   }
 
   @DeleteMapping("/{notificationId}")
-  public void delete(HttpServletRequest request, @PathVariable String notificationId) {
+  public ResponseEntity<Void> delete(HttpServletRequest request, @PathVariable String notificationId) {
     notificationService.delete(currentUser.getUserId(request), notificationId);
+    return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/{notificationId}/snooze")

@@ -59,8 +59,14 @@ public class RevisionNotificationService {
 
     return notifications.stream()
         .filter((item) -> matchesStatusFilter(item, filter.getStatus()))
-        .sorted(Comparator.comparing(RevisionNotification::getScheduledFor, Comparator.nullsLast(Comparator.reverseOrder())))
+        .sorted(Comparator.comparing(this::notificationSortTime, Comparator.nullsLast(Comparator.reverseOrder())))
         .toList();
+  }
+
+  private Instant notificationSortTime(RevisionNotification item) {
+    if (item.getScheduledFor() != null) return item.getScheduledFor();
+    if (item.getCreatedAt() != null) return item.getCreatedAt();
+    return item.getUpdatedAt();
   }
 
   public long unreadCount(String userId) {
