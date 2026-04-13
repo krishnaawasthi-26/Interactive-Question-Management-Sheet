@@ -34,17 +34,29 @@ public class GoogleTokenVerifier {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token audience mismatch.");
     }
 
-    String email = String.valueOf(response.getOrDefault("email", "")).toLowerCase();
+    String email = String.valueOf(response.getOrDefault("email", "")).trim().toLowerCase();
     String emailVerified = String.valueOf(response.getOrDefault("email_verified", "false"));
     String subject = String.valueOf(response.getOrDefault("sub", ""));
     String name = String.valueOf(response.getOrDefault("name", ""));
+    String picture = String.valueOf(response.getOrDefault("picture", ""));
+    boolean isEmailVerified = "true".equalsIgnoreCase(emailVerified);
 
-    if (email.isBlank() || subject.isBlank() || !"true".equalsIgnoreCase(emailVerified)) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google account email is not verified.");
+    if (email.isBlank() || subject.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token is missing required claims.");
     }
 
-    return new GoogleProfile(email, subject, name.isBlank() ? "Google User" : name);
+    return new GoogleProfile(
+        email,
+        isEmailVerified,
+        subject,
+        name.isBlank() ? "Google User" : name,
+        picture.isBlank() ? null : picture);
   }
 
-  public record GoogleProfile(String email, String subject, String name) {}
+  public record GoogleProfile(
+      String email,
+      boolean emailVerified,
+      String subject,
+      String name,
+      String picture) {}
 }
