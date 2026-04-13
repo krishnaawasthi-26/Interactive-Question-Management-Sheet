@@ -25,10 +25,8 @@ public class OtpDeliveryService {
 
   public void sendOtp(String email, String purpose, String otp) {
     if (!mailProperties.isEnabled()) {
-      LOGGER.warn("OTP email delivery attempted while APP_MAIL_ENABLED is false for purpose={} to={}", purpose, maskEmail(email));
-      throw new ResponseStatusException(
-          HttpStatus.SERVICE_UNAVAILABLE,
-          "Email OTP delivery is disabled. Set APP_MAIL_ENABLED=true and configure SMTP variables.");
+      LOGGER.info("OTP email delivery skipped because APP_MAIL_ENABLED is false for purpose={} to={}", purpose, maskEmail(email));
+      return;
     }
 
     try {
