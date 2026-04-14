@@ -36,24 +36,35 @@ export const getCurrentRoute = () => {
 
   const path = window.location.pathname || ROUTES.LOGIN;
 
-  if (path === ROUTES.LOGIN) return { route: ROUTES.LOGIN };
-  if (path === ROUTES.HOME) return { route: ROUTES.HOME };
-  if (path === ROUTES.SIGNUP) return { route: ROUTES.SIGNUP };
-  if (path === ROUTES.ABOUT) return { route: ROUTES.ABOUT };
-  if (path === ROUTES.CONTACT) return { route: ROUTES.CONTACT };
-  if (path === ROUTES.HOW_TO_USE) return { route: ROUTES.HOW_TO_USE };
-  if (path === ROUTES.LEARNING_INSIGHTS) return { route: ROUTES.LEARNING_INSIGHTS };
-  if (path === ROUTES.PUBLIC_SHEETS) return { route: ROUTES.PUBLIC_SHEETS };
-  if (path === ROUTES.PROFILE || path.startsWith(`${ROUTES.PROFILE}/`)) return { route: ROUTES.PROFILE };
-  if (path === ROUTES.EDIT_PROFILE) return { route: ROUTES.EDIT_PROFILE };
-  if (path === ROUTES.APP || path.startsWith(`${ROUTES.APP}/`)) return { route: ROUTES.APP };
-  if (path === ROUTES.IMPORT || path.startsWith(`${ROUTES.IMPORT}/`)) return { route: ROUTES.IMPORT };
-  if (path === ROUTES.EXPORT || path.startsWith(`${ROUTES.EXPORT}/`)) return { route: ROUTES.EXPORT };
-  if (path === ROUTES.PREMIUM) return { route: ROUTES.PREMIUM };
-  if (path === ROUTES.NOTIFICATIONS) return { route: ROUTES.NOTIFICATIONS };
-  if (path === ROUTES.ALERTS) return { route: ROUTES.ALERTS };
-  if (path === ROUTES.ALARMS) return { route: ROUTES.ALARMS };
-  if (path.startsWith(`${ROUTES.SHARED_PREFIX}/`)) return { route: ROUTES.SHARED_PREFIX };
+  const exactRouteMap = new Map([
+    [ROUTES.LOGIN, ROUTES.LOGIN],
+    [ROUTES.HOME, ROUTES.HOME],
+    [ROUTES.SIGNUP, ROUTES.SIGNUP],
+    [ROUTES.ABOUT, ROUTES.ABOUT],
+    [ROUTES.CONTACT, ROUTES.CONTACT],
+    [ROUTES.HOW_TO_USE, ROUTES.HOW_TO_USE],
+    [ROUTES.LEARNING_INSIGHTS, ROUTES.LEARNING_INSIGHTS],
+    [ROUTES.PUBLIC_SHEETS, ROUTES.PUBLIC_SHEETS],
+    [ROUTES.EDIT_PROFILE, ROUTES.EDIT_PROFILE],
+    [ROUTES.PREMIUM, ROUTES.PREMIUM],
+    [ROUTES.NOTIFICATIONS, ROUTES.NOTIFICATIONS],
+    [ROUTES.ALERTS, ROUTES.ALERTS],
+    [ROUTES.ALARMS, ROUTES.ALARMS],
+  ]);
+  const exactRoute = exactRouteMap.get(path);
+  if (exactRoute) return { route: exactRoute };
+
+  // Prefix checks are ordered from specific sections to generic shared prefixes.
+  const prefixRoutes = [
+    ROUTES.PROFILE,
+    ROUTES.APP,
+    ROUTES.IMPORT,
+    ROUTES.EXPORT,
+    ROUTES.SHARED_PREFIX,
+  ];
+  const matchedPrefix = prefixRoutes.find((prefix) => path.startsWith(`${prefix}/`));
+  if (matchedPrefix) return { route: matchedPrefix };
+
   return { route: ROUTES.LOGIN };
 };
 
