@@ -67,6 +67,7 @@ html,
 body,
 #root {
   min-height: 100%;
+  width: 100%;
 }
 
 body {
@@ -80,16 +81,18 @@ body {
   transition: background-color 160ms ease, color 160ms ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 .app-shell {
   width: 100%;
-  min-height: 100vh;
-  padding: 12px;
+  min-height: 100dvh;
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
 }
 
 .app-content {
   width: 100%;
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
@@ -143,6 +146,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
+  min-height: 40px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
   transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
@@ -247,6 +251,8 @@ a:focus-visible {
   padding: 10px 12px;
   font-size: 14px;
   min-height: 40px;
+  width: 100%;
+  max-width: 100%;
 }
 .field-base::placeholder { color: var(--text-tertiary); }
 .field-base:hover { border-color: var(--border-strong); }
@@ -286,4 +292,23 @@ a:focus-visible {
   border-radius: 12px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .page-title { font-size: 1.3rem; }
+  .btn-base { min-height: 44px; }
+  .field-base { min-height: 44px; }
 }

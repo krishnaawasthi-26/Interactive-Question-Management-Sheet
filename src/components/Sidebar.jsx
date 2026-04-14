@@ -25,7 +25,7 @@ const sections = [
   },
 ];
 
-function SidebarItem({ item, isOpen, active, onClick }) {
+function SidebarItem({ item, isOpen, active, onClick, showTooltip = true }) {
   return (
     <button
       type="button"
@@ -45,7 +45,7 @@ function SidebarItem({ item, isOpen, active, onClick }) {
         {item.label}
       </span>
 
-      {!isOpen ? (
+      {!isOpen && showTooltip ? (
         <span
           role="tooltip"
           aria-hidden="true"
@@ -58,7 +58,7 @@ function SidebarItem({ item, isOpen, active, onClick }) {
   );
 }
 
-function SidebarSection({ title, items, isOpen, currentRoute }) {
+function SidebarSection({ title, items, isOpen, currentRoute, onItemClick }) {
   return (
     <section className="space-y-1.5">
       <p
@@ -75,7 +75,10 @@ function SidebarSection({ title, items, isOpen, currentRoute }) {
             item={item}
             isOpen={isOpen}
             active={currentRoute === item.route}
-            onClick={() => navigateTo(item.route)}
+            onClick={() => {
+              navigateTo(item.route);
+              onItemClick?.();
+            }}
           />
         ))}
       </div>
@@ -83,14 +86,20 @@ function SidebarSection({ title, items, isOpen, currentRoute }) {
   );
 }
 
-function Sidebar({ isSidebarOpen, onToggle }) {
+function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile }) {
   const currentRoute = getCurrentRoute().route;
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
   const sidebarWidth = useMemo(() => (isSidebarOpen ? "w-[250px]" : "w-[72px]"), [isSidebarOpen]);
 
   return (
-    <aside className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-visible rounded-[22px] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_92%,transparent))] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}>
+    <>
+      {isMobileOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/45 lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
+      ) : null}
+      <aside
+        className={`fixed bottom-6 left-6 top-6 z-40 hidden overflow-visible rounded-[22px] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_96%,transparent),color-mix(in_srgb,var(--surface-elevated)_92%,transparent))] p-3 text-[var(--text-primary)] shadow-2xl transition-all duration-300 lg:flex lg:flex-col ${sidebarWidth}`}
+      >
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
         <button
           type="button"
@@ -139,7 +148,62 @@ function Sidebar({ isSidebarOpen, onToggle }) {
           <SidebarItem item={{ label: "Login", icon: "🔐" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.LOGIN} onClick={() => navigateTo(ROUTES.LOGIN)} />
         )}
       </div>
-    </aside>
+      </aside>
+
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-[min(86vw,300px)] overflow-y-auto border-r border-[var(--border-subtle)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_98%,transparent),color-mix(in_srgb,var(--surface-elevated)_95%,transparent))] px-3 pb-4 pt-3 text-[var(--text-primary)] shadow-2xl transition-transform duration-300 lg:hidden ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="mb-3 flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
+          <div>
+            <p className="eyebrow">Create Sheets</p>
+            <p className="meta-text">DSA Productivity</p>
+          </div>
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            aria-label="Close navigation"
+            className="btn-base btn-outline btn-icon"
+          >
+            ✕
+          </button>
+        </div>
+
+        <nav className="space-y-4 pb-4">
+          {sections.map((section) => (
+            <SidebarSection
+              key={`mobile-${section.title}`}
+              title={section.title}
+              items={section.items.map((item) => {
+                if (item.route !== ROUTES.PROFILE) return item;
+                return { ...item, route: getUserProfileRoute(currentUser?.username) };
+              })}
+              isOpen
+              currentRoute={currentRoute}
+              onItemClick={onCloseMobile}
+            />
+          ))}
+        </nav>
+
+        <div className="space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
+          {currentUser ? (
+            <>
+              <SidebarItem item={{ label: "Edit Profile", icon: "✏️" }} isOpen active={currentRoute === ROUTES.EDIT_PROFILE} showTooltip={false} onClick={() => { navigateTo(ROUTES.EDIT_PROFILE); onCloseMobile?.(); }} />
+              <SidebarItem
+                item={{ label: "Log Out", icon: "🚪" }}
+                isOpen
+                showTooltip={false}
+                active={false}
+                onClick={() => {
+                  logout();
+                  navigateTo(ROUTES.LOGIN);
+                  onCloseMobile?.();
+                }}
+              />
+            </>
+          ) : (
+            <SidebarItem item={{ label: "Login", icon: "🔐" }} isOpen showTooltip={false} active={currentRoute === ROUTES.LOGIN} onClick={() => { navigateTo(ROUTES.LOGIN); onCloseMobile?.(); }} />
+          )}
+        </div>
+      </aside>
+    </>
   );
 }
 

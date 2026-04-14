@@ -13,14 +13,14 @@ function QuestionsTable({ rows }) {
           <p className="text-xs text-[var(--text-tertiary)]">{rows.length} total questions</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <input aria-label="Search questions" placeholder="Search questions" className="field-base py-2" />
-          <select aria-label="Sort" className="field-base py-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <input aria-label="Search questions" placeholder="Search questions" className="field-base py-2 sm:w-[220px]" />
+          <select aria-label="Sort" className="field-base py-2 sm:w-auto">
             <option>Sort: Topic</option>
             <option>Status</option>
             <option>Question</option>
           </select>
-          <select aria-label="Filter" className="field-base py-2">
+          <select aria-label="Filter" className="field-base py-2 sm:w-auto">
             <option>All status</option>
             <option>Completed</option>
             <option>In Progress</option>
@@ -30,7 +30,7 @@ function QuestionsTable({ rows }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+        <table className="min-w-[760px] w-full text-left text-sm">
           <thead className="bg-[var(--surface-elevated)] text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
             <tr>
               <th className="px-4 py-3 font-semibold">Topic</th>
@@ -44,7 +44,7 @@ function QuestionsTable({ rows }) {
             {rows.length > 0 ? rows.map((row) => (
               <tr key={row.id} className="align-top transition hover:bg-[color-mix(in_srgb,var(--accent-primary)_6%,var(--surface))]">
                 <td className="px-4 py-4 text-[var(--text-primary)]">{row.topic}</td>
-                <td className="px-4 py-4 leading-6">{row.question}</td>
+                <td className="px-4 py-4 leading-6 break-words">{row.question}</td>
                 <td className="px-4 py-4">
                   {row.primary ? <a href={row.primary} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-300 hover:text-blue-200">Open Resource</a> : <span className="text-[var(--text-tertiary)]">No link</span>}
                 </td>

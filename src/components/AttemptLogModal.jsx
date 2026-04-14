@@ -133,7 +133,7 @@ export function AttemptOutcomeSection({
 
       <div className="mt-4">
         <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
-        <div className="inline-flex overflow-hidden rounded-md border border-[var(--border-subtle)]">
+        <div className="inline-flex flex-wrap overflow-hidden rounded-md border border-[var(--border-subtle)]">
           {CONFIDENCE_LEVELS.map((level) => (
             <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-black" : "bg-transparent text-[var(--text-primary)]"}`}>
               {level}
@@ -274,17 +274,17 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="panel w-full max-w-5xl rounded-2xl border shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-4">
+      <div className="panel flex max-h-[92dvh] w-full max-w-5xl flex-col rounded-2xl border shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--border-subtle)] px-4 py-4 sm:px-6">
           <div>
-            <h2 className="text-2xl font-semibold">Log Attempt</h2>
+            <h2 className="text-xl font-semibold sm:text-2xl">Log Attempt</h2>
             <p className="text-sm text-[var(--text-secondary)]">Capture attempt quality, learning signals, and revision planning.</p>
           </div>
           <button type="button" className="text-xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        <div className="max-h-[75vh] space-y-4 overflow-y-auto px-6 py-5">
+        <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           <section className={sectionClass}>
             <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Attempt Summary</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -333,9 +333,9 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
           />
         </div>
 
-        <footer className="flex items-center justify-between border-t border-[var(--border-subtle)] px-6 py-4">
+        <footer className="flex flex-col gap-3 border-t border-[var(--border-subtle)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="text-xs text-[var(--text-tertiary)]">This attempt will update learning analytics and revision alerts.</p>
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <button type="button" onClick={onClose} className="btn-base btn-neutral">Cancel</button>
             <button type="button" onClick={handleSave} className="btn-base btn-primary">Save Attempt</button>
           </div>
