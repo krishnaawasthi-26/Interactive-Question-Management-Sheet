@@ -31,7 +31,7 @@ function formatRelativeDate(value) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
-function SheetDashboardView({ title, topics = [], onOpenEdit }) {
+function SheetDashboardView({ title, topics = [], updatedAt, onOpenEdit }) {
   const [activeTab, setActiveTab] = useState("Questions");
   const rows = useMemo(() => getSheetRows(topics), [topics]);
 
@@ -50,7 +50,7 @@ function SheetDashboardView({ title, topics = [], onOpenEdit }) {
         description="Curated interview preparation sheet optimized for readability and progress tracking."
         topicsCount={topics.length}
         questionCount={rows.length}
-        updatedAt={formatRelativeDate(null)}
+        updatedAt={formatRelativeDate(updatedAt)}
         onOpenEdit={onOpenEdit}
       />
 
@@ -66,7 +66,7 @@ function SheetDashboardView({ title, topics = [], onOpenEdit }) {
           )}
         </div>
 
-        <OverviewRail summary={summary} topicsCount={topics.length} updatedAt={formatRelativeDate(null)} />
+        <OverviewRail summary={summary} topicsCount={topics.length} updatedAt={formatRelativeDate(updatedAt)} />
       </div>
     </div>
   );
