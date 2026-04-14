@@ -145,9 +145,21 @@ const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
   writeRateLimitState({ timestamps: [...recent, now], disabledUntilEpochMs: 0 });
 };
 
+const trimTrailingSlashes = (value) => value.replace(/\/+$/, "");
+
 const toRequestUrl = ({ path, baseUrl }) => {
   if (/^https?:\/\//i.test(path)) return path;
-  return `${baseUrl}${path}`;
+  if (!baseUrl) return path;
+
+  const normalizedBaseUrl = trimTrailingSlashes(baseUrl);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (/\/api$/i.test(normalizedBaseUrl) && /^\/api(\/|$)/i.test(normalizedPath)) {
+    const pathWithoutApiPrefix = normalizedPath.replace(/^\/api/i, "") || "/";
+    return `${normalizedBaseUrl}${pathWithoutApiPrefix}`;
+  }
+
+  return `${normalizedBaseUrl}${normalizedPath}`;
 };
 
 const parseResponseData = async (response) => {
