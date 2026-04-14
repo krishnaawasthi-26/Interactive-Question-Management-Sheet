@@ -90,6 +90,11 @@ public class RevisionNotificationController {
     return ResponseEntity.noContent().build();
   }
 
+  @DeleteMapping
+  public Map<String, Long> clearAll(HttpServletRequest request) {
+    return Map.of("deleted", notificationService.clearAll(currentUser.getUserId(request)));
+  }
+
   @PostMapping("/{notificationId}/snooze")
   public NotificationActionResponse snooze(
       HttpServletRequest request,

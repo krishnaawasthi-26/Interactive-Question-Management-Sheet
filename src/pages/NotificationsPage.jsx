@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
 import NotificationItemCard from "../components/ui/NotificationItemCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
-import { archiveNotification, deleteNotification, dismissNotification, fetchNotificationPreferences, fetchNotifications, markAllNotificationsRead, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification, updateNotificationPreferences } from "../api/notificationApi";
+import { archiveNotification, clearAllNotifications, deleteNotification, dismissNotification, fetchNotificationPreferences, fetchNotifications, markAllNotificationsRead, markNotificationDone, markNotificationRead, rescheduleNotification, snoozeNotification, updateNotificationPreferences } from "../api/notificationApi";
 import { emitNotificationChanged, subscribeNotificationChanged } from "../services/notificationEvents";
 import { navigateTo } from "../services/routes";
 import { sortNotificationsLatestFirst } from "../services/reminderNotifications";
@@ -53,6 +53,24 @@ function NotificationsPage({ theme, onThemeChange, defaultType = "all", title = 
           <div className="flex flex-wrap gap-2">
             {statusTabs.map((tab) => <button key={tab} onClick={() => setStatusFilter(tab)} className={`btn-base btn-neutral px-3 py-1.5 text-xs ${statusFilter === tab ? "border-[var(--accent-primary)]" : ""}`}>{tab}</button>)}
             <button className="btn-base btn-neutral px-3 py-1.5 text-xs" onClick={async () => { await markAllNotificationsRead(token); emitNotificationChanged({ type: "mark-all-read" }); load(); }}>Mark all read</button>
+            <button
+              className="btn-base btn-danger px-3 py-1.5 text-xs"
+              onClick={async () => {
+                const previous = items;
+                setItems([]);
+                try {
+                  await clearAllNotifications(token);
+                  emitNotificationChanged({ type: "clear-all" });
+                  await load();
+                  setError("");
+                } catch (clearErr) {
+                  setItems(previous);
+                  setError(clearErr?.message || "Failed to clear notifications.");
+                }
+              }}
+            >
+              Clear all
+            </button>
           </div>
         </SurfaceCard>
 
