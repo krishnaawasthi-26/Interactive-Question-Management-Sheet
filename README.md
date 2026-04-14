@@ -193,6 +193,17 @@ mvn test
 
 ## Deployment notes
 
+### Vercel routing and API proxy
+
+If you deploy the frontend on Vercel with React Router `BrowserRouter`, add `vercel.json` rewrites so deep links (like `/login`) load `index.html` and `/api/*` calls are proxied to backend.
+
+This repository includes:
+- `/api/* -> http://15.207.72.139:8080/api/*`
+- `/* -> /index.html`
+
+If your backend host changes, update `vercel.json` before deploying.
+
+
 - Frontend is currently deployed on **Vercel** (see live link above).
 - For production deployments, set environment variables in your hosting platform instead of hardcoding config.
 - Backend can be deployed to any Java-compatible platform (Render, Railway, Fly.io, ECS, etc.) with:
