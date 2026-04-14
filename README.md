@@ -37,6 +37,11 @@ The current architecture follows a clear client/store/API/server split:
 - **Spring Boot backend:** REST APIs, validation, authentication logic.
 - **MongoDB:** persistent storage for backend-managed data.
 
+
+## Requirements document
+
+For a consolidated frontend/backend requirement list, see [`requirements.md`](./requirements.md).
+
 ## Frontend stack
 
 - React 19
