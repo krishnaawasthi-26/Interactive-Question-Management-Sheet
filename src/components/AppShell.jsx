@@ -18,18 +18,25 @@ function AppShell({
   contentClassName = "",
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   return (
     <div
       className="app-shell text-[var(--text-primary)]"
       style={{ "--sidebar-width": isSidebarOpen ? "250px" : "72px" }}
     >
-      <Sidebar isSidebarOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen((prev) => !prev)} />
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
+        isMobileOpen={isMobileNavOpen}
+        onToggle={() => setIsSidebarOpen((prev) => !prev)}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
+      />
       <div className="app-content">
         <TopBar
           theme={theme}
           onThemeChange={onThemeChange}
           userLabel={userLabel}
+          onMenuToggle={() => setIsMobileNavOpen((prev) => !prev)}
           actions={(
             <>
               <NotificationBell compact />
@@ -41,8 +48,8 @@ function AppShell({
           <AlertBar message={alert} onDismiss={onDismissAlert} />
 
           {title ? (
-            <header className="panel-elevated mb-6 px-5 py-4">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-[var(--text-primary)]">{title}</h1>
+            <header className="panel-elevated mb-6 px-4 py-4 sm:px-5">
+              <h1 className="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">{title}</h1>
               {subtitle ? <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p> : null}
             </header>
           ) : null}

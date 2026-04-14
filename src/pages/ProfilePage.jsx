@@ -177,7 +177,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
           {createSheetError ? <div className="rounded-md border border-rose-600/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{createSheetError}</div> : null}
           {limitWarning ? <div className="mb-3 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200"><span>{limitWarning}</span><button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>Dismiss</button></div> : null}
           <div className="flex flex-wrap gap-2">
-            <input className="field-base min-w-[280px] flex-1" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => { setNewSheetTitle(e.target.value); if (createSheetError) setCreateSheetError(""); }} />
+            <input className="field-base w-full flex-1 sm:min-w-[280px]" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => { setNewSheetTitle(e.target.value); if (createSheetError) setCreateSheetError(""); }} />
             <button
               className="btn-base btn-primary"
               onClick={async () => {
@@ -221,7 +221,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
           ) : (
             <div className="space-y-2">
               {[...sheets].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)).slice(0, 5).map((sheet) => (
-                <div key={sheet.id} className="surface-card surface-card-elevated flex items-center justify-between gap-4">
+                <div key={sheet.id} className="surface-card surface-card-elevated flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="card-title">{sheet.title || "Untitled Sheet"}</p>
                     <p className="meta-text">{calculateSheetProgress(sheet).completedQuestions}/{calculateSheetProgress(sheet).totalQuestions} solved</p>
@@ -235,7 +235,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
 
         {engagementViewer ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="panel w-full max-w-lg p-4">
+            <div className="panel w-full max-w-lg max-h-[86dvh] overflow-y-auto p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="section-title">{engagementViewer.title}</h3>
                 <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => setEngagementViewer(null)}>Close</button>

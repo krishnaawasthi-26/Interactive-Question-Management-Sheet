@@ -196,8 +196,8 @@ function TopicList({
                     className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55`}
                   >
                     {/* Topic */}
-                    <div className="mb-1.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center flex-1">
+                    <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex min-w-0 flex-1 items-center">
                         <button
                           onClick={() => toggleTopic(topic.id)}
                           className="mr-2 flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
@@ -223,7 +223,7 @@ function TopicList({
                             </button>
                           </div>
                         ) : (
-                          <h2 className="text-sm font-semibold text-[var(--text-primary)]">{topic.title}</h2>
+                          <h2 className="text-sm font-semibold text-[var(--text-primary)] break-words">{topic.title}</h2>
                         )}
                       </div>
 
@@ -251,7 +251,7 @@ function TopicList({
                     {(expandedTopics[topic.id] || shouldExpandAll) && (
                       <>
                         {isEditing && (
-                          <div className="mb-2 mt-2 flex gap-2">
+                          <div className="mb-2 mt-2 flex flex-wrap gap-2">
                             <input
                               placeholder="Add Subtopic"
                               className="flex-1 bg-transparent border border-gray-700 px-2 py-1 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -270,7 +270,7 @@ function TopicList({
                             />
 
                             <button
-                              className="rounded-md bg-[var(--btn-accent-primary)] px-2.5 py-1 text-xs font-medium text-white transition hover:bg-[var(--btn-accent-primary-hover)]"
+                              className="rounded-md bg-[var(--btn-accent-primary)] px-2.5 py-2 text-xs font-medium text-white transition hover:bg-[var(--btn-accent-primary-hover)]"
                               onClick={() => {
                                 if (!subInput[topic.id]) return;
                                 addSubTopic(topic.id, subInput[topic.id]).then((created) => {
@@ -289,7 +289,7 @@ function TopicList({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className="space-y-2 pl-4"
+                              className="space-y-2 pl-2 sm:pl-4"
                             >
                               {topic.subTopics.map((sub, sIndex) => (
                                 <Draggable key={sub.id} draggableId={sub.id.toString()} index={sIndex} isDragDisabled={!isEditing || !allowReorder}>
@@ -300,8 +300,8 @@ function TopicList({
                                       {...provided.dragHandleProps}
                                       className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]/60 py-1`}
                                     >
-                                      <div className="flex items-center justify-between gap-3 p-2">
-                                        <div className="flex items-center flex-1">
+                                      <div className="flex flex-wrap items-center justify-between gap-3 p-2">
+                                        <div className="flex min-w-0 flex-1 items-center">
                                           <button
                                             onClick={() => toggleSubtopic(sub.id)}
                                             className="mr-2 flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
@@ -327,7 +327,7 @@ function TopicList({
                                               </button>
                                             </div>
                                           ) : (
-                                            <h3 className="text-sm font-medium text-[var(--text-primary)]">{sub.title}</h3>
+                                            <h3 className="text-sm font-medium text-[var(--text-primary)] break-words">{sub.title}</h3>
                                           )}
                                         </div>
 
@@ -355,7 +355,7 @@ function TopicList({
                                       {(expandedSubtopics[sub.id] || shouldExpandAll) && (
                                         <>
                                           {isEditing && (
-                                            <div className="flex gap-2 mt-1 mb-1">
+                                            <div className="mb-1 mt-1 flex flex-wrap gap-2">
                                               <input
                                                 placeholder="Add Question"
                                                 className="flex-1 bg-transparent border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -376,7 +376,7 @@ function TopicList({
                                                 }}
                                               />
                                               <button
-                                                className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+                                                className="rounded-md bg-green-600 px-2 py-2 text-white transition hover:bg-green-700"
                                                 onClick={() => {
                                                   if (!questionInput[sub.id]) return;
                                                   addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
@@ -450,7 +450,7 @@ function TopicList({
                                                                     🔒 Premium
                                                                   </button>
                                                                 )}
-                                                                <span className="text-sm leading-5 text-[var(--text-primary)]">{q.text}</span>
+                                                              <span className="text-sm leading-5 text-[var(--text-primary)] break-words">{q.text}</span>
                                                               </span>
                                                               {isEditing && (
                                                                 <>
@@ -491,7 +491,7 @@ function TopicList({
                                                             </div>
 
                                                             {(q.link || q.articleLink || q.videoLink || q.notes) && (
-                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-7 text-[11px]">
+                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-3 text-[11px] sm:pl-7">
                                                                 {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Link</a>}
                                                                 {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Article</a>}
                                                                 {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Video</a>}
@@ -508,7 +508,7 @@ function TopicList({
                                                             )}
 
                                                             {isEditing && mobileActionQuestionId === q.id && (
-                                                              <div className="mt-2 flex flex-wrap gap-1 pl-7 sm:hidden">
+                                                              <div className="mt-2 flex flex-wrap gap-1 pl-3 sm:hidden">
                                                                 <button
                                                                   className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
                                                                   onClick={() => {
@@ -538,7 +538,7 @@ function TopicList({
                                                             )}
 
                                                             {isEditing && resourceEditorByQuestion[q.id] && (
-                                                              <div className="mt-3 space-y-2 rounded-md border border-zinc-700 bg-[rgba(0,0,0,0.2)] p-3 pl-7">
+                                                              <div className="mt-3 space-y-2 rounded-md border border-zinc-700 bg-[rgba(0,0,0,0.2)] p-3 pl-3 sm:pl-7">
                                                                 <input
                                                                   value={resourceDraftByQuestion[q.id]?.link || ""}
                                                                   onChange={(event) =>

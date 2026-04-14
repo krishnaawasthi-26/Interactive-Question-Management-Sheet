@@ -13,7 +13,7 @@ function NotificationDrawer({ open, loading, error, permissionState, sections, o
   const items = sections[activeTab] || [];
 
   return (
-    <div className="absolute right-0 top-12 z-50 w-[460px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl">
+    <div className="fixed inset-x-3 top-16 z-50 max-h-[78dvh] w-auto rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-none sm:w-[min(460px,92vw)]">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Notification center</h3>
         <button className="text-xs text-[var(--accent-primary)]" onClick={onMarkAllRead}>Mark all read</button>
@@ -25,7 +25,7 @@ function NotificationDrawer({ open, loading, error, permissionState, sections, o
         {tabs.map(([key, label]) => <button key={key} onClick={() => setActiveTab(key)} className={`rounded-lg border px-2 py-1 text-xs ${activeTab === key ? "border-[var(--accent-primary)]" : "border-[var(--border-subtle)]"}`}>{label}</button>)}
       </div>
 
-      <div className="max-h-[65vh] space-y-2 overflow-y-auto pr-1">
+      <div className="max-h-[58dvh] space-y-2 overflow-y-auto pr-1 sm:max-h-[65vh]">
         {loading ? <p className="text-sm">Loading…</p> : null}
         {!loading && items.length === 0 ? <p className="rounded-lg border border-dashed border-[var(--border-subtle)] p-5 text-center text-sm text-[var(--text-tertiary)]">{activeTab === "archived" ? "No archived notifications." : "No active notifications."}</p> : null}
         {items.map((item) => (
