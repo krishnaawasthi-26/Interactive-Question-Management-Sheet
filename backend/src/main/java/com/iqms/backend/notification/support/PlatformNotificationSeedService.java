@@ -18,7 +18,7 @@ public class PlatformNotificationSeedService {
   }
 
   public void seedForUserIfNeeded(String userId) {
-    if (!notificationRepository.findVisibleByUserIdAndType(userId, "platform", Instant.now(), org.springframework.data.domain.PageRequest.of(0, 1)).isEmpty()) {
+    if (notificationRepository.existsByUserIdAndSourceTypeAndSourceId(userId, "system", "platform-seed")) {
       return;
     }
 

@@ -28,7 +28,7 @@ public class RevisionNotification {
   private String title;
   private String message;
   @Indexed
-  private String status; // unread | read | archived | dismissed | completed | overdue
+  private String status; // unread | read | archived | dismissed | completed | overdue | deleted
   private String priority; // low | medium | high
 
   private Instant scheduledFor;
@@ -49,6 +49,7 @@ public class RevisionNotification {
 
   private Instant createdAt;
   private Instant updatedAt;
+  private Instant deletedAt;
 
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
@@ -94,4 +95,6 @@ public class RevisionNotification {
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
   public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+  public Instant getDeletedAt() { return deletedAt; }
+  public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
 }

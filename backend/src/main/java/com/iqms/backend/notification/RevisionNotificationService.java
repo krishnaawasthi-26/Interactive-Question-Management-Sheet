@@ -142,7 +142,20 @@ public class RevisionNotificationService {
 
   public void delete(String userId, String notificationId) {
     RevisionNotification notification = getOwnedNotification(userId, notificationId);
-    notificationRepository.delete(notification);
+    softDelete(notification);
+    notificationRepository.save(notification);
+  }
+
+  public long clearAll(String userId) {
+    List<RevisionNotification> notifications = notificationRepository.findVisibleByUserId(userId, Instant.now(), PageRequest.of(0, 1000));
+    long affected = 0;
+    for (RevisionNotification notification : notifications) {
+      if ("deleted".equals(notification.getStatus())) continue;
+      softDelete(notification);
+      notificationRepository.save(notification);
+      affected += 1;
+    }
+    return affected;
   }
 
   public long markAllRead(String userId) {
@@ -319,6 +332,9 @@ public class RevisionNotificationService {
       notification.setCreatedAt(now);
       notification.setStatus("unread");
     }
+    if ("deleted".equals(notification.getStatus())) {
+      return;
+    }
 
     Map<String, Object> metadata = notification.getMetadata() == null ? new HashMap<>() : notification.getMetadata();
     metadata.put("sheetId", sheet.getId());
@@ -351,6 +367,7 @@ public class RevisionNotificationService {
     if ("completed".equals(notification.getStatus()) || "archived".equals(notification.getStatus()) || "dismissed".equals(notification.getStatus())) {
       return;
     }
+    if ("deleted".equals(notification.getStatus())) return;
 
     if (notification.getScheduledFor().isBefore(now) && notification.getDeliveredAt() == null) {
       notification.setDeliveredAt(now);
@@ -390,6 +407,14 @@ public class RevisionNotificationService {
     entry.put("details", details == null ? Map.of() : details);
     auditTrail.add(entry);
     notification.setAuditTrail(auditTrail);
+  }
+
+  private void softDelete(RevisionNotification notification) {
+    Instant now = Instant.now();
+    notification.setStatus("deleted");
+    notification.setDeletedAt(now);
+    notification.setUpdatedAt(now);
+    appendAudit(notification, "deleted", Map.of());
   }
 
   private void rescheduleFromRecurrence(RevisionNotification notification) {

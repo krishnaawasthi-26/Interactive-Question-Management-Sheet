@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { archiveNotification, deleteNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
+import { archiveNotification, clearAllNotifications, deleteNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { getNotificationPermissionState, requestNotificationPermission, subscribeToPushIfPossible } from "../services/notifications";
 import { emitNotificationChanged, subscribeNotificationChanged } from "../services/notificationEvents";
 import { buildNotificationSections } from "../services/notificationUtils";
@@ -72,6 +72,21 @@ function NotificationBell({ compact = false }) {
   };
   const onSnooze = async (id, mins) => { await snoozeNotification(token, id, mins); emitNotificationChanged({ type: "snooze", id }); loadAll(); };
   const onMarkAllRead = async () => { await markAllNotificationsRead(token); emitNotificationChanged({ type: "mark-all-read" }); loadAll(); };
+  const onClearAll = async () => {
+    const previous = notifications;
+    setNotifications([]);
+    setUnreadCount(0);
+    try {
+      await clearAllNotifications(token);
+      emitNotificationChanged({ type: "clear-all" });
+      await loadAll();
+      setError("");
+    } catch (clearErr) {
+      setNotifications(previous);
+      setError(clearErr?.message || "Failed to clear notifications.");
+      await loadAll();
+    }
+  };
 
   const onReschedule = async (id) => {
     const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
@@ -112,6 +127,7 @@ function NotificationBell({ compact = false }) {
         onSnooze={onSnooze}
         onReschedule={onReschedule}
         onMarkAllRead={onMarkAllRead}
+        onClearAll={onClearAll}
       />
       {open ? <button className="mt-2 text-xs text-[var(--accent-info)]" onClick={() => navigateTo(ROUTES.NOTIFICATIONS)}>Open all notifications →</button> : null}
     </div>
