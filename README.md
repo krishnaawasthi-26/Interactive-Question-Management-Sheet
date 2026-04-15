@@ -91,6 +91,59 @@ Variables:
 - `RAZORPAY_KEY_ID` (Razorpay API key id, safe to share with frontend through backend response)
 - `RAZORPAY_KEY_SECRET` (Razorpay API secret, **keep only on backend/server env**)
 
+## How to get each required credential/service
+
+Use the provided sample files first:
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+```
+
+Then fill values service by service:
+
+1. **MongoDB (`MONGODB_URI`)**
+   - Create a cluster in MongoDB Atlas (or run local MongoDB).
+   - In Atlas: Database → Connect → Drivers → copy connection string.
+   - Replace username, password, and database name in `backend/.env`.
+
+2. **Auth secret (`APP_AUTH_SECRET`)**
+   - Generate a strong random secret (32+ chars).
+   - Example:
+     ```bash
+     openssl rand -base64 48
+     ```
+   - Paste output into `APP_AUTH_SECRET`.
+
+3. **Google login (`APP_AUTH_GOOGLE_CLIENT_ID`)**
+   - Open Google Cloud Console → APIs & Services → Credentials.
+   - Create OAuth Client ID → **Web application**.
+   - Add origin: `http://localhost:5173` for local development.
+   - Copy Client ID (`*.apps.googleusercontent.com`) to `APP_AUTH_GOOGLE_CLIENT_ID`.
+
+4. **OTP email / SMTP (`APP_MAIL_*`)**
+   - Use your mail provider SMTP credentials.
+   - For Gmail:
+     - `APP_MAIL_HOST=smtp.gmail.com`
+     - `APP_MAIL_PORT=587`
+     - `APP_MAIL_AUTH=true`
+     - `APP_MAIL_STARTTLS=true`
+     - Use an App Password in `APP_MAIL_PASSWORD`.
+   - Set `APP_MAIL_ENABLED=true` only after all mail fields are configured.
+
+5. **Razorpay (`APP_PAYMENT_RAZORPAY_ENABLED`, `RAZORPAY_*`, `VITE_RAZORPAY_KEY_ID`)**
+   - Create Razorpay account → Dashboard → API Keys.
+   - Generate test keys first.
+   - Put:
+     - `RAZORPAY_KEY_ID` in `backend/.env`
+     - `RAZORPAY_KEY_SECRET` in `backend/.env` (never expose publicly)
+     - `VITE_RAZORPAY_KEY_ID` in frontend `.env` (publishable key id)
+   - Enable payments by setting `APP_PAYMENT_RAZORPAY_ENABLED=true`.
+
+6. **Optional frontend-only vars**
+   - `VITE_API_TIMEOUT_MS`: request timeout (default `12000`).
+   - `VITE_WEB_PUSH_PUBLIC_KEY`: required only for push subscription support.
+
 ### Razorpay premium flow (secure)
 
 - Frontend opens `checkout.razorpay.com` only after requesting an order from backend.
