@@ -71,17 +71,17 @@ public class ProfileController {
   }
 
   @PutMapping
-  public ResponseEntity<Map<String, Object>> updateProfile(HttpServletRequest request, @RequestBody Map<String, String> body) {
+  public ResponseEntity<Map<String, Object>> updateProfile(HttpServletRequest request, @RequestBody(required = false) Map<String, String> body) {
     User user = findUser(currentUser.getUserId(request));
-    String name = body.get("name");
-    String email = body.get("email");
-    String username = body.get("username");
-    String bio = body.get("bio");
-    String institution = body.get("institution");
-    String company = body.get("company");
-    String websiteUrl = body.get("websiteUrl");
-    String githubUrl = body.get("githubUrl");
-    String linkedinUrl = body.get("linkedinUrl");
+    String name = bodyValue(body, "name");
+    String email = bodyValue(body, "email");
+    String username = bodyValue(body, "username");
+    String bio = bodyValue(body, "bio");
+    String institution = bodyValue(body, "institution");
+    String company = bodyValue(body, "company");
+    String websiteUrl = bodyValue(body, "websiteUrl");
+    String githubUrl = bodyValue(body, "githubUrl");
+    String linkedinUrl = bodyValue(body, "linkedinUrl");
 
     if (name != null && !name.isBlank()) {
       user.setName(name.trim());
@@ -257,6 +257,10 @@ public class ProfileController {
   private String normalizeOptionalValue(String value) {
     String normalized = value.trim();
     return normalized.isBlank() ? null : normalized;
+  }
+
+  private String bodyValue(Map<String, String> body, String key) {
+    return body == null ? null : body.get(key);
   }
 
   private Map<String, Object> profilePayload(User user) {

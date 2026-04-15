@@ -31,16 +31,16 @@ public class StudyTeamController {
   }
 
   @PostMapping
-  public ResponseEntity<StudyTeam> create(HttpServletRequest request, @RequestBody Map<String, String> body) {
-    return ResponseEntity.ok(teamService.create(currentUser.getUserId(request), body.get("name"), body.get("mode")));
+  public ResponseEntity<StudyTeam> create(HttpServletRequest request, @RequestBody(required = false) Map<String, String> body) {
+    return ResponseEntity.ok(teamService.create(currentUser.getUserId(request), bodyValue(body, "name"), bodyValue(body, "mode")));
   }
 
   @PostMapping("/{teamId}/invite")
   public ResponseEntity<StudyTeam> invite(
       HttpServletRequest request,
       @PathVariable String teamId,
-      @RequestBody Map<String, String> body) {
-    return ResponseEntity.ok(teamService.invite(currentUser.getUserId(request), teamId, body.get("username"), body.get("role")));
+      @RequestBody(required = false) Map<String, String> body) {
+    return ResponseEntity.ok(teamService.invite(currentUser.getUserId(request), teamId, bodyValue(body, "username"), bodyValue(body, "role")));
   }
 
   @PostMapping("/{teamId}/assign-sheet/{sheetId}")
@@ -59,5 +59,9 @@ public class StudyTeamController {
   @GetMapping("/{teamId}/dashboard/member")
   public ResponseEntity<Map<String, Object>> memberDashboard(HttpServletRequest request, @PathVariable String teamId) {
     return ResponseEntity.ok(teamService.memberDashboard(currentUser.getUserId(request), teamId));
+  }
+
+  private String bodyValue(Map<String, String> body, String key) {
+    return body == null ? null : body.get(key);
   }
 }

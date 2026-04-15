@@ -7,6 +7,7 @@ import com.iqms.backend.repository.StudyTeamRepository;
 import com.iqms.backend.repository.TeamSheetProgressRepository;
 import com.iqms.backend.repository.UserRepository;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -63,13 +64,16 @@ public class StudyTeamService {
   public StudyTeam invite(String actorUserId, String teamId, String username, String role) {
     StudyTeam team = find(teamId);
     requireMentorOrAdmin(team, actorUserId);
+    if (username == null || username.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username is required.");
+    }
 
     User actor = premiumAccessService.findUser(actorUserId);
     if (team.getMemberships().size() >= 10) {
       entitlementService.requireFeature(actor, "team_unlimited_members");
     }
 
-    User target = userRepository.findByUsername(username.toLowerCase(Locale.ROOT))
+    User target = userRepository.findByUsername(username.trim().toLowerCase(Locale.ROOT))
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
 
     String normalizedRole = normalizeRole(role);
@@ -118,8 +122,14 @@ public class StudyTeamService {
     payload.put("activeMembers", activeMembers);
     payload.put("averageProgress", Math.round(avgProgress));
     payload.put("overdueRevisionItems", overdueRevisionItems);
-    payload.put("topPerformers", progressEntries.stream().sorted((a, b) -> Integer.compare(b.getProgressPercent(), a.getProgressPercent())).limit(5).toList());
-    payload.put("lowEngagement", progressEntries.stream().sorted((a, b) -> Integer.compare(a.getProgressPercent(), b.getProgressPercent())).limit(5).toList());
+    payload.put("topPerformers", progressEntries.stream()
+        .sorted(Comparator.comparingInt(this::safeProgressPercent).reversed())
+        .limit(5)
+        .toList());
+    payload.put("lowEngagement", progressEntries.stream()
+        .sorted(Comparator.comparingInt(this::safeProgressPercent))
+        .limit(5)
+        .toList());
     return payload;
   }
 
@@ -133,8 +143,15 @@ public class StudyTeamService {
     payload.put("assignedSheets", team.getAssignedSheetIds());
     payload.put("dueToday", progress.stream().mapToInt(entry -> entry.getDueCount() == null ? 0 : entry.getDueCount()).sum());
     payload.put("progressSummary", progress);
-    payload.put("recentActivity", progress.stream().sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt())).limit(10).toList());
+    payload.put("recentActivity", progress.stream()
+        .sorted(Comparator.comparing(TeamSheetProgress::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+        .limit(10)
+        .toList());
     return payload;
+  }
+
+  private int safeProgressPercent(TeamSheetProgress entry) {
+    return entry.getProgressPercent() == null ? 0 : entry.getProgressPercent();
   }
 
   private StudyTeam find(String teamId) {
