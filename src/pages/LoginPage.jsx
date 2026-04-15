@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { loadGoogleAuthConfig } from "../config/authConfig";
+import { isGoogleAuthMissingConfigError, loadGoogleAuthConfig } from "../config/authConfig";
 import { getGoogleAuthErrorMessage } from "../utils/googleAuthError";
 import AppShell from "../components/AppShell";
 
@@ -16,6 +16,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const googleButtonRef = useRef(null);
   const [googleReady, setGoogleReady] = useState(false);
   const [googleConfigError, setGoogleConfigError] = useState("");
+  const [googleEnabled, setGoogleEnabled] = useState(true);
   const lockSeconds = Math.max(0, Math.ceil((loginBlockedUntil - now) / 1000));
   const isLocked = lockSeconds > 0;
 
@@ -43,7 +44,12 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
       try {
         googleConfig = await loadGoogleAuthConfig();
       } catch (error) {
-        setGoogleConfigError(error?.message || "Google Sign-In configuration failed to load.");
+        if (isGoogleAuthMissingConfigError(error)) {
+          setGoogleEnabled(false);
+          setGoogleConfigError("");
+        } else {
+          setGoogleConfigError(error?.message || "Google Sign-In configuration failed to load.");
+        }
         setGoogleReady(false);
         return;
       }
@@ -68,6 +74,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
         shape: "rectangular",
         width: "320",
       });
+      setGoogleEnabled(true);
       setGoogleConfigError("");
       setGoogleReady(true);
     };
@@ -142,12 +149,18 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
           </button>
         </form>
 
-        <div className="my-4 text-center text-xs text-[var(--text-muted)]">OR</div>
-        <div className="flex justify-center" ref={googleButtonRef} />
-        {googleConfigError ? (
-          <p className="mt-2 text-center text-xs text-[var(--accent-danger)]">{googleConfigError}</p>
+        {googleEnabled ? (
+          <>
+            <div className="my-4 text-center text-xs text-[var(--text-muted)]">OR</div>
+            <div className="flex justify-center" ref={googleButtonRef} />
+            {googleConfigError ? (
+              <p className="mt-2 text-center text-xs text-[var(--accent-danger)]">{googleConfigError}</p>
+            ) : (
+              !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>
+            )}
+          </>
         ) : (
-          !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>
+          <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Google Sign-In is currently unavailable for this deployment.</p>
         )}
 
         <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="link-base mt-4 text-sm">
