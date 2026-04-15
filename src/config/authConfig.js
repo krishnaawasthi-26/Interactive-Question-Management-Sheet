@@ -49,7 +49,7 @@ const GOOGLE_AUTH_CONFIG_MISSING_CODE = "GOOGLE_AUTH_CONFIG_MISSING";
 
 const createMissingConfigError = () => {
   const error = new Error(
-    "Google Sign-In is disabled because no Google Web Client ID is configured. Backend: set APP_AUTH_GOOGLE_CLIENT_ID or APP_AUTH_GOOGLE_CLIENT_IDS. Frontend: set VITE_APP_AUTH_GOOGLE_CLIENT_ID or VITE_GOOGLE_CLIENT_ID. Then restart both apps."
+    "Google Sign-In is disabled because no Google Web Client ID is configured. Backend accepts APP_AUTH_GOOGLE_CLIENT_ID / APP_AUTH_GOOGLE_CLIENT_IDS (also GOOGLE_CLIENT_ID / GOOGLE_CLIENT_IDS / GOOGLE_WEB_CLIENT_ID / GOOGLE_WEB_CLIENT_IDS). Frontend accepts VITE_APP_AUTH_GOOGLE_CLIENT_ID / VITE_GOOGLE_CLIENT_ID (or *_CLIENT_IDS variants). Then restart both apps."
   );
   error.code = GOOGLE_AUTH_CONFIG_MISSING_CODE;
   return error;
