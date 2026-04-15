@@ -26,9 +26,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             "/api/sheets/**",
             "/api/notifications/**",
             "/api/notification-preferences/**",
-            "/api/premium/create-order",
-            "/api/premium/verify",
             "/api/premium/status",
+            "/api/payments/razorpay/order",
+            "/api/payments/razorpay/verify",
             "/api/teams/**")
         .excludePathPatterns(
             "/api/profile/shared/**",

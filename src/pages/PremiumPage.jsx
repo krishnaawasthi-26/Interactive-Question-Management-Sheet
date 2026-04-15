@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
-import { createPremiumOrder, fetchPremiumPlans, verifyPremiumPayment } from "../api/premiumApi";
+import { createPremiumOrder, fetchPremiumPlans, fetchPremiumStatus, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
 
 const loadRazorpayCheckoutScript = () =>
@@ -63,8 +63,13 @@ function PremiumPage({ theme, onThemeChange }) {
       const order = await createPremiumOrder(currentUser.token, planId);
 
       await new Promise((resolve, reject) => {
+        const checkoutKey = import.meta.env.VITE_RAZORPAY_KEY_ID || order.keyId;
+        if (!checkoutKey) {
+          reject(new Error("Payment configuration is unavailable."));
+          return;
+        }
         const razorpay = new window.Razorpay({
-          key: order.razorpayKeyId,
+          key: checkoutKey,
           amount: order.amount,
           currency: order.currency,
           name: "Create Sheets Premium",
@@ -85,8 +90,8 @@ function PremiumPage({ theme, onThemeChange }) {
                 razorpayPaymentId: paymentResponse.razorpay_payment_id,
                 razorpaySignature: paymentResponse.razorpay_signature,
               });
-
-              const nextUser = { ...currentUser, ...verified, premiumActive: true };
+              const status = await fetchPremiumStatus(currentUser.token);
+              const nextUser = { ...currentUser, ...verified, ...status, premiumActive: true };
               window.localStorage.setItem("iqms-current-user", JSON.stringify(nextUser));
               useAuthStore.setState({ currentUser: nextUser });
               setMessage(`Premium activated until ${new Date(verified.premiumUntil).toLocaleString()}.`);

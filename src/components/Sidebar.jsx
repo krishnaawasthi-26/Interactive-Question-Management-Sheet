@@ -10,6 +10,7 @@ const sections = [
       { label: "My Sheets", route: ROUTES.APP, icon: "🗂️" },
       { label: "Profile", route: ROUTES.PROFILE, icon: "👤" },
       { label: "Insights", route: ROUTES.LEARNING_INSIGHTS, icon: "🗓️" },
+      { label: "Buy Premium", route: ROUTES.PREMIUM, icon: "💎" },
       { label: "Notifications", route: ROUTES.NOTIFICATIONS, icon: "🔔" },
       { label: "Alerts", route: ROUTES.ALERTS, icon: "📚" },
       { label: "Alarm", route: ROUTES.ALARMS, icon: "⏰" },
