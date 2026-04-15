@@ -1,7 +1,8 @@
-import NotificationsPage from "./NotificationsPage";
+import { Navigate } from "react-router-dom";
+import { ROUTES } from "../services/routes";
 
-function AlertsPage(props) {
-  return <NotificationsPage {...props} defaultType="revision" defaultPanel="notifications" title="Notifications & Alerts" />;
+function AlertsPage() {
+  return <Navigate to={ROUTES.NOTIFICATIONS} replace />;
 }
 
 export default AlertsPage;

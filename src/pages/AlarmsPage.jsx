@@ -106,21 +106,21 @@ function AlarmsPage({ theme, onThemeChange }) {
     }
   };
 
-  const ReminderRow = ({ item }) => <div className="rounded-xl border border-[var(--border-subtle)] p-3">
+  const ReminderRow = ({ item }) => <div className="inbox-row rounded-xl border border-[var(--border-subtle)] p-3">
     <p className="font-semibold">{item.title}</p><p className="text-sm text-[var(--text-secondary)]">{item.message}</p>
     <p className="text-xs text-[var(--text-tertiary)]">{getRelativeTime(item.scheduledFor)} • {item.status}</p>
     <div className="mt-2 flex flex-wrap gap-2">
-      {item.status === "unread" || item.status === "overdue" ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={async () => { await markNotificationRead(token, item.id); load(); }}>Read</button> : null}
-      <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={async () => { await snoozeNotification(token, item.id, 60); load(); }}>Snooze 1h</button>
-      <button className="btn-base btn-success px-2 py-1 text-xs" onClick={async () => { await markNotificationDone(token, item.id); load(); }}>Done</button>
-      <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={async () => {
+      {item.status === "unread" || item.status === "overdue" ? <button className="btn-base btn-neutral btn-sm" onClick={async () => { await markNotificationRead(token, item.id); load(); }}>Read</button> : null}
+      <button className="btn-base btn-neutral btn-sm" onClick={async () => { await snoozeNotification(token, item.id, 60); load(); }}>Snooze 1h</button>
+      <button className="btn-base btn-success btn-sm" onClick={async () => { await markNotificationDone(token, item.id); load(); }}>Done</button>
+      <button className="btn-base btn-neutral btn-sm" onClick={async () => {
         const input = window.prompt("Reschedule to (ISO date/time)", new Date(Date.now() + 3600_000).toISOString());
         if (!input) return;
         await rescheduleNotification(token, item.id, new Date(input).toISOString());
         load();
       }}>Reschedule</button>
-      <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={async () => { await dismissNotification(token, item.id); load(); }}>Dismiss</button>
-      <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={async () => { await archiveNotification(token, item.id); load(); }}>Archive</button>
+      <button className="btn-base btn-neutral btn-sm" onClick={async () => { await dismissNotification(token, item.id); load(); }}>Dismiss</button>
+      <button className="btn-base btn-neutral btn-sm" onClick={async () => { await archiveNotification(token, item.id); load(); }}>Archive</button>
     </div>
   </div>;
 
@@ -128,7 +128,7 @@ function AlarmsPage({ theme, onThemeChange }) {
     <div className="space-y-4">
       <SurfaceCard title="Create reminder" description="Use quick presets or custom date-time with optional recurrence.">
         <div className="mb-2 flex flex-wrap gap-2">
-          {quickPresets.map((preset) => <button key={preset.label} className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => setScheduledFor(preset.getDate().toISOString().slice(0, 16))}>{preset.label}</button>)}
+          {quickPresets.map((preset) => <button key={preset.label} className="btn-base btn-neutral btn-sm" onClick={() => setScheduledFor(preset.getDate().toISOString().slice(0, 16))}>{preset.label}</button>)}
         </div>
         <div className="grid gap-2 md:grid-cols-5">
           <input className="field-base" placeholder="Title" value={title} onChange={(e) => { setTitle(e.target.value); setFormMessage(""); }} />
@@ -137,7 +137,7 @@ function AlarmsPage({ theme, onThemeChange }) {
           <select className="field-base" value={recurrenceType} onChange={(e) => { setRecurrenceType(e.target.value); setFormMessage(""); }}>
             <option value="none">No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
           </select>
-          <button className="btn-base btn-success" onClick={createReminder}>Create reminder</button>
+          <button className="btn-base btn-success btn-sm" onClick={createReminder}>Create reminder</button>
         </div>
         {recurrenceType !== "none" ? <input className="field-base mt-2 w-40" type="number" min="1" value={recurrenceEvery} onChange={(e) => setRecurrenceEvery(e.target.value)} /> : null}
         {formMessage ? <p className="mt-2 text-sm text-[var(--text-secondary)]">{formMessage}</p> : null}

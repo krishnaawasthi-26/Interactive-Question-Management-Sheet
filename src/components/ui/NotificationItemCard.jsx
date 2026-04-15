@@ -7,25 +7,25 @@ function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchi
   const archived = isArchivedNotification(item);
 
   return (
-    <article className={`rounded-xl border p-3 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_45%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_10%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs" style={{ color: typeMeta.tint }}>{typeMeta.icon} {typeMeta.label}</p>
-          <p className="text-sm font-semibold">{item.title}</p>
-          <p className="text-xs text-[var(--text-secondary)]">{item.message}</p>
+    <article className={`inbox-row rounded-xl border p-3 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_34%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-[0.11em]" style={{ color: typeMeta.tint }}>{typeMeta.icon} {typeMeta.label}</p>
+          <p className="mt-1 text-sm font-semibold leading-5">{item.title}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{item.message}</p>
           <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">{getRelativeTime(item.scheduledFor || item.createdAt)} • <span className={priorityClass[item.priority] || ""}>{item.priority || "medium"}</span> • {state}</p>
         </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-2">
-        {item.actionUrl ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onOpen(item)}>View</button> : null}
-        {!archived && (item.status === "unread" || item.status === "overdue") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onRead(item.id)}>Read</button> : null}
-        {!archived && item.type === "revision" ? <button className="btn-base btn-success px-2 py-1 text-xs" onClick={() => onDone(item.id)}>Done</button> : null}
-        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onSnooze(item.id, 60)}>+1h</button> : null}
-        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onReschedule(item.id)}>Reschedule</button> : null}
-        {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onDismiss(item.id)}>Dismiss</button> : null}
-        {!archived ? <button className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => onArchive(item.id)}>Archive</button> : null}
-        <button className="btn-base btn-danger px-2 py-1 text-xs" onClick={() => onDelete(item.id)}>Delete</button>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {item.actionUrl ? <button className="btn-base btn-neutral btn-sm" onClick={() => onOpen(item)}>View</button> : null}
+        {!archived && (item.status === "unread" || item.status === "overdue") ? <button className="btn-base btn-neutral btn-sm" onClick={() => onRead(item.id)}>Read</button> : null}
+        {!archived && item.type === "revision" ? <button className="btn-base btn-success btn-sm" onClick={() => onDone(item.id)}>Done</button> : null}
+        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral btn-sm" onClick={() => onSnooze(item.id, 60)}>+1h</button> : null}
+        {!archived && (item.type === "alarm" || item.type === "revision") ? <button className="btn-base btn-neutral btn-sm" onClick={() => onReschedule(item.id)}>Reschedule</button> : null}
+        {!archived ? <button className="btn-base btn-neutral btn-sm" onClick={() => onDismiss(item.id)}>Dismiss</button> : null}
+        {!archived ? <button className="btn-base btn-neutral btn-sm" onClick={() => onArchive(item.id)}>Archive</button> : null}
+        <button className="btn-base btn-danger btn-sm" onClick={() => onDelete(item.id)}>Delete</button>
       </div>
     </article>
   );
