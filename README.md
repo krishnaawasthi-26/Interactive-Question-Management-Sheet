@@ -115,12 +115,12 @@ Then fill values service by service:
      ```
    - Paste output into `APP_AUTH_SECRET`.
 
-3. **Google login (`APP_AUTH_GOOGLE_CLIENT_ID`)**
+3. **Google login (`APP_AUTH_GOOGLE_CLIENT_ID` or `APP_AUTH_GOOGLE_CLIENT_IDS`)**
    - Open Google Cloud Console → APIs & Services → Credentials.
    - Create OAuth Client ID → **Web application**.
    - Add origin: `http://localhost:5173` for local development.
    - Copy Client ID (`*.apps.googleusercontent.com`) to `APP_AUTH_GOOGLE_CLIENT_ID`.
-   - If you support multiple IDs, provide comma-separated values in `APP_AUTH_GOOGLE_CLIENT_ID`.
+   - If you support multiple IDs, provide comma-separated values in `APP_AUTH_GOOGLE_CLIENT_IDS`.
 
 4. **OTP email / SMTP (`APP_MAIL_*`)**
    - Use your mail provider SMTP credentials.
@@ -158,7 +158,7 @@ Google Sign-In now uses backend runtime configuration only (no built-in sample c
 
 Required backend env vars:
 
-- `APP_AUTH_GOOGLE_CLIENT_ID` (Web OAuth client id from Google Cloud Console)
+- `APP_AUTH_GOOGLE_CLIENT_ID` or `APP_AUTH_GOOGLE_CLIENT_IDS` (Web OAuth client id(s) from Google Cloud Console)
 - `APP_MAIL_ENABLED` (`true` to allow OTP email delivery)
 - `APP_MAIL_HOST`
 - `APP_MAIL_PORT` (typically `587` for STARTTLS)
@@ -180,7 +180,8 @@ Use this exact checklist if Google login button is disabled:
 1. **Backend env setup (`backend/.env`)**
    - Add:
      - `APP_AUTH_GOOGLE_CLIENT_ID=<your-web-client-id>.apps.googleusercontent.com`
-   - For multiple accepted IDs, use comma-separated values in this same variable.
+   - For multiple accepted IDs, use:
+     - `APP_AUTH_GOOGLE_CLIENT_IDS=<id-one>.apps.googleusercontent.com,<id-two>.apps.googleusercontent.com`
 2. **Frontend env setup (`.env`)**
    - Add one of:
      - `VITE_APP_AUTH_GOOGLE_CLIENT_ID=<same-web-client-id>`
@@ -228,7 +229,7 @@ Google setup checklist (for `Error 401: invalid_client` / `no registered origin`
 
 - Create an OAuth **Web application** credential (not Android/iOS/Desktop).
 - Add your frontend URL to **Authorized JavaScript origins** (for local dev: `http://localhost:5173`).
-- Use that same client ID in backend env var `APP_AUTH_GOOGLE_CLIENT_ID`.
+- Use that same client ID in backend env var `APP_AUTH_GOOGLE_CLIENT_ID` (or include it in `APP_AUTH_GOOGLE_CLIENT_IDS`).
 
 OTP note:
 
