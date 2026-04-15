@@ -234,8 +234,8 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
         </SurfaceCard>
 
         {engagementViewer ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="panel w-full max-w-lg max-h-[86dvh] overflow-y-auto p-4">
+          <div className="overlay-shell">
+            <div className="overlay-panel max-h-[86dvh] max-w-lg overflow-y-auto p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="section-title">{engagementViewer.title}</h3>
                 <button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={() => setEngagementViewer(null)}>Close</button>

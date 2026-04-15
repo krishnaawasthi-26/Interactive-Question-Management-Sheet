@@ -102,24 +102,39 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
     <AppShell title="Create account" subtitle="Start building your sheet workspace" theme={theme} onThemeChange={onThemeChange}>
       <div className="panel mx-auto mt-6 w-full max-w-xl p-6">
         {!verificationId ? (
-          <form className="space-y-3" onSubmit={submitSignUpDetails}>
-            <input type="text" required disabled={authLoading} value={form.name} placeholder="Full name" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, name: event.target.value })); }} className="field-base w-full" />
-            <input type="email" required disabled={authLoading} value={form.email} placeholder="Email" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, email: event.target.value })); }} className="field-base w-full" />
-            <input type="text" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_-]+" disabled={authLoading} value={form.username} placeholder="Unique name (used in shareable URL)" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, username: event.target.value })); }} className="field-base w-full" />
-            <input type="password" required minLength={6} disabled={authLoading} value={form.password} placeholder="Password" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, password: event.target.value })); }} className="field-base w-full" />
+          <form className="stack-form" onSubmit={submitSignUpDetails}>
+            <label>
+              <span className="stack-form-label">Full name</span>
+              <input type="text" required disabled={authLoading} value={form.name} placeholder="Enter your full name" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, name: event.target.value })); }} className="field-base w-full" />
+            </label>
+            <label>
+              <span className="stack-form-label">Email</span>
+              <input type="email" required disabled={authLoading} value={form.email} placeholder="Enter your email" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, email: event.target.value })); }} className="field-base w-full" />
+            </label>
+            <label>
+              <span className="stack-form-label">Username</span>
+              <input type="text" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_-]+" disabled={authLoading} value={form.username} placeholder="Used in your shareable profile URL" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, username: event.target.value })); }} className="field-base w-full" />
+            </label>
+            <label>
+              <span className="stack-form-label">Password</span>
+              <input type="password" required minLength={6} disabled={authLoading} value={form.password} placeholder="Create a password" onChange={(event) => { clearAuthError(); setForm((current) => ({ ...current, password: event.target.value })); }} className="field-base w-full" />
+            </label>
             {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
             <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full">{authLoading ? "Sending OTP..." : "Send OTP"}</button>
           </form>
         ) : (
-          <form className="space-y-3" onSubmit={submitOtpVerification}>
+          <form className="stack-form" onSubmit={submitOtpVerification}>
             <p className="text-sm text-[var(--text-muted)]">
               OTP sent to <span className="font-semibold">{form.email}</span>. Enter the OTP to complete sign up.
             </p>
             {otpMessage && <p className="text-xs text-[var(--text-muted)]">{otpMessage}</p>}
-            <input type="text" required disabled={authLoading} value={otp} placeholder="Enter OTP" onChange={(event) => { clearAuthError(); setOtp(event.target.value); }} className="field-base w-full" />
+            <label>
+              <span className="stack-form-label">Verification code</span>
+              <input type="text" required disabled={authLoading} value={otp} placeholder="Enter OTP" onChange={(event) => { clearAuthError(); setOtp(event.target.value); }} className="field-base w-full" />
+            </label>
             {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
             <button type="submit" disabled={authLoading} className="btn-base btn-primary w-full">{authLoading ? "Verifying OTP..." : "Verify OTP & Create account"}</button>
-            <button type="button" disabled={authLoading} className="btn-base w-full" onClick={() => { setVerificationId(""); setOtp(""); setOtpMessage(""); }}>
+            <button type="button" disabled={authLoading} className="btn-base btn-neutral w-full" onClick={() => { setVerificationId(""); setOtp(""); setOtpMessage(""); }}>
               Back
             </button>
           </form>
@@ -133,7 +148,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
           !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google signup...</p>
         )}
 
-        <button type="button" disabled={authLoading} onClick={onGoToLogin} className="mt-4 text-sm text-[var(--accent-info)]">Already have an account? Login</button>
+        <button type="button" disabled={authLoading} onClick={onGoToLogin} className="link-base mt-4 text-sm">Already have an account? Login</button>
       </div>
     </AppShell>
   );

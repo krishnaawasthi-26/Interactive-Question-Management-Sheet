@@ -7,13 +7,13 @@ function NotificationItemCard({ item, onOpen, onRead, onDone, onDismiss, onArchi
   const archived = isArchivedNotification(item);
 
   return (
-    <article className={`inbox-row rounded-xl border p-3 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_34%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}>
+    <article className={`inbox-row rounded-xl border p-3.5 ${unread ? "border-[color-mix(in_srgb,var(--accent-primary)_34%,transparent)] bg-[color-mix(in_srgb,var(--accent-primary)_8%,var(--surface-elevated))]" : "border-[var(--border-subtle)] bg-[var(--surface-elevated)]"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-medium uppercase tracking-[0.11em]" style={{ color: typeMeta.tint }}>{typeMeta.icon} {typeMeta.label}</p>
-          <p className="mt-1 text-sm font-semibold leading-5">{item.title}</p>
-          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{item.message}</p>
-          <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">{getRelativeTime(item.scheduledFor || item.createdAt)} • <span className={priorityClass[item.priority] || ""}>{item.priority || "medium"}</span> • {state}</p>
+          <p className="mt-1 text-sm font-semibold leading-5 text-[var(--text-primary)]">{item.title}</p>
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">{item.message}</p>
+          <p className="mt-1.5 text-[11px] text-[var(--text-tertiary)]">{getRelativeTime(item.scheduledFor || item.createdAt)} • <span className={priorityClass[item.priority] || ""}>{item.priority || "medium"}</span> • {state}</p>
         </div>
       </div>
 

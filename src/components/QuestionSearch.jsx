@@ -1,7 +1,7 @@
 function QuestionSearch({ value, onChange }) {
   return (
-    <section className="panel mb-5 p-4">
-      <label className="mb-2 block text-sm font-semibold" htmlFor="question-search">
+    <section className="panel mb-5 p-4 sm:p-5">
+      <label className="mb-2 block text-sm font-semibold text-[var(--text-primary)]" htmlFor="question-search">
         Search & filter
       </label>
       <input

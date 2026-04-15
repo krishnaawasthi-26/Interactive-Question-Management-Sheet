@@ -16,11 +16,11 @@ function ConfirmationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 backdrop-blur-sm">
-      <div className="panel w-full max-w-md rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">
+    <div className="overlay-shell">
+      <div className="overlay-panel max-w-md p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">{message}</p>
+          <h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">{title}</h2>
+          <p className="meta-text mt-2">{message}</p>
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
