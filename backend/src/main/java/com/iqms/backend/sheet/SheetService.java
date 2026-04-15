@@ -10,7 +10,7 @@ import com.iqms.backend.repository.SheetRepository;
 import com.iqms.backend.repository.UserRepository;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +22,19 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class SheetService {
+  private static final Set<String> PROGRESS_KEYS = Set.of(
+      "done",
+      "progress",
+      "progressPercent",
+      "attemptLog",
+      "revisionCompleted",
+      "revisionDone",
+      "reminderCompleted",
+      "completedAt",
+      "completedOn",
+      "lastAttemptAt",
+      "streak",
+      "history");
 
   private final SheetRepository sheetRepository;
   private final SheetCopyEventRepository sheetCopyEventRepository;
@@ -66,7 +79,7 @@ public class SheetService {
   }
 
   public List<Sheet> listSheetsAccessibleBy(String userId) {
-    return sheetRepository.findAll().stream()
+    return sheetRepository.findCandidateAccessibleSheets(userId).stream()
         .filter(sheet -> collaborationService.canView(sheet, userId))
         .toList();
   }
@@ -157,14 +170,14 @@ public class SheetService {
   public Sheet getByShareId(String shareId) {
     return sheetRepository
         .findByShareId(shareId)
-        .filter(sheet -> "public".equals(sheet.getVisibility()) || "unlisted".equals(sheet.getVisibility()) || sheet.isPublic())
+        .filter(this::isDiscoverable)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared sheet not found."));
   }
 
   public Sheet remixSheet(String actorUserId, String sourceSheetId, String title) {
     Sheet source = sheetRepository.findById(sourceSheetId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source sheet not found."));
-    if (!("public".equals(source.getVisibility()) || "unlisted".equals(source.getVisibility()) || source.isPublic())) {
+    if (!isDiscoverable(source)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sheet is not remixable.");
     }
     Sheet remixed = createSheet(actorUserId, title == null ? source.getTitle() + " (Remix)" : title);
@@ -180,7 +193,7 @@ public class SheetService {
   public Sheet copyPublicSheet(String actorUserId, String sourceSheetId, String title) {
     Sheet source = sheetRepository.findById(sourceSheetId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Source sheet not found."));
-    if (!("public".equals(source.getVisibility()) || "unlisted".equals(source.getVisibility()) || source.isPublic())) {
+    if (!isDiscoverable(source)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sheet is not public.");
     }
 
@@ -228,21 +241,7 @@ public class SheetService {
 
   @SuppressWarnings("unchecked")
   private List<Map<String, Object>> stripProgressData(List<Map<String, Object>> topics) {
-    Set<String> progressKeys = new HashSet<>(List.of(
-        "done",
-        "progress",
-        "progressPercent",
-        "attemptLog",
-        "revisionCompleted",
-        "revisionDone",
-        "reminderCompleted",
-        "completedAt",
-        "completedOn",
-        "lastAttemptAt",
-        "streak",
-        "history"));
-
-    return (List<Map<String, Object>>) sanitizeProgress(topics, progressKeys);
+    return (List<Map<String, Object>>) sanitizeProgress(topics, PROGRESS_KEYS);
   }
 
   @SuppressWarnings("unchecked")
@@ -296,8 +295,9 @@ public class SheetService {
       List<String> downloadedBy = sheet.getDownloadedByUsernames() == null
           ? new ArrayList<>()
           : new ArrayList<>(sheet.getDownloadedByUsernames());
-      if (!downloadedBy.contains(username)) {
-        downloadedBy.add(username);
+      LinkedHashSet<String> uniqueDownloaders = new LinkedHashSet<>(downloadedBy);
+      if (uniqueDownloaders.add(username)) {
+        downloadedBy = new ArrayList<>(uniqueDownloaders);
         sheet.setDownloadedByUsernames(downloadedBy);
         sheet.setUpdatedAt(Instant.now());
         return sheetRepository.save(sheet);
@@ -315,13 +315,18 @@ public class SheetService {
       List<String> copiedBy = sheet.getCopiedByUsernames() == null
           ? new ArrayList<>()
           : new ArrayList<>(sheet.getCopiedByUsernames());
-      if (!copiedBy.contains(username)) {
-        copiedBy.add(username);
+      LinkedHashSet<String> uniqueCopiers = new LinkedHashSet<>(copiedBy);
+      if (uniqueCopiers.add(username)) {
+        copiedBy = new ArrayList<>(uniqueCopiers);
         sheet.setCopiedByUsernames(copiedBy);
         sheet.setUpdatedAt(Instant.now());
         return sheetRepository.save(sheet);
       }
       return sheet;
     });
+  }
+
+  private boolean isDiscoverable(Sheet sheet) {
+    return "public".equals(sheet.getVisibility()) || "unlisted".equals(sheet.getVisibility()) || sheet.isPublic();
   }
 }

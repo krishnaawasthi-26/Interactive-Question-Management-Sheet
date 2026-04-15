@@ -56,9 +56,7 @@ public class StudyTeamService {
   }
 
   public List<StudyTeam> listForUser(String userId) {
-    return teamRepository.findAll().stream()
-        .filter(team -> team.getMemberships().stream().anyMatch(member -> userId.equals(member.getUserId())))
-        .toList();
+    return teamRepository.findAllByMembershipsUserId(userId);
   }
 
   public StudyTeam invite(String actorUserId, String teamId, String username, String role) {
