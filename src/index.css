@@ -103,6 +103,7 @@ body {
 
 .app-shell-grid {
   min-height: calc(100dvh - 20px);
+  transition: padding-left 260ms ease;
 }
 
 .app-content {
@@ -117,14 +118,12 @@ body {
   }
 
   .app-shell-grid {
-    display: grid;
-    gap: 0;
-    grid-template-columns: var(--sidebar-width, 86px) minmax(0, 1fr);
+    display: block;
     border: 1px solid var(--border-subtle);
     border-radius: 22px;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     overflow: hidden;
-    transition: grid-template-columns 260ms ease;
+    padding-left: var(--sidebar-width, 88px);
     box-shadow: var(--shadow-sm);
   }
 
@@ -400,11 +399,11 @@ canvas {
 .sidebar-desktop-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
-  padding: 0 4px 12px;
-  margin-bottom: 12px;
+  padding: 0 4px 14px;
+  margin-bottom: 14px;
 }
 
 .sidebar-toggle {
@@ -422,21 +421,42 @@ canvas {
 .sidebar-brand {
   overflow: hidden;
   white-space: nowrap;
-  width: 0;
+  max-width: 0;
   opacity: 0;
-  transition: width 160ms ease, opacity 160ms ease;
+  transform: translateX(-5px);
+  transition: max-width 180ms ease, opacity 180ms ease, transform 180ms ease;
 }
 
 .sidebar-brand.is-visible {
-  width: auto;
+  max-width: 170px;
   opacity: 1;
+  transform: translateX(0);
 }
 
 .sidebar-scroll {
   flex: 1;
-  overflow-y: hidden;
+  overflow-y: auto;
   min-height: 0;
-  padding: 0 2px;
+  padding: 2px 4px 10px;
+}
+
+.sidebar-section {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.sidebar-section-items {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 4px 2px;
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 6px;
 }
 
 .sidebar-nav-item {
@@ -445,13 +465,20 @@ canvas {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+  min-height: 42px;
   border-radius: 11px;
   border: 1px solid transparent;
-  padding: 8px 6px;
+  padding: 8px 10px;
   color: var(--text-secondary);
   background: transparent;
   position: relative;
   transition: border-color 130ms ease, color 130ms ease, background-color 130ms ease, transform 130ms ease;
+}
+
+.sidebar-nav-item.is-collapsed {
+  justify-content: center;
+  gap: 0;
+  padding-inline: 8px;
 }
 
 .sidebar-nav-item:hover {
@@ -483,25 +510,29 @@ canvas {
 .sidebar-nav-label {
   overflow: hidden;
   white-space: nowrap;
-  width: 0;
+  max-width: 0;
   opacity: 0;
+  transform: translateX(-4px);
   font-size: 13px;
   font-weight: 560;
-  transition: width 150ms ease, opacity 150ms ease;
+  transition: max-width 160ms ease, opacity 140ms ease, transform 160ms ease;
 }
 
 .sidebar-nav-label.is-visible,
 .sidebar-section-title.is-visible {
-  width: auto;
+  max-width: 170px;
   opacity: 1;
+  transform: translateX(0);
 }
 
 .sidebar-section-title {
   overflow: hidden;
   white-space: nowrap;
-  width: 0;
+  max-width: 0;
   opacity: 0;
-  padding: 0 6px;
+  padding: 0 10px;
+  transform: translateX(-4px);
+  transition: max-width 160ms ease, opacity 140ms ease, transform 160ms ease;
 }
 
 .sidebar-tooltip {
@@ -541,7 +572,9 @@ canvas {
   width: min(82vw, 320px);
   border-right: 1px solid var(--border-subtle);
   padding: 14px;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: transform 220ms ease;
 }
 
@@ -706,13 +739,14 @@ canvas {
   .sidebar-desktop {
     display: flex;
     flex-direction: column;
-    height: calc(100dvh - 32px);
+    height: 100dvh;
     border-right: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
-    padding: 14px 8px;
+    padding: 22px 10px 18px;
     position: fixed;
-    top: 16px;
-    left: 16px;
+    top: 0;
+    left: 0;
     z-index: 45;
+    transition: width 260ms ease;
   }
 
   .sidebar-mobile .sidebar-scroll {
@@ -720,11 +754,11 @@ canvas {
   }
 
   .sidebar-desktop-collapsed {
-    width: 86px;
+    width: var(--sidebar-collapsed-width, 88px);
   }
 
   .sidebar-desktop-expanded {
-    width: 252px;
+    width: var(--sidebar-expanded-width, 252px);
   }
 
   .app-content {

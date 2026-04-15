@@ -24,7 +24,11 @@ function AppShell({
     <div className="app-shell text-[var(--text-primary)]">
       <div
         className="app-shell-grid"
-        style={{ "--sidebar-width": isSidebarOpen ? "252px" : "86px" }}
+        style={{
+          "--sidebar-collapsed-width": "88px",
+          "--sidebar-expanded-width": "252px",
+          "--sidebar-width": isSidebarOpen ? "var(--sidebar-expanded-width)" : "var(--sidebar-collapsed-width)",
+        }}
       >
         <Sidebar
           isSidebarOpen={isSidebarOpen}

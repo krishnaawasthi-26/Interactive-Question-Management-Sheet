@@ -75,7 +75,7 @@ function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compac
       onMouseLeave={() => setTooltipVisible(false)}
       onFocus={() => setTooltipVisible(true)}
       onBlur={() => setTooltipVisible(false)}
-      className={`sidebar-nav-item group ${active ? "is-active" : ""} ${compact ? "is-compact" : ""}`.trim()}
+      className={`sidebar-nav-item group ${isOpen ? "is-open" : "is-collapsed"} ${active ? "is-active" : ""} ${compact ? "is-compact" : ""}`.trim()}
     >
       <span className="sidebar-nav-icon" aria-hidden>{item.icon}</span>
       <span className={`sidebar-nav-label ${isOpen ? "is-visible" : ""}`}>{item.label}</span>
@@ -98,9 +98,9 @@ function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compac
 
 function SidebarSection({ title, items, isOpen, currentRoute, onItemClick }) {
   return (
-    <section className="space-y-1.5">
+    <section className="sidebar-section">
       <p className={`caption-text sidebar-section-title ${isOpen ? "is-visible" : ""}`}>{title}</p>
-      <div className="space-y-1.5">
+      <div className="sidebar-section-items">
         {items.map((item) => (
           <SidebarItem
             key={`${title}-${item.label}`}
@@ -144,9 +144,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
       ) : null}
 
-      <aside
-        className={`sidebar-desktop ${sidebarWidth}`}
-      >
+      <aside className={`sidebar-desktop ${sidebarWidth}`}>
         <div className="sidebar-desktop-header">
           <button
             type="button"
@@ -162,7 +160,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           </div>
         </div>
 
-        <nav className="sidebar-scroll space-y-5">
+        <nav className="sidebar-scroll" aria-label="Primary">
           {resolvedSections.map((section) => (
             <SidebarSection
               key={section.title}
@@ -174,7 +172,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           ))}
         </nav>
 
-        <div className="mt-4 space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
+        <div className="sidebar-footer">
           {currentUser ? (
             <>
               <SidebarItem item={{ label: "Edit Profile", icon: "✎" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.EDIT_PROFILE} onClick={() => navigateTo(ROUTES.EDIT_PROFILE)} />
@@ -203,7 +201,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           <button type="button" onClick={onCloseMobile} aria-label="Close navigation" className="sidebar-toggle">✕</button>
         </div>
 
-        <nav className="sidebar-scroll space-y-5 pb-4">
+        <nav className="sidebar-scroll" aria-label="Mobile primary">
           {resolvedSections.map((section) => (
             <SidebarSection
               key={`mobile-${section.title}`}
@@ -216,7 +214,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           ))}
         </nav>
 
-        <div className="space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
+        <div className="sidebar-footer">
           {currentUser ? (
             <>
               <SidebarItem item={{ label: "Edit Profile", icon: "✎" }} isOpen showTooltip={false} active={currentRoute === ROUTES.EDIT_PROFILE} onClick={() => { navigateTo(ROUTES.EDIT_PROFILE); onCloseMobile?.(); }} />
