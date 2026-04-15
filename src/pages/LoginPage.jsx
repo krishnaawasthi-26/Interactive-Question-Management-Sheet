@@ -1,23 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { getGoogleAuthDisabledReason, isGoogleAuthMissingConfigError, loadGoogleAuthConfig } from "../config/authConfig";
-import { getGoogleAuthErrorMessage } from "../utils/googleAuthError";
 import AppShell from "../components/AppShell";
 
 function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
-  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const authError = useAuthStore((state) => state.authError);
   const authLoading = useAuthStore((state) => state.authLoading);
   const loginBlockedUntil = useAuthStore((state) => state.loginBlockedUntil);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [now, setNow] = useState(() => Date.now());
-  const googleButtonRef = useRef(null);
-  const [googleReady, setGoogleReady] = useState(false);
-  const [googleConfigError, setGoogleConfigError] = useState("");
-  const [googleEnabled, setGoogleEnabled] = useState(true);
-  const [googleDisabledReason, setGoogleDisabledReason] = useState("");
   const lockSeconds = Math.max(0, Math.ceil((loginBlockedUntil - now) / 1000));
   const isLocked = lockSeconds > 0;
 
@@ -26,78 +18,6 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [isLocked]);
-
-  useEffect(() => {
-    const scriptId = "google-identity-service";
-    const script = document.getElementById(scriptId) || document.createElement("script");
-    if (!script.id) {
-      script.id = scriptId;
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    }
-
-    const setupGoogle = async () => {
-      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
-
-      let googleConfig;
-      try {
-        googleConfig = await loadGoogleAuthConfig();
-      } catch (error) {
-        if (isGoogleAuthMissingConfigError(error)) {
-          setGoogleEnabled(false);
-          setGoogleDisabledReason(getGoogleAuthDisabledReason(error));
-          setGoogleConfigError("");
-        } else {
-          setGoogleConfigError(getGoogleAuthDisabledReason(error));
-        }
-        setGoogleReady(false);
-        return;
-      }
-
-      window.google.accounts.id.initialize({
-        client_id: googleConfig.clientId,
-        callback: async (response) => {
-          if (!response?.credential) return;
-          const success = await loginWithGoogle({ idToken: response.credential });
-          if (success) onLoginSuccess();
-        },
-        error_callback: (error) => {
-          setGoogleConfigError(getGoogleAuthErrorMessage(error));
-          setGoogleReady(false);
-        },
-      });
-      googleButtonRef.current.innerHTML = "";
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        type: "standard",
-        theme: theme === "light" ? "outline" : "filled_black",
-        text: "continue_with",
-        shape: "rectangular",
-        width: "320",
-      });
-      setGoogleEnabled(true);
-      setGoogleDisabledReason("");
-      setGoogleConfigError("");
-      setGoogleReady(true);
-    };
-
-    if (script.getAttribute("data-loaded") === "true") {
-      void setupGoogle();
-      return;
-    }
-
-    const onGoogleScriptLoad = () => {
-      script.setAttribute("data-loaded", "true");
-      void setupGoogle();
-    };
-
-    script.addEventListener("load", onGoogleScriptLoad);
-
-    return () => {
-      script.removeEventListener("load", onGoogleScriptLoad);
-    };
-  }, [loginWithGoogle, onLoginSuccess, theme]);
 
   const lockMessage = useMemo(() => {
     if (!isLocked) return "";
@@ -151,23 +71,6 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
             {isLocked ? `Try again in ${lockSeconds}s` : authLoading ? "Checking account..." : "Login"}
           </button>
         </form>
-
-        {googleEnabled ? (
-          <>
-            <div className="my-4 text-center text-xs text-[var(--text-muted)]">OR</div>
-            <div className="flex justify-center" ref={googleButtonRef} />
-            {googleConfigError ? (
-              <p className="mt-2 text-center text-xs text-[var(--accent-danger)]">{googleConfigError}</p>
-            ) : (
-              !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>
-            )}
-          </>
-        ) : (
-          <div className="mt-2 text-center text-xs text-[var(--text-muted)]">
-            <p>Google Sign-In is currently unavailable for this deployment.</p>
-            {googleDisabledReason && <p className="mt-1 text-[var(--accent-danger)]">{googleDisabledReason}</p>}
-          </div>
-        )}
 
         <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="link-base mt-4 text-sm">
           Don&apos;t have an account? Sign up

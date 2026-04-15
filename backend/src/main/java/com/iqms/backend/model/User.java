@@ -24,9 +24,6 @@ public class User {
   private String password;
   private String authProvider;
 
-  @Indexed(unique = true, sparse = true)
-  private String googleSubject;
-
   @Indexed(unique = true)
   private String profileShareId;
 
@@ -39,7 +36,6 @@ public class User {
   private String linkedinUrl;
   private Integer usernameChangeCount = 0;
   private Integer emailChangeCount = 0;
-  private Boolean googleOnboardingComplete = Boolean.TRUE;
   private Set<String> followerUserIds = new LinkedHashSet<>();
   private Set<String> followingUserIds = new LinkedHashSet<>();
   private Set<String> copiedSheetIds = new LinkedHashSet<>();
@@ -90,14 +86,6 @@ public class User {
 
   public void setAuthProvider(String authProvider) {
     this.authProvider = authProvider;
-  }
-
-  public String getGoogleSubject() {
-    return googleSubject;
-  }
-
-  public void setGoogleSubject(String googleSubject) {
-    this.googleSubject = googleSubject;
   }
 
   public void setUsername(String username) {
@@ -182,14 +170,6 @@ public class User {
 
   public void setEmailChangeCount(Integer emailChangeCount) {
     this.emailChangeCount = emailChangeCount == null ? 0 : emailChangeCount;
-  }
-
-  public boolean isGoogleOnboardingComplete() {
-    return googleOnboardingComplete == null || googleOnboardingComplete;
-  }
-
-  public void setGoogleOnboardingComplete(Boolean googleOnboardingComplete) {
-    this.googleOnboardingComplete = googleOnboardingComplete;
   }
 
   public Set<String> getFollowerUserIds() {
