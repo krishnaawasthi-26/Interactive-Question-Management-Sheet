@@ -8,10 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AuthConfigurationValidator {
+  private static final Logger log = LoggerFactory.getLogger(AuthConfigurationValidator.class);
+
 
   private final GoogleOAuthProperties googleOAuthProperties;
   private final MailProperties mailProperties;
@@ -45,10 +49,20 @@ public class AuthConfigurationValidator {
   }
 
   private void validateGoogleConfig(List<String> errors) {
-    for (String clientId : googleOAuthProperties.getClientIds()) {
+    List<String> googleClientIds = googleOAuthProperties.getClientIds();
+    if (googleClientIds.isEmpty()) {
+      log.warn("Google login is disabled: no APP_AUTH_GOOGLE_CLIENT_ID or APP_AUTH_GOOGLE_CLIENT_IDS value is configured.");
+      return;
+    }
+
+    for (String clientId : googleClientIds) {
       if (!clientId.endsWith(".apps.googleusercontent.com")) {
         errors.add("Each APP_AUTH_GOOGLE_CLIENT_ID/APP_AUTH_GOOGLE_CLIENT_IDS value must end with .apps.googleusercontent.com.");
       }
+    }
+
+    if (errors.isEmpty()) {
+      log.info("Google login is enabled with {} configured client ID(s).", googleClientIds.size());
     }
   }
 

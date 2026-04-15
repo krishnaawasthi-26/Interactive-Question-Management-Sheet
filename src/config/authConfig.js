@@ -3,9 +3,14 @@ import { apiRequest } from "../api/apiClient";
 let googleAuthConfigPromise;
 
 const normalizeClientId = (value) => (typeof value === "string" ? value.trim() : "");
-const fallbackClientId = normalizeClientId(
-  import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID,
-);
+const resolveFrontendGoogleClientId = () => {
+  const primaryClientId = normalizeClientId(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_ID);
+  if (primaryClientId) {
+    return primaryClientId;
+  }
+  return normalizeClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+};
+const fallbackClientId = resolveFrontendGoogleClientId();
 
 const GOOGLE_AUTH_CONFIG_MISSING_CODE = "GOOGLE_AUTH_CONFIG_MISSING";
 
