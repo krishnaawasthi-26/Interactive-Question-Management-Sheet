@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { getCurrentRoute, getUserProfileRoute, navigateTo, ROUTES } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 
@@ -26,19 +26,69 @@ const sections = [
 ];
 
 function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compact = false }) {
+  const tooltipId = useId();
+  const buttonRef = useRef(null);
+  const tooltipRef = useRef(null);
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipStyle, setTooltipStyle] = useState(null);
+  const shouldShowFloatingLabel = !isOpen && showTooltip;
+
+  useEffect(() => {
+    if (!shouldShowFloatingLabel || !isTooltipVisible) return;
+    const buttonNode = buttonRef.current;
+    const tooltipNode = tooltipRef.current;
+    if (!buttonNode || !tooltipNode) return;
+
+    const buttonRect = buttonNode.getBoundingClientRect();
+    const tooltipRect = tooltipNode.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const edgePadding = 8;
+    const preferredOffset = 10;
+
+    const fitsRight = buttonRect.right + preferredOffset + tooltipRect.width + edgePadding <= viewportWidth;
+    const left = fitsRight
+      ? buttonRect.right + preferredOffset
+      : Math.max(edgePadding, buttonRect.left - tooltipRect.width - preferredOffset);
+    const centeredTop = buttonRect.top + (buttonRect.height / 2) - (tooltipRect.height / 2);
+    const top = Math.min(
+      Math.max(edgePadding, centeredTop),
+      viewportHeight - tooltipRect.height - edgePadding,
+    );
+
+    setTooltipStyle({
+      left: `${Math.round(left)}px`,
+      top: `${Math.round(top)}px`,
+    });
+  }, [isTooltipVisible, shouldShowFloatingLabel]);
+
+  const showFloatingLabel = shouldShowFloatingLabel && isTooltipVisible;
+
   return (
     <button
+      ref={buttonRef}
       type="button"
       aria-label={item.label}
-      title={!isOpen ? item.label : undefined}
+      aria-describedby={showFloatingLabel ? tooltipId : undefined}
       onClick={onClick}
+      onMouseEnter={() => setTooltipVisible(true)}
+      onMouseLeave={() => setTooltipVisible(false)}
+      onFocus={() => setTooltipVisible(true)}
+      onBlur={() => setTooltipVisible(false)}
       className={`sidebar-nav-item group ${active ? "is-active" : ""} ${compact ? "is-compact" : ""}`.trim()}
     >
       <span className="sidebar-nav-icon" aria-hidden>{item.icon}</span>
       <span className={`sidebar-nav-label ${isOpen ? "is-visible" : ""}`}>{item.label}</span>
 
-      {!isOpen && showTooltip ? (
-        <span role="tooltip" aria-hidden="true" className="sidebar-tooltip">
+      {shouldShowFloatingLabel ? (
+        <span
+          id={tooltipId}
+          ref={tooltipRef}
+          role="tooltip"
+          aria-hidden={!showFloatingLabel}
+          className={`sidebar-tooltip ${showFloatingLabel ? "is-visible" : ""}`}
+          style={tooltipStyle || undefined}
+        >
           {item.label}
         </span>
       ) : null}
