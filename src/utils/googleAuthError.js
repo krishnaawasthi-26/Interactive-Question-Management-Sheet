@@ -10,7 +10,7 @@ export const getGoogleAuthErrorMessage = (error) => {
     return "Google iframe initialization failed (often origin_mismatch). Add this exact frontend origin to Authorized JavaScript origins in Google Cloud Console.";
   }
   if (normalized.includes("token audience mismatch") || normalized.includes("audience mismatch")) {
-    return "Google token audience mismatch. The frontend client ID and backend APP_AUTH_GOOGLE_CLIENT_ID / APP_AUTH_GOOGLE_CLIENT_IDS must match.";
+    return "Google token audience mismatch. The frontend client ID and backend APP_AUTH_GOOGLE_CLIENT_ID must match.";
   }
   if (normalized.includes("invalid google token")) {
     return "Google did not accept the ID token. This can happen if token verification is blocked or the token is expired.";

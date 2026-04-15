@@ -11,7 +11,7 @@ const GOOGLE_AUTH_CONFIG_MISSING_CODE = "GOOGLE_AUTH_CONFIG_MISSING";
 
 const createMissingConfigError = () => {
   const error = new Error(
-    "Google Sign-In is disabled because no Google Web Client ID is configured. Set APP_AUTH_GOOGLE_CLIENT_ID (or APP_AUTH_GOOGLE_CLIENT_IDS) on the backend, or VITE_APP_AUTH_GOOGLE_CLIENT_ID (or VITE_GOOGLE_CLIENT_ID) on the frontend, then restart backend and frontend."
+    "Google Sign-In is disabled because no Google Web Client ID is configured. Set APP_AUTH_GOOGLE_CLIENT_ID on the backend, or VITE_APP_AUTH_GOOGLE_CLIENT_ID (or VITE_GOOGLE_CLIENT_ID) on the frontend, then restart backend and frontend."
   );
   error.code = GOOGLE_AUTH_CONFIG_MISSING_CODE;
   return error;
@@ -30,7 +30,7 @@ export const getGoogleAuthDisabledReason = (error) => {
     return "Google Sign-In config endpoint is missing on this deployment (/api/auth/google/config returned 404). Deploy the backend auth routes and try again.";
   }
   if (status === 500 || status === 503) {
-    return `Google Sign-In config endpoint failed with HTTP ${status}. Check backend env vars APP_AUTH_GOOGLE_CLIENT_ID and APP_AUTH_GOOGLE_CLIENT_IDS.`;
+    return `Google Sign-In config endpoint failed with HTTP ${status}. Check backend env var APP_AUTH_GOOGLE_CLIENT_ID.`;
   }
 
   return error?.message || "Google Sign-In configuration failed to load.";
@@ -50,7 +50,7 @@ export const loadGoogleAuthConfig = async () => {
         if (fallbackClientId) {
           return { clientId: fallbackClientId };
         }
-        throw isGoogleAuthMissingConfigError(error) ? error : createMissingConfigError();
+        throw error;
       });
   }
 
