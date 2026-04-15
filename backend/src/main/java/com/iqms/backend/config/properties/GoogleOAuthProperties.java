@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 public class GoogleOAuthProperties {
 
   private String clientId;
+  private String clientIds;
 
   public String getClientId() {
     return clientId;
@@ -19,18 +20,32 @@ public class GoogleOAuthProperties {
     this.clientId = clientId == null ? "" : clientId.trim();
   }
 
+  public void setClientIds(String clientIds) {
+    this.clientIds = clientIds == null ? "" : clientIds.trim();
+  }
+
   public String getPrimaryClientId() {
     List<String> configuredClientIds = getClientIds();
     return configuredClientIds.isEmpty() ? "" : configuredClientIds.get(0);
   }
 
   public List<String> getClientIds() {
-    if (clientId == null || clientId.isBlank()) {
-      return List.of();
-    }
-    return Arrays.stream(clientId.split(","))
+    return Arrays.stream(((clientId == null ? "" : clientId) + "," + (clientIds == null ? "" : clientIds)).split(","))
         .map(String::trim)
+        .map(this::stripMatchingQuotes)
         .filter(value -> !value.isBlank())
+        .distinct()
         .toList();
+  }
+
+  private String stripMatchingQuotes(String value) {
+    if (value.length() >= 2) {
+      boolean wrappedInDoubleQuotes = value.startsWith("\"") && value.endsWith("\"");
+      boolean wrappedInSingleQuotes = value.startsWith("'") && value.endsWith("'");
+      if (wrappedInDoubleQuotes || wrappedInSingleQuotes) {
+        return value.substring(1, value.length() - 1).trim();
+      }
+    }
+    return value;
   }
 }
