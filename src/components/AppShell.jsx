@@ -56,7 +56,7 @@ function AppShell({
               </header>
             ) : null}
 
-            <div className={`grid gap-5 ${rightPanel ? "xl:grid-cols-[minmax(0,1fr)_280px]" : ""}`}>
+            <div className={`section-fade-in grid gap-5 ${rightPanel ? "xl:grid-cols-[minmax(0,1fr)_280px]" : ""}`}>
               <main className={contentClassName}>{children}</main>
               {rightPanel ? <aside className="xl:sticky xl:top-6 xl:h-fit">{rightPanel}</aside> : null}
             </div>

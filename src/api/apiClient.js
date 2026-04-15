@@ -6,6 +6,8 @@ import {
 } from "../config/apiConfig";
 
 const isBrowser = typeof window !== "undefined";
+const GET_CACHE_TTL_MS = 10_000;
+const inMemoryGetCache = new Map();
 
 const safeParse = (value, fallback) => {
   try {
@@ -146,6 +148,13 @@ const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
 };
 
 const trimTrailingSlashes = (value) => value.replace(/\/+$/, "");
+const buildGetCacheKey = ({ method, requestUrl, token, headers }) =>
+  JSON.stringify({
+    method,
+    requestUrl,
+    token: token ? "auth" : "public",
+    headers: Object.entries(headers || {}).sort(([a], [b]) => a.localeCompare(b)),
+  });
 
 const toRequestUrl = ({ path, baseUrl }) => {
   if (/^https?:\/\//i.test(path)) return path;
@@ -181,40 +190,68 @@ export const apiRequest = async (
   { method = "GET", body, token, headers = {}, baseUrl = API_BASE_URL, rateLimit = false } = {}
 ) => {
   maybeEnforceRateLimit({ rateLimit });
+  const normalizedMethod = `${method || "GET"}`.toUpperCase();
+  const requestUrl = toRequestUrl({ path, baseUrl });
+  const shouldUseGetCache = normalizedMethod === "GET" && !body;
+  if (!shouldUseGetCache && inMemoryGetCache.size > 0) {
+    inMemoryGetCache.clear();
+  }
 
-  let response;
-  const controller = new AbortController();
-  const timeout = globalThis.setTimeout(() => {
-    controller.abort();
-  }, API_REQUEST_TIMEOUT_MS);
-
-  try {
-    response = await fetch(toRequestUrl({ path, baseUrl }), {
-      method,
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
-      },
-      ...(body !== undefined && body !== null ? { body: JSON.stringify(body) } : {}),
-    });
-  } catch (error) {
-    if (error?.name === "AbortError") {
-      throw createApiError(API_ERROR_MESSAGES.timeout, { code: "REQUEST_TIMEOUT" });
+  if (shouldUseGetCache) {
+    const cacheKey = buildGetCacheKey({ method: normalizedMethod, requestUrl, token, headers });
+    const cachedValue = inMemoryGetCache.get(cacheKey);
+    if (cachedValue && cachedValue.expiresAt > Date.now()) {
+      return cachedValue.promise;
     }
-    throw createApiError(API_ERROR_MESSAGES.network);
-  } finally {
-    globalThis.clearTimeout(timeout);
   }
 
-  if (!response.ok) {
-    const parsed = await parseErrorPayload(response);
-    throw createApiError(parsed.message, {
-      ...parsed,
-      status: response.status,
-    });
+  const performRequest = async () => {
+    let response;
+    const controller = new AbortController();
+    const timeout = globalThis.setTimeout(() => {
+      controller.abort();
+    }, API_REQUEST_TIMEOUT_MS);
+
+    try {
+      response = await fetch(requestUrl, {
+        method: normalizedMethod,
+        signal: controller.signal,
+        headers: {
+          ...(body !== undefined && body !== null ? { "Content-Type": "application/json" } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...headers,
+        },
+        ...(body !== undefined && body !== null ? { body: JSON.stringify(body) } : {}),
+      });
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw createApiError(API_ERROR_MESSAGES.timeout, { code: "REQUEST_TIMEOUT" });
+      }
+      throw createApiError(API_ERROR_MESSAGES.network);
+    } finally {
+      globalThis.clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const parsed = await parseErrorPayload(response);
+      throw createApiError(parsed.message, {
+        ...parsed,
+        status: response.status,
+      });
+    }
+
+    return parseResponseData(response);
+  };
+
+  if (!shouldUseGetCache) {
+    return performRequest();
   }
 
-  return parseResponseData(response);
+  const cacheKey = buildGetCacheKey({ method: normalizedMethod, requestUrl, token, headers });
+  const pendingPromise = performRequest().catch((error) => {
+    inMemoryGetCache.delete(cacheKey);
+    throw error;
+  });
+  inMemoryGetCache.set(cacheKey, { promise: pendingPromise, expiresAt: Date.now() + GET_CACHE_TTL_MS });
+  return pendingPromise;
 };

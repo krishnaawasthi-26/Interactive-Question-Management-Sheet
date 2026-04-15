@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+
 const STATUS_STYLES = {
   "In Progress": "bg-amber-500/15 text-amber-300 border border-amber-500/30",
   "Solve!": "bg-rose-500/15 text-rose-300 border border-rose-500/30",
@@ -5,26 +7,62 @@ const STATUS_STYLES = {
 };
 
 function QuestionsTable({ rows }) {
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState("topic");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const visibleRows = useMemo(() => {
+    const filtered = rows.filter((row) => {
+      const statusMatch = statusFilter === "all" ? true : row.status === statusFilter;
+      if (!statusMatch) return false;
+      if (!normalizedQuery) return true;
+
+      const haystack = [row.topic, row.question, row.notes, row.primary].join(" ").toLowerCase();
+      return haystack.includes(normalizedQuery);
+    });
+
+    const comparatorBySort = {
+      topic: (a, b) => `${a.topic || ""}`.localeCompare(`${b.topic || ""}`),
+      status: (a, b) => `${a.status || ""}`.localeCompare(`${b.status || ""}`),
+      question: (a, b) => `${a.question || ""}`.localeCompare(`${b.question || ""}`),
+    };
+
+    return filtered.sort(comparatorBySort[sortBy] || comparatorBySort.topic);
+  }, [normalizedQuery, rows, sortBy, statusFilter]);
+
   return (
     <section className="table-shell">
       <div className="table-shell-header flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="section-title">Questions</h3>
-          <p className="meta-text">{rows.length} total questions</p>
+          <p className="meta-text">{visibleRows.length} of {rows.length} questions</p>
         </div>
 
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <input aria-label="Search questions" placeholder="Search questions" className="field-base py-2 sm:w-[220px]" />
-          <select aria-label="Sort" className="field-base py-2 sm:w-auto">
-            <option>Sort: Topic</option>
-            <option>Status</option>
-            <option>Question</option>
+          <input
+            aria-label="Search questions"
+            placeholder="Search questions"
+            className="field-base py-2 sm:w-[220px]"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <select aria-label="Sort" className="field-base py-2 sm:w-auto" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+            <option value="topic">Sort: Topic</option>
+            <option value="status">Status</option>
+            <option value="question">Question</option>
           </select>
-          <select aria-label="Filter" className="field-base py-2 sm:w-auto">
-            <option>All status</option>
-            <option>Completed</option>
-            <option>In Progress</option>
-            <option>Solve!</option>
+          <select
+            aria-label="Filter"
+            className="field-base py-2 sm:w-auto"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">All status</option>
+            <option value="Completed">Completed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Solve!">Solve!</option>
           </select>
         </div>
       </div>
@@ -41,7 +79,7 @@ function QuestionsTable({ rows }) {
             </tr>
           </thead>
           <tbody className="table-shell-body">
-            {rows.length > 0 ? rows.map((row) => (
+            {visibleRows.length > 0 ? visibleRows.map((row) => (
               <tr key={row.id} className="table-shell-row">
                 <td className="table-shell-cell text-[var(--text-primary)]">{row.topic}</td>
                 <td className="table-shell-cell leading-6 break-words">{row.question}</td>
