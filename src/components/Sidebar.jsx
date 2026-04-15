@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { getCurrentRoute, getUserProfileRoute, navigateTo, ROUTES } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 
@@ -72,11 +72,9 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
   const currentRoute = getCurrentRoute().route;
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
-  const [isDesktopHovered, setIsDesktopHovered] = useState(false);
-  const isDesktopPreviewOpen = isSidebarOpen || isDesktopHovered;
   const sidebarWidth = useMemo(
-    () => (isDesktopPreviewOpen ? "sidebar-desktop-expanded" : "sidebar-desktop-collapsed"),
-    [isDesktopPreviewOpen],
+    () => (isSidebarOpen ? "sidebar-desktop-expanded" : "sidebar-desktop-collapsed"),
+    [isSidebarOpen],
   );
 
   const resolvedSections = useMemo(
@@ -98,8 +96,6 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
 
       <aside
         className={`sidebar-desktop ${sidebarWidth}`}
-        onMouseEnter={() => setIsDesktopHovered(true)}
-        onMouseLeave={() => setIsDesktopHovered(false)}
       >
         <div className="sidebar-desktop-header">
           <button
@@ -110,7 +106,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           >
             <span className={`transition-transform duration-200 ${isSidebarOpen ? "rotate-180" : ""}`}>❮</span>
           </button>
-          <div className={`sidebar-brand ${isDesktopPreviewOpen ? "is-visible" : ""}`}>
+          <div className={`sidebar-brand ${isSidebarOpen ? "is-visible" : ""}`}>
             <p className="eyebrow">IQMS</p>
             <p className="meta-text">Create Sheets</p>
           </div>
@@ -122,7 +118,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
               key={section.title}
               title={section.title}
               items={section.items}
-              isOpen={isDesktopPreviewOpen}
+              isOpen={isSidebarOpen}
               currentRoute={currentRoute}
             />
           ))}
@@ -131,10 +127,10 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
         <div className="mt-4 space-y-1.5 border-t border-[var(--border-subtle)] pt-3">
           {currentUser ? (
             <>
-              <SidebarItem item={{ label: "Edit Profile", icon: "✎" }} isOpen={isDesktopPreviewOpen} active={currentRoute === ROUTES.EDIT_PROFILE} onClick={() => navigateTo(ROUTES.EDIT_PROFILE)} />
+              <SidebarItem item={{ label: "Edit Profile", icon: "✎" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.EDIT_PROFILE} onClick={() => navigateTo(ROUTES.EDIT_PROFILE)} />
               <SidebarItem
                 item={{ label: "Log Out", icon: "↗" }}
-                isOpen={isDesktopPreviewOpen}
+                isOpen={isSidebarOpen}
                 active={false}
                 onClick={() => {
                   logout();
@@ -143,7 +139,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
               />
             </>
           ) : (
-            <SidebarItem item={{ label: "Login", icon: "→" }} isOpen={isDesktopPreviewOpen} active={currentRoute === ROUTES.LOGIN} onClick={() => navigateTo(ROUTES.LOGIN)} />
+            <SidebarItem item={{ label: "Login", icon: "→" }} isOpen={isSidebarOpen} active={currentRoute === ROUTES.LOGIN} onClick={() => navigateTo(ROUTES.LOGIN)} />
           )}
         </div>
       </aside>

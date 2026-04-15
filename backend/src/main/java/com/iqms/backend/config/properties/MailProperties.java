@@ -94,10 +94,17 @@ public class MailProperties {
   }
 
   public boolean isEnabled() {
-    return enabled;
+    if (enabled) {
+      return true;
+    }
+    return hasText(host) && hasText(username) && hasText(password);
   }
 
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
+  }
+
+  private boolean hasText(String value) {
+    return value != null && !value.isBlank();
   }
 }
