@@ -120,6 +120,7 @@ Then fill values service by service:
    - Create OAuth Client ID → **Web application**.
    - Add origin: `http://localhost:5173` for local development.
    - Copy Client ID (`*.apps.googleusercontent.com`) to `APP_AUTH_GOOGLE_CLIENT_ID`.
+   - Optional: if you support multiple frontend origins/client ids, set comma-separated values in `APP_AUTH_GOOGLE_CLIENT_IDS`.
 
 4. **OTP email / SMTP (`APP_MAIL_*`)**
    - Use your mail provider SMTP credentials.
@@ -167,10 +168,38 @@ Required backend env vars:
 
 Optional backend env vars:
 
+- `APP_AUTH_GOOGLE_CLIENT_IDS` (comma-separated list of accepted Google Web client IDs)
 - `APP_AUTH_OTP_BYPASS_KEY` (only for OTP testing; never exposed to frontend)
 - `APP_MAIL_FROM_NAME` (default: `IQMS`)
 - `APP_MAIL_AUTH` (default: `true`)
 - `APP_MAIL_STARTTLS` (default: `true`)
+
+### Fix: "Google Sign-In is disabled because no Google Web Client ID is configured"
+
+Use this exact checklist if Google login button is disabled:
+
+1. **Backend env setup (`backend/.env`)**
+   - Add either:
+     - `APP_AUTH_GOOGLE_CLIENT_ID=<your-web-client-id>.apps.googleusercontent.com`
+     - or `APP_AUTH_GOOGLE_CLIENT_IDS=<id1>.apps.googleusercontent.com,<id2>.apps.googleusercontent.com`
+2. **Frontend env setup (`.env`)**
+   - Add one of:
+     - `VITE_APP_AUTH_GOOGLE_CLIENT_ID=<same-web-client-id>`
+     - `VITE_GOOGLE_CLIENT_ID=<same-web-client-id>`
+3. **Match IDs**
+   - The frontend client ID must be one of the backend accepted IDs.
+4. **Google Console origins**
+   - In the OAuth Web credential, add your frontend URL (for local: `http://localhost:5173`) to **Authorized JavaScript origins**.
+5. **Restart both apps after env changes**
+   - Stop and restart backend and frontend; Vite/Spring do not reliably pick up changed env vars without restart.
+
+Quick verification:
+
+```bash
+curl -s http://localhost:8080/api/auth/google/config
+```
+
+Expected response should include a non-empty `clientId`.
 
 Run backend with explicit env values:
 
