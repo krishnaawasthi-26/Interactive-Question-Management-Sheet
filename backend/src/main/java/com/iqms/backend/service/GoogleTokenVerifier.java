@@ -19,13 +19,21 @@ public class GoogleTokenVerifier {
   }
 
   public GoogleProfile verify(String idToken) {
+    String normalizedToken = idToken == null ? "" : idToken.trim();
+    if (normalizedToken.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Google ID token is required.");
+    }
+
     Map response;
     try {
       response = restClient.get()
-          .uri("https://oauth2.googleapis.com/tokeninfo?id_token={token}", idToken)
+          .uri("https://oauth2.googleapis.com/tokeninfo?id_token={token}", normalizedToken)
           .retrieve()
           .body(Map.class);
     } catch (Exception ex) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token.");
+    }
+    if (response == null || response.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token.");
     }
 

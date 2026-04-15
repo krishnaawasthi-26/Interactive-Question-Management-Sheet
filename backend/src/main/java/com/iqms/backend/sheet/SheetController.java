@@ -80,7 +80,11 @@ public class SheetController {
       HttpServletRequest request,
       @PathVariable String sheetId,
       @RequestBody Map<String, Object> body) {
-    String visibility = body == null ? null : String.valueOf(body.get("visibility"));
+    String visibility = null;
+    if (body != null) {
+      Object visibilityValue = body.get("visibility");
+      visibility = visibilityValue == null ? null : String.valueOf(visibilityValue);
+    }
     Boolean commentsEnabled = body == null ? null : (body.get("commentsEnabled") instanceof Boolean b ? b : null);
     return ResponseEntity.ok(sheetService.updateSharingSettings(currentUser.getUserId(request), sheetId, visibility, commentsEnabled));
   }

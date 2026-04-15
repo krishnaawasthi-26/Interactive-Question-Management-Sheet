@@ -6,4 +6,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface StudyTeamRepository extends MongoRepository<StudyTeam, String> {
   List<StudyTeam> findAllByOwnerUserIdOrderByUpdatedAtDesc(String ownerUserId);
+  List<StudyTeam> findAllByMembershipsUserId(String userId);
 }

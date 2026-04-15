@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -109,6 +110,20 @@ public class GlobalExceptionHandler {
             exception.getRetryAfterSeconds(),
             exception.getDisabledUntilEpochMs(),
             null));
+  }
+
+  @ExceptionHandler(DataAccessException.class)
+  public ResponseEntity<ErrorResponse> handleDataAccessException(
+      DataAccessException exception,
+      HttpServletRequest request) {
+    HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+    log.error("Database access error: path={}, type={}", request.getRequestURI(), exception.getClass().getName(), exception);
+    return ResponseEntity.status(status).body(
+        new ErrorResponse(
+            status.value(),
+            status.getReasonPhrase(),
+            "Database operation failed. Please retry.",
+            request.getRequestURI()));
   }
 
   @ExceptionHandler(Exception.class)

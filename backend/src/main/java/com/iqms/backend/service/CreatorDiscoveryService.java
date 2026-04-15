@@ -4,6 +4,8 @@ import com.iqms.backend.model.Sheet;
 import com.iqms.backend.model.User;
 import com.iqms.backend.repository.SheetRepository;
 import com.iqms.backend.repository.UserRepository;
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,29 +23,23 @@ public class CreatorDiscoveryService {
 
   public Map<String, Object> discovery() {
     List<User> users = userRepository.findAll();
-    List<Sheet> publicSheets = sheetRepository.findAll().stream()
-        .filter(sheet -> sheet.isPublic() || "public".equals(sheet.getVisibility()))
-        .toList();
+    List<Sheet> publicSheets = sheetRepository.findAllDiscoverableSheets();
 
     List<Map<String, Object>> trendingCreators = users.stream()
-        .sorted((a, b) -> Integer.compare(
-            b.getFollowerUserIds() == null ? 0 : b.getFollowerUserIds().size(),
-            a.getFollowerUserIds() == null ? 0 : a.getFollowerUserIds().size()))
+        .sorted(Comparator.comparingInt(this::followersCount).reversed())
         .limit(20)
         .map(user -> {
           Map<String, Object> row = new LinkedHashMap<>();
           row.put("username", user.getUsername());
           row.put("name", user.getName() == null ? user.getUsername() : user.getName());
           row.put("bio", user.getBio() == null ? "" : user.getBio());
-          row.put("followersCount", user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size());
+          row.put("followersCount", followersCount(user));
           return row;
         })
         .toList();
 
     List<Map<String, Object>> trendingSheets = publicSheets.stream()
-        .sorted((a, b) -> Integer.compare(
-            (b.getCopiedByUsernames() == null ? 0 : b.getCopiedByUsernames().size()) + (b.getDownloadedByUsernames() == null ? 0 : b.getDownloadedByUsernames().size()),
-            (a.getCopiedByUsernames() == null ? 0 : a.getCopiedByUsernames().size()) + (a.getDownloadedByUsernames() == null ? 0 : a.getDownloadedByUsernames().size())))
+        .sorted(Comparator.comparingInt(this::sheetEngagement).reversed())
         .limit(30)
         .map(sheet -> {
           Map<String, Object> row = new LinkedHashMap<>();
@@ -61,7 +57,25 @@ public class CreatorDiscoveryService {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("trendingCreators", trendingCreators);
     payload.put("trendingSheets", trendingSheets);
-    payload.put("recentlyPublished", trendingSheets.stream().sorted((a, b) -> String.valueOf(b.get("updatedAt")).compareTo(String.valueOf(a.get("updatedAt")))).limit(20).toList());
+    payload.put("recentlyPublished", trendingSheets.stream()
+        .sorted(Comparator.comparing(this::rowUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+        .limit(20)
+        .toList());
     return payload;
+  }
+
+  private int followersCount(User user) {
+    return user.getFollowerUserIds() == null ? 0 : user.getFollowerUserIds().size();
+  }
+
+  private int sheetEngagement(Sheet sheet) {
+    int copies = sheet.getCopiedByUsernames() == null ? 0 : sheet.getCopiedByUsernames().size();
+    int downloads = sheet.getDownloadedByUsernames() == null ? 0 : sheet.getDownloadedByUsernames().size();
+    return copies + downloads;
+  }
+
+  private Instant rowUpdatedAt(Map<String, Object> row) {
+    Object value = row.get("updatedAt");
+    return value instanceof Instant instant ? instant : null;
   }
 }
