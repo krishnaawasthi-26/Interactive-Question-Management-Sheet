@@ -1,0 +1,333 @@
+.premium-page {
+  display: grid;
+  gap: 20px;
+}
+
+.premium-hero,
+.premium-billing,
+.premium-footnotes {
+  position: relative;
+  overflow: clip;
+}
+
+.premium-hero {
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 75%, transparent);
+  background:
+    radial-gradient(1000px 420px at 92% -20%, color-mix(in srgb, var(--accent-primary) 17%, transparent), transparent 58%),
+    linear-gradient(170deg, color-mix(in srgb, var(--surface-elevated) 96%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
+  box-shadow: 0 18px 36px rgba(2, 7, 18, 0.36), inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  animation: premiumFadeUp 500ms ease-out both;
+}
+
+.premium-hero__glow {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  right: -80px;
+  top: -110px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 35%, transparent) 0%, transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.premium-hero h2 {
+  margin: 8px 0 0;
+  max-width: 740px;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.premium-hero__subtitle {
+  margin-top: 12px;
+  max-width: 770px;
+  color: var(--text-secondary);
+}
+
+.premium-hero__trust {
+  margin-top: 12px;
+  font-size: 0.83rem;
+  color: color-mix(in srgb, var(--text-secondary) 90%, var(--accent-primary) 10%);
+}
+
+.premium-billing {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 90%, transparent);
+  animation: premiumFadeUp 540ms ease-out both;
+}
+
+.premium-billing__switch {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 86%, transparent);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 5px;
+  background: color-mix(in srgb, var(--surface-soft) 66%, transparent);
+}
+
+.premium-billing__tab {
+  border: 0;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: transparent;
+  min-height: 36px;
+  padding: 6px 13px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.premium-billing__tab.is-active {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
+}
+
+.premium-billing__save {
+  font-size: 0.66rem;
+  color: color-mix(in srgb, var(--accent-primary) 78%, var(--text-primary) 22%);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.premium-grid {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.premium-grid::before {
+  content: "";
+  position: absolute;
+  inset: -12% -4% auto;
+  height: 320px;
+  pointer-events: none;
+  background: radial-gradient(circle at 55% 20%, color-mix(in srgb, var(--accent-info) 12%, transparent), transparent 72%);
+  filter: blur(24px);
+}
+
+.premium-card {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 94%, transparent);
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--surface-elevated) 95%, transparent), color-mix(in srgb, var(--surface) 94%, transparent));
+  padding: 18px;
+  box-shadow: 0 14px 30px rgba(2, 8, 20, 0.28), inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+  animation: premiumFadeUp 540ms ease-out both;
+  animation-delay: var(--card-stagger, 0ms);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--border-strong) 98%, transparent);
+  box-shadow: 0 18px 36px rgba(2, 8, 20, 0.36), inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+.premium-card--featured {
+  border-color: color-mix(in srgb, var(--accent-primary) 52%, var(--border-subtle));
+  background:
+    radial-gradient(420px 220px at 100% 0%, color-mix(in srgb, var(--accent-primary) 14%, transparent), transparent 72%),
+    linear-gradient(160deg, color-mix(in srgb, var(--surface-elevated) 96%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+  box-shadow: 0 22px 40px rgba(5, 10, 26, 0.44), 0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}
+
+.premium-card--featured-lite {
+  border-color: color-mix(in srgb, var(--accent-info) 38%, var(--border-subtle));
+}
+
+.premium-card--planned {
+  opacity: 0.9;
+}
+
+.premium-card__badge {
+  justify-self: start;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 44%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  animation: premiumPulse 2200ms ease-in-out infinite;
+}
+
+.premium-card__header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.015em;
+}
+
+.premium-card__description {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.premium-card__price-wrap {
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+}
+
+.premium-card__price {
+  margin: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.premium-card__billing,
+.premium-card__note,
+.premium-card__tag {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.premium-card__note,
+.premium-card__tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 82%, transparent);
+  padding: 2px 8px;
+}
+
+.premium-card__tag {
+  margin-left: 6px;
+}
+
+.premium-card__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.premium-card__features li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.premium-card__features li span:first-child {
+  margin-top: 1px;
+  color: color-mix(in srgb, var(--accent-success) 84%, var(--text-primary) 16%);
+}
+
+.premium-cta {
+  width: 100%;
+  min-height: 44px;
+}
+
+.premium-cta--featured {
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent-primary) 28%, transparent);
+}
+
+.premium-footnotes {
+  padding: 14px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 94%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  animation: premiumFadeUp 620ms ease-out both;
+}
+
+.premium-footnotes p {
+  margin: 0;
+}
+
+.premium-footnotes p + p {
+  margin-top: 6px;
+}
+
+@media (min-width: 760px) {
+  .premium-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .premium-hero {
+    padding: 28px;
+  }
+}
+
+@media (min-width: 1220px) {
+  .premium-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .premium-card--featured {
+    transform: translateY(-6px) scale(1.01);
+  }
+
+  .premium-card--featured:hover {
+    transform: translateY(-10px) scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-hero,
+  .premium-billing,
+  .premium-card,
+  .premium-footnotes,
+  .premium-card__badge {
+    animation: none;
+    transition: none;
+  }
+
+  .premium-card:hover,
+  .premium-card--featured,
+  .premium-card--featured:hover {
+    transform: none;
+  }
+}
+
+@keyframes premiumFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes premiumPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-primary) 0%, transparent);
+  }
+}
