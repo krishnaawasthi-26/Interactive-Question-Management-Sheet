@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
+import EmptyState from "../components/ui/EmptyState";
 import NotificationItemCard from "../components/ui/NotificationItemCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import {
@@ -180,8 +181,8 @@ function NotificationsPage({ theme, onThemeChange, title = "Inbox" }) {
           ) : <p className="meta-text">Loading preferences…</p>}
         </SurfaceCard>
 
-        {loading ? <p className="meta-text">Loading inbox…</p> : null}
-        {error ? <p className="text-sm text-[var(--accent-danger)]">{error}</p> : null}
+        {loading ? <div className="panel-muted p-3 text-sm text-[var(--text-secondary)]">Loading inbox…</div> : null}
+        {error ? <div className="panel-muted border-[color-mix(in_srgb,var(--accent-danger)_45%,transparent)] p-3 text-sm text-[var(--accent-danger)]">{error}</div> : null}
 
         <div className="space-y-2.5">
           {items.map((item) => (
@@ -216,10 +217,7 @@ function NotificationsPage({ theme, onThemeChange, title = "Inbox" }) {
             />
           ))}
           {!loading && items.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">✉</div>
-              <p className="mt-2 text-sm text-[var(--text-secondary)]">No inbox items match this filter.</p>
-            </div>
+            <EmptyState title="No inbox items found" description="Try another filter or wait for fresh activity to appear." icon="✉" />
           ) : null}
         </div>
       </div>

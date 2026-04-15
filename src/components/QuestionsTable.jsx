@@ -6,11 +6,11 @@ const STATUS_STYLES = {
 
 function QuestionsTable({ rows }) {
   return (
-    <section className="panel overflow-hidden rounded-2xl">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3">
+    <section className="table-shell">
+      <div className="table-shell-header flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-[var(--text-primary)]">Questions</h3>
-          <p className="text-xs text-[var(--text-tertiary)]">{rows.length} total questions</p>
+          <h3 className="section-title">Questions</h3>
+          <p className="meta-text">{rows.length} total questions</p>
         </div>
 
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -30,34 +30,34 @@ function QuestionsTable({ rows }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-[760px] w-full text-left text-sm">
-          <thead className="bg-[var(--surface-elevated)] text-xs uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+        <table className="table-shell-table">
+          <thead className="table-shell-head">
             <tr>
-              <th className="px-4 py-3 font-semibold">Topic</th>
-              <th className="px-4 py-3 font-semibold">Question</th>
-              <th className="px-4 py-3 font-semibold">Guide</th>
-              <th className="px-4 py-3 font-semibold">Notes</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
+              <th>Topic</th>
+              <th>Question</th>
+              <th>Guide</th>
+              <th>Notes</th>
+              <th>Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--text-secondary)]">
+          <tbody className="table-shell-body">
             {rows.length > 0 ? rows.map((row) => (
-              <tr key={row.id} className="align-top transition hover:bg-[color-mix(in_srgb,var(--accent-primary)_6%,var(--surface))]">
-                <td className="px-4 py-4 text-[var(--text-primary)]">{row.topic}</td>
-                <td className="px-4 py-4 leading-6 break-words">{row.question}</td>
-                <td className="px-4 py-4">
-                  {row.primary ? <a href={row.primary} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-300 hover:text-blue-200">Open Resource</a> : <span className="text-[var(--text-tertiary)]">No link</span>}
+              <tr key={row.id} className="table-shell-row">
+                <td className="table-shell-cell text-[var(--text-primary)]">{row.topic}</td>
+                <td className="table-shell-cell leading-6 break-words">{row.question}</td>
+                <td className="table-shell-cell">
+                  {row.primary ? <a href={row.primary} target="_blank" rel="noreferrer" className="link-base text-sm font-medium">Open Resource</a> : <span className="text-[var(--text-tertiary)]">No link</span>}
                 </td>
-                <td className="px-4 py-4">{row.notes ? <span className="text-[var(--text-primary)]">Available</span> : <span className="text-[var(--text-tertiary)]">—</span>}</td>
-                <td className="px-4 py-4">
-                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[row.status] || STATUS_STYLES["In Progress"]}`}>
+                <td className="table-shell-cell">{row.notes ? <span className="text-[var(--text-primary)]">Available</span> : <span className="text-[var(--text-tertiary)]">—</span>}</td>
+                <td className="table-shell-cell">
+                  <span className={`status-pill ${STATUS_STYLES[row.status] || STATUS_STYLES["In Progress"]}`}>
                     {row.status}
                   </span>
                 </td>
               </tr>
             )) : (
               <tr>
-                <td className="px-4 py-8 text-sm text-[var(--text-tertiary)]" colSpan={5}>This sheet has no questions yet.</td>
+                <td className="table-shell-cell py-8 text-sm text-[var(--text-tertiary)]" colSpan={5}>This sheet has no questions yet.</td>
               </tr>
             )}
           </tbody>

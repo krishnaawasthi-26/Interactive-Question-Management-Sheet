@@ -116,7 +116,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           </div>
         </div>
 
-        <nav className="sidebar-scroll space-y-4">
+        <nav className="sidebar-scroll space-y-5">
           {resolvedSections.map((section) => (
             <SidebarSection
               key={section.title}
@@ -157,7 +157,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
           <button type="button" onClick={onCloseMobile} aria-label="Close navigation" className="sidebar-toggle">✕</button>
         </div>
 
-        <nav className="sidebar-scroll space-y-4 pb-4">
+        <nav className="sidebar-scroll space-y-5 pb-4">
           {resolvedSections.map((section) => (
             <SidebarSection
               key={`mobile-${section.title}`}

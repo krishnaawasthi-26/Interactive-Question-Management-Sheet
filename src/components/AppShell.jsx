@@ -46,13 +46,13 @@ function AppShell({
               </>
             )}
           />
-          <div className="mx-auto w-full max-w-[1360px] px-0 lg:px-2">
+          <div className="mx-auto w-full max-w-[var(--content-max-width)] px-0 lg:px-2">
             <AlertBar message={alert} onDismiss={onDismissAlert} />
 
             {title ? (
               <header className="panel-elevated mb-5 px-4 py-4 sm:px-5">
-                <h1 className="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">{title}</h1>
-                {subtitle ? <p className="mt-1 text-sm text-[var(--text-secondary)]">{subtitle}</p> : null}
+                <h1 className="page-title">{title}</h1>
+                {subtitle ? <p className="meta-text mt-1">{subtitle}</p> : null}
               </header>
             ) : null}
 

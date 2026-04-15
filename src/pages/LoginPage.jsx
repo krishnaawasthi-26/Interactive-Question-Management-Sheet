@@ -104,31 +104,37 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   return (
     <AppShell title="Login" subtitle="Access your question sheets" theme={theme} onThemeChange={onThemeChange}>
       <div className="panel mx-auto mt-6 w-full max-w-xl p-6">
-        <form className="space-y-3" onSubmit={submit}>
-          <input
-            type="text"
-            required
-            disabled={authLoading || isLocked}
-            value={form.identifier}
-            placeholder="Email or username"
-            onChange={(event) => {
-              clearAuthError();
-              setForm((current) => ({ ...current, identifier: event.target.value }));
-            }}
-            className="field-base w-full"
-          />
-          <input
-            type="password"
-            required
-            disabled={authLoading || isLocked}
-            value={form.password}
-            placeholder="Password"
-            onChange={(event) => {
-              clearAuthError();
-              setForm((current) => ({ ...current, password: event.target.value }));
-            }}
-            className="field-base w-full"
-          />
+        <form className="stack-form" onSubmit={submit}>
+          <label>
+            <span className="stack-form-label">Email or username</span>
+            <input
+              type="text"
+              required
+              disabled={authLoading || isLocked}
+              value={form.identifier}
+              placeholder="Enter your email or username"
+              onChange={(event) => {
+                clearAuthError();
+                setForm((current) => ({ ...current, identifier: event.target.value }));
+              }}
+              className="field-base w-full"
+            />
+          </label>
+          <label>
+            <span className="stack-form-label">Password</span>
+            <input
+              type="password"
+              required
+              disabled={authLoading || isLocked}
+              value={form.password}
+              placeholder="Enter your password"
+              onChange={(event) => {
+                clearAuthError();
+                setForm((current) => ({ ...current, password: event.target.value }));
+              }}
+              className="field-base w-full"
+            />
+          </label>
           {isLocked && <p className="text-sm text-[var(--accent-primary)]">{lockMessage}</p>}
           {authError && <p className="text-sm text-[var(--accent-danger)]">{authError}</p>}
           <button type="submit" disabled={authLoading || isLocked} className="btn-base btn-primary w-full">
@@ -144,7 +150,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
           !googleReady && <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Loading Google login...</p>
         )}
 
-        <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="mt-4 text-sm text-[var(--accent-info)]">
+        <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="link-base mt-4 text-sm">
           Don&apos;t have an account? Sign up
         </button>
       </div>
