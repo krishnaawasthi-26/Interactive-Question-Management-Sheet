@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { isGoogleAuthMissingConfigError, loadGoogleAuthConfig } from "../config/authConfig";
+import { getGoogleAuthDisabledReason, isGoogleAuthMissingConfigError, loadGoogleAuthConfig } from "../config/authConfig";
 import { getGoogleAuthErrorMessage } from "../utils/googleAuthError";
 import AppShell from "../components/AppShell";
 
@@ -17,6 +17,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const [googleReady, setGoogleReady] = useState(false);
   const [googleConfigError, setGoogleConfigError] = useState("");
   const [googleEnabled, setGoogleEnabled] = useState(true);
+  const [googleDisabledReason, setGoogleDisabledReason] = useState("");
   const lockSeconds = Math.max(0, Math.ceil((loginBlockedUntil - now) / 1000));
   const isLocked = lockSeconds > 0;
 
@@ -46,9 +47,10 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
       } catch (error) {
         if (isGoogleAuthMissingConfigError(error)) {
           setGoogleEnabled(false);
+          setGoogleDisabledReason(getGoogleAuthDisabledReason(error));
           setGoogleConfigError("");
         } else {
-          setGoogleConfigError(error?.message || "Google Sign-In configuration failed to load.");
+          setGoogleConfigError(getGoogleAuthDisabledReason(error));
         }
         setGoogleReady(false);
         return;
@@ -75,6 +77,7 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
         width: "320",
       });
       setGoogleEnabled(true);
+      setGoogleDisabledReason("");
       setGoogleConfigError("");
       setGoogleReady(true);
     };
@@ -160,7 +163,10 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
             )}
           </>
         ) : (
-          <p className="mt-2 text-center text-xs text-[var(--text-muted)]">Google Sign-In is currently unavailable for this deployment.</p>
+          <div className="mt-2 text-center text-xs text-[var(--text-muted)]">
+            <p>Google Sign-In is currently unavailable for this deployment.</p>
+            {googleDisabledReason && <p className="mt-1 text-[var(--accent-danger)]">{googleDisabledReason}</p>}
+          </div>
         )}
 
         <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="link-base mt-4 text-sm">

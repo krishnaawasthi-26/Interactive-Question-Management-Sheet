@@ -19,6 +19,23 @@ const createMissingConfigError = () => {
 
 export const isGoogleAuthMissingConfigError = (error) => error?.code === GOOGLE_AUTH_CONFIG_MISSING_CODE;
 
+export const getGoogleAuthDisabledReason = (error) => {
+  if (!error) return "";
+  if (isGoogleAuthMissingConfigError(error)) {
+    return error.message;
+  }
+
+  const status = Number(error?.status);
+  if (status === 404) {
+    return "Google Sign-In config endpoint is missing on this deployment (/api/auth/google/config returned 404). Deploy the backend auth routes and try again.";
+  }
+  if (status === 500 || status === 503) {
+    return `Google Sign-In config endpoint failed with HTTP ${status}. Check backend env vars APP_AUTH_GOOGLE_CLIENT_ID and APP_AUTH_GOOGLE_CLIENT_IDS.`;
+  }
+
+  return error?.message || "Google Sign-In configuration failed to load.";
+};
+
 export const loadGoogleAuthConfig = async () => {
   if (!googleAuthConfigPromise) {
     googleAuthConfigPromise = apiRequest("/api/auth/google/config")
