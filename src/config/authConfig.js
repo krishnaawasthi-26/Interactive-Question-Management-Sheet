@@ -1,8 +1,16 @@
 import { apiRequest } from "../api/apiClient";
 
 let googleAuthConfigPromise;
+let hasLoggedGoogleClientDetection = false;
 
-const normalizeClientId = (value) => (typeof value === "string" ? value.trim() : "");
+const normalizeClientId = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const normalizedValue = value.trim();
+  return normalizedValue ? normalizedValue : "";
+};
 
 const parseClientIdList = (value) => {
   if (typeof value !== "string") {
@@ -25,7 +33,7 @@ const parseClientIdList = (value) => {
     .filter(Boolean);
 };
 
-const resolveFrontendGoogleClientId = () => {
+export const getFrontendGoogleClientId = () => {
   const primaryClientId = normalizeClientId(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_ID);
   if (primaryClientId) {
     return primaryClientId;
@@ -43,7 +51,14 @@ const resolveFrontendGoogleClientId = () => {
 
   return parseClientIdList(import.meta.env.VITE_GOOGLE_CLIENT_IDS)[0] || "";
 };
-const fallbackClientId = resolveFrontendGoogleClientId();
+
+const logFrontendGoogleConfigDetection = (clientId) => {
+  if (hasLoggedGoogleClientDetection) {
+    return;
+  }
+  hasLoggedGoogleClientDetection = true;
+  console.info(`Google OAuth client ID detected: ${clientId ? "yes" : "no"}`);
+};
 
 const GOOGLE_AUTH_CONFIG_MISSING_CODE = "GOOGLE_AUTH_CONFIG_MISSING";
 
@@ -75,10 +90,14 @@ export const getGoogleAuthDisabledReason = (error) => {
 };
 
 export const loadGoogleAuthConfig = async () => {
+  const fallbackClientId = getFrontendGoogleClientId();
+  logFrontendGoogleConfigDetection(fallbackClientId);
+
   if (!googleAuthConfigPromise) {
     googleAuthConfigPromise = apiRequest("/api/auth/google/config")
       .then((payload) => {
         const clientId = normalizeClientId(payload?.clientId) || fallbackClientId;
+        logFrontendGoogleConfigDetection(clientId);
         if (!clientId) {
           throw createMissingConfigError();
         }

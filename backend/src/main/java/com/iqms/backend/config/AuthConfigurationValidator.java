@@ -49,10 +49,13 @@ public class AuthConfigurationValidator {
   }
 
   private void validateGoogleConfig(List<String> errors) {
-    List<String> googleClientIds = googleOAuthProperties.getClientIds();
+    List<String> googleClientIds = googleOAuthProperties.getBackendGoogleClientIds();
+    log.info("Google OAuth client ID detected: {}", googleClientIds.isEmpty() ? "no" : "yes");
+    log.info("Google OAuth client IDs detected: {}", googleClientIds.size());
+
     if (googleClientIds.isEmpty()) {
       log.warn(
-          "Google login is disabled: no Google Web Client ID is configured. Checked APP_AUTH_GOOGLE_CLIENT_ID, APP_AUTH_GOOGLE_CLIENT_IDS, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_IDS, GOOGLE_WEB_CLIENT_ID, GOOGLE_WEB_CLIENT_IDS.");
+          "Google login is disabled: no Google Web Client ID is configured. Checked APP_AUTH_GOOGLE_CLIENT_ID and APP_AUTH_GOOGLE_CLIENT_IDS.");
       return;
     }
 

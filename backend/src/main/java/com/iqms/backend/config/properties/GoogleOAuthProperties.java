@@ -1,7 +1,9 @@
 package com.iqms.backend.config.properties;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -30,12 +32,31 @@ public class GoogleOAuthProperties {
   }
 
   public List<String> getClientIds() {
-    return Arrays.stream(((clientId == null ? "" : clientId) + "," + (clientIds == null ? "" : clientIds)).split(","))
-        .map(String::trim)
-        .map(this::stripMatchingQuotes)
-        .filter(value -> !value.isBlank())
-        .distinct()
-        .toList();
+    return getBackendGoogleClientIds();
+  }
+
+  public List<String> getBackendGoogleClientIds() {
+    Set<String> normalizedClientIds = new LinkedHashSet<>();
+    normalizedClientIds.addAll(parseClientIds(clientId));
+    normalizedClientIds.addAll(parseClientIds(clientIds));
+    return List.copyOf(normalizedClientIds);
+  }
+
+  private List<String> parseClientIds(String value) {
+    String normalizedValue = value == null ? "" : value;
+    if (normalizedValue.isBlank()) {
+      return List.of();
+    }
+
+    String[] entries = normalizedValue.split(",");
+    List<String> parsedClientIds = new ArrayList<>();
+    for (String entry : entries) {
+      String parsedEntry = stripMatchingQuotes(entry == null ? "" : entry.trim());
+      if (!parsedEntry.isBlank()) {
+        parsedClientIds.add(parsedEntry);
+      }
+    }
+    return parsedClientIds;
   }
 
   private String stripMatchingQuotes(String value) {
