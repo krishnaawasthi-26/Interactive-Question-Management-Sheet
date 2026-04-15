@@ -37,13 +37,16 @@ public class SheetCollaborationService {
   public Sheet invite(String actorUserId, String sheetId, String username, String role) {
     Sheet sheet = findSheet(sheetId);
     requireOwner(sheet, actorUserId);
+    if (username == null || username.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username is required.");
+    }
 
     String normalizedRole = normalizeRole(role);
     if ("owner".equals(normalizedRole)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot invite as owner.");
     }
 
-    String userId = userRepository.findByUsername(username.toLowerCase(Locale.ROOT))
+    String userId = userRepository.findByUsername(username.trim().toLowerCase(Locale.ROOT))
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."))
         .getId();
 

@@ -89,12 +89,12 @@ public class SheetController {
   public ResponseEntity<Sheet> inviteCollaborator(
       HttpServletRequest request,
       @PathVariable String sheetId,
-      @RequestBody Map<String, String> body) {
+      @RequestBody(required = false) Map<String, String> body) {
     return ResponseEntity.ok(collaborationService.invite(
         currentUser.getUserId(request),
         sheetId,
-        body.get("username"),
-        body.get("role")));
+        bodyValue(body, "username"),
+        bodyValue(body, "role")));
   }
 
   @GetMapping("/{sheetId}/comments")
@@ -106,14 +106,14 @@ public class SheetController {
   public ResponseEntity<SheetComment> addComment(
       HttpServletRequest request,
       @PathVariable String sheetId,
-      @RequestBody Map<String, String> body) {
+      @RequestBody(required = false) Map<String, String> body) {
     return ResponseEntity.ok(collaborationService.addComment(
         currentUser.getUserId(request),
         sheetId,
-        body.get("content"),
-        body.get("topicId"),
-        body.get("subTopicId"),
-        body.get("questionId")));
+        bodyValue(body, "content"),
+        bodyValue(body, "topicId"),
+        bodyValue(body, "subTopicId"),
+        bodyValue(body, "questionId")));
   }
 
   @GetMapping("/{sheetId}/activity")
@@ -162,5 +162,9 @@ public class SheetController {
       @PathVariable String sheetId,
       @Valid @RequestBody SheetEngagementRequest body) {
     return ResponseEntity.ok(sheetService.trackEngagement(currentUser.getUserId(request), sheetId, body.getAction()));
+  }
+
+  private String bodyValue(Map<String, String> body, String key) {
+    return body == null ? null : body.get(key);
   }
 }
