@@ -12,6 +12,10 @@ export const GOOGLE_CLIENT_IDS = Array.from(
     ...toList(import.meta.env.VITE_GOOGLE_CLIENT_ID),
     ...toList(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_IDS),
     ...toList(import.meta.env.VITE_GOOGLE_CLIENT_IDS),
+    ...toList(import.meta.env.APP_AUTH_GOOGLE_CLIENT_ID),
+    ...toList(import.meta.env.GOOGLE_CLIENT_ID),
+    ...toList(import.meta.env.APP_AUTH_GOOGLE_CLIENT_IDS),
+    ...toList(import.meta.env.GOOGLE_CLIENT_IDS),
   ])
 );
 
