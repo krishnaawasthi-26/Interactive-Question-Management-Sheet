@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
+
+const normalizeText = (value) =>
+  `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
 
 function TopicList({
   isEditing = true,
@@ -43,41 +46,41 @@ function TopicList({
   const [resourceDraftByQuestion, setResourceDraftByQuestion] = useState({});
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
   const [activeNotesPreview, setActiveNotesPreview] = useState(null);
-  const normalizeText = (value) =>
-    value.trim().toLowerCase().replace(/\s+/g, " ");
   const normalizedQuery = normalizeText(searchQuery);
   const shouldExpandAll = Boolean(normalizedQuery);
-  const visibleTopics = normalizedQuery
-    ? topics
-        .map((topic) => {
-          const filteredSubTopics = topic.subTopics
-            .map((sub) => {
-              const filteredQuestions = sub.questions.filter((question) => {
-                const normalizedQuestion = normalizeText(question.text);
-                return onlyExactMatch
-                  ? normalizedQuestion === normalizedQuery
-                  : normalizedQuestion.includes(normalizedQuery);
-              });
+  const visibleTopics = useMemo(() => (
+    normalizedQuery
+      ? topics
+          .map((topic) => {
+            const filteredSubTopics = topic.subTopics
+              .map((sub) => {
+                const filteredQuestions = sub.questions.filter((question) => {
+                  const normalizedQuestion = normalizeText(question.text);
+                  return onlyExactMatch
+                    ? normalizedQuestion === normalizedQuery
+                    : normalizedQuestion.includes(normalizedQuery);
+                });
 
-              return {
-                ...sub,
-                questions: filteredQuestions,
-              };
-            })
-            .filter((sub) => sub.questions.length > 0);
+                return {
+                  ...sub,
+                  questions: filteredQuestions,
+                };
+              })
+              .filter((sub) => sub.questions.length > 0);
 
-          return {
-            ...topic,
-            subTopics: filteredSubTopics,
-          };
-        })
-        .filter((topic) => topic.subTopics.length > 0)
-    : topics;
+            return {
+              ...topic,
+              subTopics: filteredSubTopics,
+            };
+          })
+          .filter((topic) => topic.subTopics.length > 0)
+      : topics
+  ), [normalizedQuery, onlyExactMatch, topics]);
 
   const toggleTopic = (id) =>
-    setExpandedTopics({ ...expandedTopics, [id]: !expandedTopics[id] });
+    setExpandedTopics((current) => ({ ...current, [id]: !current[id] }));
   const toggleSubtopic = (id) =>
-    setExpandedSubtopics({ ...expandedSubtopics, [id]: !expandedSubtopics[id] });
+    setExpandedSubtopics((current) => ({ ...current, [id]: !current[id] }));
 
   const handleDragEnd = (result) => {
     if (!allowReorder || !isEditing) return;

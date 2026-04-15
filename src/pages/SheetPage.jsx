@@ -373,32 +373,44 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         ? "Unsaved changes"
         : "Saved";
 
-  const filteredAndSortedSheets = [...sheets]
-    .filter((sheet) => {
-      if (typeFilter === "all") return true;
-      if (typeFilter === "public") return Boolean(sheet.isPublic);
-      if (typeFilter === "private") return !sheet.isPublic;
-      if (typeFilter === "archived") return Boolean(sheet.isArchived);
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === "created") {
-        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      }
-      if (sortBy === "progress") {
-        return calculateSheetProgress(b).percent - calculateSheetProgress(a).percent;
-      }
-      if (sortBy === "type") {
-        return Number(Boolean(b.isPublic)) - Number(Boolean(a.isPublic));
-      }
-      if (sortBy === "questions") {
-        return calculateSheetProgress(b).totalQuestions - calculateSheetProgress(a).totalQuestions;
-      }
-      if (sortBy === "title") {
-        return `${a.title || ""}`.localeCompare(`${b.title || ""}`);
-      }
-      return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
-    });
+  const sheetProgressById = useMemo(
+    () =>
+      Object.fromEntries(
+        sheets.map((sheet) => [sheet.id, calculateSheetProgress(sheet)])
+      ),
+    [sheets]
+  );
+
+  const filteredAndSortedSheets = useMemo(
+    () =>
+      [...sheets]
+        .filter((sheet) => {
+          if (typeFilter === "all") return true;
+          if (typeFilter === "public") return Boolean(sheet.isPublic);
+          if (typeFilter === "private") return !sheet.isPublic;
+          if (typeFilter === "archived") return Boolean(sheet.isArchived);
+          return true;
+        })
+        .sort((a, b) => {
+          if (sortBy === "created") {
+            return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+          }
+          if (sortBy === "progress") {
+            return (sheetProgressById[b.id]?.percent || 0) - (sheetProgressById[a.id]?.percent || 0);
+          }
+          if (sortBy === "type") {
+            return Number(Boolean(b.isPublic)) - Number(Boolean(a.isPublic));
+          }
+          if (sortBy === "questions") {
+            return (sheetProgressById[b.id]?.totalQuestions || 0) - (sheetProgressById[a.id]?.totalQuestions || 0);
+          }
+          if (sortBy === "title") {
+            return `${a.title || ""}`.localeCompare(`${b.title || ""}`);
+          }
+          return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+        }),
+    [sheetProgressById, sheets, sortBy, typeFilter]
+  );
 
   const groupedSheetActionsById = useMemo(
     () =>
@@ -556,7 +568,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
               ) : (
                 <div className="space-y-3">
                   {filteredAndSortedSheets.map((sheet) => {
-                    const progress = calculateSheetProgress(sheet);
+                    const progress = sheetProgressById[sheet.id] || { percent: 0, completedQuestions: 0, totalQuestions: 0 };
                     return (
                       <div key={sheet.id} className="panel-elevated flex items-start justify-between gap-4 rounded-xl p-3">
                         <div className="w-full max-w-lg space-y-2">

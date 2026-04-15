@@ -21,6 +21,9 @@
   --accent-warning: #e2b160;
   --accent-info: #70a7ff;
   --focus-ring: color-mix(in srgb, var(--accent-primary) 58%, transparent);
+  --danger-color: var(--accent-danger);
+  --btn-accent-primary: var(--accent-primary);
+  --btn-accent-primary-hover: var(--accent-primary-hover);
   --btn-on-primary: #1f1405;
   --btn-on-success: #062719;
   --btn-on-danger: #2f080d;
@@ -60,6 +63,9 @@
   --accent-success: #2f855a;
   --accent-warning: #b7791f;
   --accent-info: #2563eb;
+  --danger-color: var(--accent-danger);
+  --btn-accent-primary: var(--accent-primary);
+  --btn-accent-primary-hover: var(--accent-primary-hover);
   --btn-on-primary: #ffffff;
   --btn-on-success: #ffffff;
   --btn-on-danger: #ffffff;
@@ -157,6 +163,22 @@ body {
 .surface-card:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
+}
+
+.section-fade-in {
+  animation: sectionFadeIn 180ms ease-out;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-title { font-size: clamp(1.38rem, 0.95vw + 1rem, 1.78rem); font-weight: 670; letter-spacing: -0.02em; line-height: 1.2; }
@@ -695,8 +717,10 @@ canvas {
   .sidebar-mobile,
   .inbox-row,
   .btn-base,
-  .sidebar-nav-item {
+  .sidebar-nav-item,
+  .section-fade-in {
     transition: none !important;
+    animation: none !important;
   }
 
   .btn-base:hover,
