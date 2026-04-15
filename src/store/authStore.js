@@ -1,10 +1,6 @@
 import { create } from "zustand";
-import { loginUser, loginWithGoogle, requestSignUpOtp, signUpUser, verifySignUpOtp } from "../api/authApi";
-import {
-  requestEmailChangeOtp as requestEmailChangeOtpApi,
-  updateProfile as updateProfileApi,
-  verifyEmailChangeOtp as verifyEmailChangeOtpApi,
-} from "../api/profileApi";
+import { loginUser, signUpUser } from "../api/authApi";
+import { updateProfile as updateProfileApi } from "../api/profileApi";
 
 const CURRENT_USER_KEY = "iqms-current-user";
 const LOGIN_LOCK_KEY = "iqms-login-lock";
@@ -61,24 +57,6 @@ export const useAuthStore = create((set, get) => ({
 
   clearAuthError: () => set({ authError: null }),
 
-  requestSignUpOtp: async ({ name, email, username, password }) => {
-    set({ authLoading: true, authError: null });
-
-    try {
-      const result = await requestSignUpOtp({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        username: username.trim().toLowerCase(),
-        password: password.trim(),
-      });
-      set({ authError: null, authLoading: false });
-      return result;
-    } catch (error) {
-      set({ authError: error.message, authLoading: false });
-      return null;
-    }
-  },
-
   signUp: async ({ name, email, username, password }) => {
     set({ authLoading: true, authError: null });
     try {
@@ -88,20 +66,6 @@ export const useAuthStore = create((set, get) => ({
         username: username.trim().toLowerCase(),
         password: password.trim(),
       });
-      writeCurrentUser(user);
-      set({ currentUser: user, authError: null, authLoading: false });
-      return true;
-    } catch (error) {
-      set({ authError: error.message, authLoading: false });
-      return false;
-    }
-  },
-
-  verifySignUpOtp: async ({ verificationId, otp }) => {
-    set({ authLoading: true, authError: null });
-
-    try {
-      const user = await verifySignUpOtp({ verificationId, otp: otp.trim() });
       writeCurrentUser(user);
       set({ currentUser: user, authError: null, authLoading: false });
       return true;
@@ -148,19 +112,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  loginWithGoogle: async ({ idToken }) => {
-    set({ authLoading: true, authError: null });
-    try {
-      const user = await loginWithGoogle({ idToken });
-      writeCurrentUser(user);
-      set({ currentUser: user, authError: null, authLoading: false });
-      return true;
-    } catch (error) {
-      set({ authError: error.message, authLoading: false });
-      return false;
-    }
-  },
-
   updateProfile: async (payload) => {
     const user = get().currentUser;
     if (!user?.token) return false;
@@ -173,38 +124,6 @@ export const useAuthStore = create((set, get) => ({
       return true;
     } catch (error) {
       set({ authError: error.message });
-      return false;
-    }
-  },
-
-  requestEmailChangeOtp: async ({ email }) => {
-    const user = get().currentUser;
-    if (!user?.token) return null;
-
-    set({ authLoading: true, authError: null });
-    try {
-      const result = await requestEmailChangeOtpApi(user.token, { email: email.trim().toLowerCase() });
-      set({ authLoading: false, authError: null });
-      return result;
-    } catch (error) {
-      set({ authLoading: false, authError: error.message });
-      return null;
-    }
-  },
-
-  verifyEmailChangeOtp: async ({ verificationId, otp }) => {
-    const user = get().currentUser;
-    if (!user?.token) return false;
-
-    set({ authLoading: true, authError: null });
-    try {
-      const updated = await verifyEmailChangeOtpApi(user.token, { verificationId, otp: otp.trim() });
-      const merged = { ...user, ...updated };
-      writeCurrentUser(merged);
-      set({ authLoading: false, authError: null, currentUser: merged });
-      return true;
-    } catch (error) {
-      set({ authLoading: false, authError: error.message });
       return false;
     }
   },

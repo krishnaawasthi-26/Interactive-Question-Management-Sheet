@@ -11,8 +11,3 @@ export const followUser = (token, username) =>
   authRequest(`/api/profile/follow/${username}`, "POST", null, token);
 export const unfollowUser = (token, username) =>
   authRequest(`/api/profile/follow/${username}`, "DELETE", null, token);
-
-export const requestEmailChangeOtp = (token, payload) =>
-  authRequest("/api/profile/email/change/request-otp", "POST", payload, token);
-export const verifyEmailChangeOtp = (token, payload) =>
-  authRequest("/api/profile/email/change/verify-otp", "POST", payload, token);

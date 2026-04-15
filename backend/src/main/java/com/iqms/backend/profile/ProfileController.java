@@ -1,14 +1,9 @@
 package com.iqms.backend.profile;
 
-import com.iqms.backend.dto.EmailChangeRequest;
-import com.iqms.backend.dto.OtpChallengeResponse;
-import com.iqms.backend.dto.VerifyOtpRequest;
 import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
 import com.iqms.backend.security.CurrentUser;
 import com.iqms.backend.model.Sheet;
-import com.iqms.backend.service.OtpDeliveryService;
-import com.iqms.backend.service.OtpService;
 import com.iqms.backend.service.PremiumAccessService;
 import com.iqms.backend.service.SheetService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,8 +35,6 @@ public class ProfileController {
   private final CurrentUser currentUser;
   private final SheetService sheetService;
   private final ProfileShareService profileShareService;
-  private final OtpService otpService;
-  private final OtpDeliveryService otpDeliveryService;
   private final PremiumAccessService premiumAccessService;
 
   public ProfileController(
@@ -49,15 +42,11 @@ public class ProfileController {
       CurrentUser currentUser,
       SheetService sheetService,
       ProfileShareService profileShareService,
-      OtpService otpService,
-      OtpDeliveryService otpDeliveryService,
       PremiumAccessService premiumAccessService) {
     this.userRepository = userRepository;
     this.currentUser = currentUser;
     this.sheetService = sheetService;
     this.profileShareService = profileShareService;
-    this.otpService = otpService;
-    this.otpDeliveryService = otpDeliveryService;
     this.premiumAccessService = premiumAccessService;
   }
 
@@ -87,10 +76,23 @@ public class ProfileController {
       user.setName(name.trim());
     }
 
-    if (email != null && !email.isBlank() && !email.trim().equalsIgnoreCase(user.getEmail())) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Email change requires OTP verification. Use /api/profile/email/change/request-otp.");
+    if (email != null && !email.isBlank()) {
+      String normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail.equalsIgnoreCase(user.getEmail())) {
+        if (user.getEmailChangeCount() >= MAX_EMAIL_CHANGES) {
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "You have reached the email change limit (7).");
+        }
+        userRepository
+            .findByEmail(normalizedEmail)
+            .filter(found -> !found.getId().equals(user.getId()))
+            .ifPresent(found -> {
+              throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use.");
+            });
+        user.setEmail(normalizedEmail);
+        user.setEmailChangeCount(user.getEmailChangeCount() + 1);
+      }
     }
 
     if (username != null && !username.isBlank()) {
@@ -119,68 +121,10 @@ public class ProfileController {
     if (githubUrl != null) user.setGithubUrl(normalizeOptionalValue(githubUrl));
     if (linkedinUrl != null) user.setLinkedinUrl(normalizeOptionalValue(linkedinUrl));
 
-    if ("GOOGLE".equalsIgnoreCase(user.getAuthProvider())
-        && !user.isGoogleOnboardingComplete()
-        && name != null
-        && !name.isBlank()
-        && username != null
-        && !username.isBlank()) {
-      user.setGoogleOnboardingComplete(true);
-    }
-
     User saved = userRepository.save(user);
     return ResponseEntity.ok(profilePayload(saved));
   }
 
-
-  @PostMapping("/email/change/request-otp")
-  public ResponseEntity<OtpChallengeResponse> requestEmailChangeOtp(
-      HttpServletRequest request,
-      @jakarta.validation.Valid @RequestBody EmailChangeRequest body) {
-    User user = findUser(currentUser.getUserId(request));
-    if (user.getEmailChangeCount() >= MAX_EMAIL_CHANGES) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "You have reached the email change limit (7).");
-    }
-    String normalizedEmail = body.getEmail().trim().toLowerCase();
-    userRepository
-        .findByEmail(normalizedEmail)
-        .filter(found -> !found.getId().equals(user.getId()))
-        .ifPresent(found -> {
-          throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use.");
-        });
-
-    String payloadKey = user.getId() + ":" + normalizedEmail;
-    OtpService.OtpChallenge challenge = otpService.issueOtp(normalizedEmail, "email-change", payloadKey);
-    otpDeliveryService.sendOtp(normalizedEmail, "email-change", challenge.code());
-    return ResponseEntity.ok(new OtpChallengeResponse(challenge.verificationId(), "OTP sent to new email address."));
-  }
-
-  @PostMapping("/email/change/verify-otp")
-  public ResponseEntity<Map<String, Object>> verifyEmailChangeOtp(
-      HttpServletRequest request,
-      @jakarta.validation.Valid @RequestBody VerifyOtpRequest body) {
-    User user = findUser(currentUser.getUserId(request));
-    OtpService.OtpRecord record = otpService.verifyOtp(body.getVerificationId(), body.getOtp(), "email-change");
-    String[] payloadParts = record.payloadKey().split(":", 2);
-    if (payloadParts.length != 2 || !payloadParts[0].equals(user.getId())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email verification session.");
-    }
-
-    String normalizedEmail = payloadParts[1];
-    userRepository
-        .findByEmail(normalizedEmail)
-        .filter(found -> !found.getId().equals(user.getId()))
-        .ifPresent(found -> {
-          throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use.");
-        });
-
-    user.setEmail(normalizedEmail);
-    user.setEmailChangeCount(user.getEmailChangeCount() + 1);
-    User saved = userRepository.save(user);
-    return ResponseEntity.ok(profilePayload(saved));
-  }
   @GetMapping("/shared/{profileShareId}")
   public ResponseEntity<Map<String, Object>> getSharedProfile(@PathVariable String profileShareId) {
     return ResponseEntity.ok(profileShareService.getSharedProfile(profileShareId));
@@ -280,7 +224,6 @@ public class ProfileController {
     payload.put("usernameChangesRemaining", Math.max(0, MAX_USERNAME_CHANGES - user.getUsernameChangeCount()));
     payload.put("emailChangesUsed", user.getEmailChangeCount());
     payload.put("emailChangesRemaining", Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()));
-    payload.put("requiresGoogleOnboarding", "GOOGLE".equalsIgnoreCase(user.getAuthProvider()) && !user.isGoogleOnboardingComplete());
     payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
     payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
     payload.put("premiumTrialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());

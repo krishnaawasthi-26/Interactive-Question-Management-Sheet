@@ -115,14 +115,8 @@ Then fill values service by service:
      ```
    - Paste output into `APP_AUTH_SECRET`.
 
-3. **Google login (`APP_AUTH_GOOGLE_CLIENT_ID` or `APP_AUTH_GOOGLE_CLIENT_IDS`)**
-   - Open Google Cloud Console → APIs & Services → Credentials.
-   - Create OAuth Client ID → **Web application**.
    - Add origin: `http://localhost:5173` for local development.
-   - Copy Client ID (`*.apps.googleusercontent.com`) to `APP_AUTH_GOOGLE_CLIENT_ID`.
-   - If you support multiple IDs, provide comma-separated values in `APP_AUTH_GOOGLE_CLIENT_IDS`.
 
-4. **OTP email / SMTP (`APP_MAIL_*`)**
    - Use your mail provider SMTP credentials.
    - For Gmail:
      - `APP_MAIL_HOST=smtp.gmail.com`
@@ -152,14 +146,10 @@ Then fill values service by service:
 - Premium is activated only after backend verification succeeds.
 
 
-### Google login configuration (required)
 
-Google Sign-In now uses backend runtime configuration only (no built-in sample credentials).
 
 Required backend env vars:
 
-- `APP_AUTH_GOOGLE_CLIENT_ID` or `APP_AUTH_GOOGLE_CLIENT_IDS` (Web OAuth client id(s) from Google Cloud Console)
-- `APP_MAIL_ENABLED` (`true` to allow OTP email delivery)
 - `APP_MAIL_HOST`
 - `APP_MAIL_PORT` (typically `587` for STARTTLS)
 - `APP_MAIL_USERNAME`
@@ -168,44 +158,32 @@ Required backend env vars:
 
 Optional backend env vars:
 
-- `APP_AUTH_OTP_BYPASS_KEY` (only for OTP testing; never exposed to frontend)
 - `APP_MAIL_FROM_NAME` (default: `IQMS`)
 - `APP_MAIL_AUTH` (default: `true`)
 - `APP_MAIL_STARTTLS` (default: `true`)
 
-### Fix: "Google Sign-In is disabled because no Google Web Client ID is configured"
 
-Use this exact checklist if Google login button is disabled:
 
 1. **Backend env setup (`backend/.env`)**
    - Add:
-     - `APP_AUTH_GOOGLE_CLIENT_ID=<your-web-client-id>.apps.googleusercontent.com`
    - For multiple accepted IDs, use:
-     - `APP_AUTH_GOOGLE_CLIENT_IDS=<id-one>.apps.googleusercontent.com,<id-two>.apps.googleusercontent.com`
 2. **Frontend env setup (`.env`)**
    - Add one of:
-     - `VITE_APP_AUTH_GOOGLE_CLIENT_ID=<same-web-client-id>`
-     - `VITE_GOOGLE_CLIENT_ID=<same-web-client-id>`
 3. **Match IDs**
    - The frontend client ID must be one of the backend accepted IDs.
-4. **Google Console origins**
-   - In the OAuth Web credential, add your frontend URL (for local: `http://localhost:5173`) to **Authorized JavaScript origins**.
 5. **Restart both apps after env changes**
    - Stop and restart backend and frontend; Vite/Spring do not reliably pick up changed env vars without restart.
 
 Quick verification:
 
 ```bash
-curl -s http://localhost:8080/api/auth/google/config
 ```
 
-Expected response should include a non-empty `clientId`.
 
 Run backend with explicit env values:
 
 ```bash
 cd backend
-APP_AUTH_GOOGLE_CLIENT_ID="<your-web-client-id>.apps.googleusercontent.com" \
 APP_MAIL_ENABLED="true" \
 APP_MAIL_HOST="smtp.gmail.com" \
 APP_MAIL_PORT="587" \
@@ -213,7 +191,6 @@ APP_MAIL_USERNAME="<smtp-username>" \
 APP_MAIL_PASSWORD="<smtp-password-or-app-password>" \
 APP_MAIL_FROM="<from-email>" \
 APP_MAIL_FROM_NAME="IQMS" \
-APP_AUTH_OTP_BYPASS_KEY="<optional-otp-bypass-key>" \
 MONGODB_URI="<your-mongodb-uri>" \
 mvn spring-boot:run
 ```
@@ -225,15 +202,10 @@ cd /workspace/Interactive-Question-Management-Sheet
 npm run dev
 ```
 
-Google setup checklist (for `Error 401: invalid_client` / `no registered origin`):
 
-- Create an OAuth **Web application** credential (not Android/iOS/Desktop).
 - Add your frontend URL to **Authorized JavaScript origins** (for local dev: `http://localhost:5173`).
-- Use that same client ID in backend env var `APP_AUTH_GOOGLE_CLIENT_ID` (or include it in `APP_AUTH_GOOGLE_CLIENT_IDS`).
 
-OTP note:
 
-- OTP delivery now uses SMTP (`OtpDeliveryService`) and fails the request if email delivery fails.
 - For Gmail, use an App Password (not your normal account password) in `APP_MAIL_PASSWORD`.
 
 ## Local development steps

@@ -1,6 +1,5 @@
 package com.iqms.backend.config;
 
-import com.iqms.backend.config.properties.GoogleOAuthProperties;
 import com.iqms.backend.config.properties.MailProperties;
 import com.iqms.backend.config.properties.RazorpayProperties;
 import jakarta.annotation.PostConstruct;
@@ -8,26 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AuthConfigurationValidator {
-  private static final Logger log = LoggerFactory.getLogger(AuthConfigurationValidator.class);
 
-
-  private final GoogleOAuthProperties googleOAuthProperties;
   private final MailProperties mailProperties;
   private final RazorpayProperties razorpayProperties;
   private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
   public AuthConfigurationValidator(
-      GoogleOAuthProperties googleOAuthProperties,
       MailProperties mailProperties,
       RazorpayProperties razorpayProperties,
       ObjectProvider<JavaMailSender> mailSenderProvider) {
-    this.googleOAuthProperties = googleOAuthProperties;
     this.mailProperties = mailProperties;
     this.razorpayProperties = razorpayProperties;
     this.mailSenderProvider = mailSenderProvider;
@@ -37,7 +29,6 @@ public class AuthConfigurationValidator {
   public void validate() {
     List<String> errors = new ArrayList<>();
 
-    validateGoogleConfig(errors);
     validateMailConfig(errors);
     validateRazorpayConfig(errors);
 
@@ -45,28 +36,6 @@ public class AuthConfigurationValidator {
       throw new IllegalStateException(
           "Invalid auth/mail/payment configuration. Fix these settings before starting: "
               + String.join(" ", errors));
-    }
-  }
-
-  private void validateGoogleConfig(List<String> errors) {
-    List<String> googleClientIds = googleOAuthProperties.getBackendGoogleClientIds();
-    log.info("Google OAuth client ID detected: {}", googleClientIds.isEmpty() ? "no" : "yes");
-    log.info("Google OAuth client IDs detected: {}", googleClientIds.size());
-
-    if (googleClientIds.isEmpty()) {
-      log.warn(
-          "Google login is disabled: no Google Web Client ID is configured. Checked APP_AUTH_GOOGLE_CLIENT_ID and APP_AUTH_GOOGLE_CLIENT_IDS.");
-      return;
-    }
-
-    for (String clientId : googleClientIds) {
-      if (!clientId.endsWith(".apps.googleusercontent.com")) {
-        errors.add("Each APP_AUTH_GOOGLE_CLIENT_ID/APP_AUTH_GOOGLE_CLIENT_IDS value must end with .apps.googleusercontent.com.");
-      }
-    }
-
-    if (errors.isEmpty()) {
-      log.info("Google login is enabled with {} configured client ID(s).", googleClientIds.size());
     }
   }
 
