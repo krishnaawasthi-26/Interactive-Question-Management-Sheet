@@ -120,7 +120,7 @@ Then fill values service by service:
    - Create OAuth Client ID → **Web application**.
    - Add origin: `http://localhost:5173` for local development.
    - Copy Client ID (`*.apps.googleusercontent.com`) to `APP_AUTH_GOOGLE_CLIENT_ID`.
-   - Optional: if you support multiple frontend origins/client ids, set comma-separated values in `APP_AUTH_GOOGLE_CLIENT_IDS`.
+   - If you support multiple IDs, provide comma-separated values in `APP_AUTH_GOOGLE_CLIENT_ID`.
 
 4. **OTP email / SMTP (`APP_MAIL_*`)**
    - Use your mail provider SMTP credentials.
@@ -168,7 +168,6 @@ Required backend env vars:
 
 Optional backend env vars:
 
-- `APP_AUTH_GOOGLE_CLIENT_IDS` (comma-separated list of accepted Google Web client IDs)
 - `APP_AUTH_OTP_BYPASS_KEY` (only for OTP testing; never exposed to frontend)
 - `APP_MAIL_FROM_NAME` (default: `IQMS`)
 - `APP_MAIL_AUTH` (default: `true`)
@@ -179,9 +178,9 @@ Optional backend env vars:
 Use this exact checklist if Google login button is disabled:
 
 1. **Backend env setup (`backend/.env`)**
-   - Add either:
+   - Add:
      - `APP_AUTH_GOOGLE_CLIENT_ID=<your-web-client-id>.apps.googleusercontent.com`
-     - or `APP_AUTH_GOOGLE_CLIENT_IDS=<id1>.apps.googleusercontent.com,<id2>.apps.googleusercontent.com`
+   - For multiple accepted IDs, use comma-separated values in this same variable.
 2. **Frontend env setup (`.env`)**
    - Add one of:
      - `VITE_APP_AUTH_GOOGLE_CLIENT_ID=<same-web-client-id>`
