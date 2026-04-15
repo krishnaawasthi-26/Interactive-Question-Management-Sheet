@@ -82,7 +82,6 @@ public class AuthConfigurationValidator {
     requireNonBlank(errors, mailProperties.getHost(), "APP_MAIL_HOST");
     requireNonBlank(errors, mailProperties.getUsername(), "APP_MAIL_USERNAME");
     requireNonBlank(errors, mailProperties.getPassword(), "APP_MAIL_PASSWORD");
-    requireNonBlank(errors, mailProperties.getFromAddress(), "APP_MAIL_FROM (or APP_MAIL_FROM_ADDRESS)");
 
     String host = safeTrim(mailProperties.getHost());
     if ("smtp.gmail.com".equalsIgnoreCase(host)) {

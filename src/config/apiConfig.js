@@ -1,10 +1,8 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export const API_ENDPOINTS = {
-  publicSheetBySlug:
-    import.meta.env.VITE_PUBLIC_SHEET_API_BASE_URL ||
-    "https://node.codolio.com/api/question-tracker/v1/sheet/public/get-sheet-by-slug",
-  outboxSync: import.meta.env.VITE_SYNC_API_BASE_URL || "/api/sync/outbox",
+  publicSheetBySlug: "/api/question-tracker/v1/sheet/public/get-sheet-by-slug",
+  outboxSync: "/api/sync/outbox",
 };
 
 export const CLIENT_RATE_LIMIT = {
@@ -21,7 +19,7 @@ export const API_ERROR_MESSAGES = {
   rateLimited: "Too many requests. Try after {seconds} seconds.",
 };
 
-export const API_REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 12_000);
+export const API_REQUEST_TIMEOUT_MS = 12_000;
 
 // Backward-compatible aliases.
 export const PUBLIC_SHEET_API_BASE_URL = API_ENDPOINTS.publicSheetBySlug;
