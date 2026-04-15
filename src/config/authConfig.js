@@ -3,12 +3,45 @@ import { apiRequest } from "../api/apiClient";
 let googleAuthConfigPromise;
 
 const normalizeClientId = (value) => (typeof value === "string" ? value.trim() : "");
+
+const parseClientIdList = (value) => {
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .map((entry) => {
+      if (entry.length >= 2) {
+        const wrappedInDoubleQuotes = entry.startsWith('"') && entry.endsWith('"');
+        const wrappedInSingleQuotes = entry.startsWith("'") && entry.endsWith("'");
+        if (wrappedInDoubleQuotes || wrappedInSingleQuotes) {
+          return entry.slice(1, -1).trim();
+        }
+      }
+      return entry;
+    })
+    .filter(Boolean);
+};
+
 const resolveFrontendGoogleClientId = () => {
   const primaryClientId = normalizeClientId(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_ID);
   if (primaryClientId) {
     return primaryClientId;
   }
-  return normalizeClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
+  const legacyAliasClientId = normalizeClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  if (legacyAliasClientId) {
+    return legacyAliasClientId;
+  }
+
+  const listClientId = parseClientIdList(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_IDS)[0];
+  if (listClientId) {
+    return listClientId;
+  }
+
+  return parseClientIdList(import.meta.env.VITE_GOOGLE_CLIENT_IDS)[0] || "";
 };
 const fallbackClientId = resolveFrontendGoogleClientId();
 
