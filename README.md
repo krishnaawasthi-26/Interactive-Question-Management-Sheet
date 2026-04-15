@@ -75,6 +75,7 @@ Variables:
 - `VITE_API_BASE_URL` (default: `http://localhost:8080`)
 - `VITE_SYNC_API_BASE_URL` (default: `/api/sync/outbox`)
 - `VITE_PUBLIC_SHEET_API_BASE_URL` (default: public sheet endpoint)
+- `VITE_RAZORPAY_KEY_ID` (Razorpay publishable key id; optional fallback if backend does not return key id)
 
 ### Backend (`backend/.env`)
 
@@ -86,6 +87,7 @@ cp .env.example .env
 Variables:
 - `MONGODB_URI` (default example: `mongodb://localhost:27017/create-sheets`)
 - `APP_AUTH_SECRET` (required for real deployments)
+- `APP_PAYMENT_RAZORPAY_ENABLED` (`true` to require and enable Razorpay payments)
 - `RAZORPAY_KEY_ID` (Razorpay API key id, safe to share with frontend through backend response)
 - `RAZORPAY_KEY_SECRET` (Razorpay API secret, **keep only on backend/server env**)
 

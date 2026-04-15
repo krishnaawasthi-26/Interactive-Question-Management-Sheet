@@ -1,7 +1,7 @@
 package com.iqms.backend.controller;
 
-import com.iqms.backend.model.User;
 import com.iqms.backend.model.PremiumPaymentOrder;
+import com.iqms.backend.model.User;
 import com.iqms.backend.repository.PremiumPaymentOrderRepository;
 import com.iqms.backend.repository.UserRepository;
 import com.iqms.backend.security.CurrentUser;
@@ -24,8 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/premium")
+@RequestMapping("/api")
 public class PremiumController {
+  private static final String PROVIDER = "razorpay";
+
   private final CurrentUser currentUser;
   private final PremiumAccessService premiumAccessService;
   private final UserRepository userRepository;
@@ -45,7 +47,7 @@ public class PremiumController {
     this.razorpayService = razorpayService;
   }
 
-  @GetMapping("/plans")
+  @GetMapping("/premium/plans")
   public ResponseEntity<Map<String, Object>> plans() {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("currency", "INR");
@@ -56,7 +58,7 @@ public class PremiumController {
     return ResponseEntity.ok(payload);
   }
 
-  @GetMapping("/status")
+  @GetMapping("/premium/status")
   public ResponseEntity<Map<String, Object>> status(HttpServletRequest request) {
     User user = premiumAccessService.findUser(currentUser.getUserId(request));
     Map<String, Object> payload = new LinkedHashMap<>();
@@ -68,7 +70,7 @@ public class PremiumController {
     return ResponseEntity.ok(payload);
   }
 
-  @PostMapping("/create-order")
+  @PostMapping("/payments/razorpay/order")
   public ResponseEntity<Map<String, Object>> createOrder(
       HttpServletRequest request,
       @RequestBody Map<String, String> body) {
@@ -80,6 +82,7 @@ public class PremiumController {
     PlanInfo planInfo = toPlanInfo(plan);
 
     User user = premiumAccessService.findUser(currentUser.getUserId(request));
+    Instant now = Instant.now();
     String receipt = "premium_" + user.getId() + "_" + UUID.randomUUID().toString().replace("-", "");
 
     Map<String, Object> order = razorpayService.createOrder(Map.of(
@@ -90,32 +93,35 @@ public class PremiumController {
             "userId", user.getId(),
             "plan", planInfo.id())));
 
-    String razorpayOrderId = asString(order.get("id"));
-    if (razorpayOrderId == null || razorpayOrderId.isBlank()) {
+    String providerOrderId = asString(order.get("id"));
+    if (providerOrderId == null || providerOrderId.isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Unable to initiate payment.");
     }
 
     PremiumPaymentOrder paymentOrder = new PremiumPaymentOrder();
-    paymentOrder.setRazorpayOrderId(razorpayOrderId);
+    paymentOrder.setProvider(PROVIDER);
+    paymentOrder.setProviderOrderId(providerOrderId);
     paymentOrder.setUserId(user.getId());
     paymentOrder.setPlan(planInfo.id());
     paymentOrder.setAmount(planInfo.amountInPaise());
     paymentOrder.setCurrency("INR");
-    paymentOrder.setStatus("created");
-    paymentOrder.setCreatedAt(Instant.now());
+    paymentOrder.setVerificationStatus("pending");
+    paymentOrder.setPaymentStatus("created");
+    paymentOrder.setCreatedAt(now);
+    paymentOrder.setUpdatedAt(now);
     premiumPaymentOrderRepository.save(paymentOrder);
 
     Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("orderId", razorpayOrderId);
+    payload.put("orderId", providerOrderId);
     payload.put("amount", planInfo.amountInPaise());
     payload.put("currency", "INR");
     payload.put("plan", planInfo.id());
     payload.put("displayName", planInfo.name());
-    payload.put("razorpayKeyId", razorpayService.publicKeyId());
+    payload.put("keyId", razorpayService.publicKeyId());
     return ResponseEntity.ok(payload);
   }
 
-  @PostMapping("/verify")
+  @PostMapping("/payments/razorpay/verify")
   public ResponseEntity<Map<String, Object>> verify(
       HttpServletRequest request,
       @RequestBody Map<String, String> body) {
@@ -126,14 +132,24 @@ public class PremiumController {
     String razorpaySignature = safeField(body, "razorpaySignature");
 
     PremiumPaymentOrder paymentOrder = premiumPaymentOrderRepository
-        .findByRazorpayOrderId(razorpayOrderId)
+        .findByProviderOrderId(razorpayOrderId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown order."));
 
+    if (!PROVIDER.equalsIgnoreCase(paymentOrder.getProvider())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported payment provider.");
+    }
     if (!user.getId().equals(paymentOrder.getUserId())) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Order does not belong to user.");
     }
 
+    if ("verified".equalsIgnoreCase(paymentOrder.getVerificationStatus())) {
+      return ResponseEntity.ok(buildPremiumStatus(user));
+    }
+
     if (!razorpayService.isValidSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+      paymentOrder.setVerificationStatus("failed");
+      paymentOrder.setUpdatedAt(Instant.now());
+      premiumPaymentOrderRepository.save(paymentOrder);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid payment signature.");
     }
 
@@ -146,28 +162,37 @@ public class PremiumController {
     if (!razorpayOrderId.equals(gatewayOrderId)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment order mismatch.");
     }
-    if (!"captured".equalsIgnoreCase(gatewayStatus) && !"authorized".equalsIgnoreCase(gatewayStatus)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment is not completed.");
-    }
     if (!paymentOrder.getCurrency().equalsIgnoreCase(gatewayCurrency == null ? "" : gatewayCurrency)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment currency mismatch.");
     }
     if (!paymentOrder.getAmount().equals(gatewayAmount)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment amount mismatch.");
     }
-
-    if (!"paid".equalsIgnoreCase(paymentOrder.getStatus())) {
-      paymentOrder.setStatus("paid");
-      paymentOrder.setRazorpayPaymentId(razorpayPaymentId);
-      paymentOrder.setPaidAt(Instant.now());
+    if (!"captured".equalsIgnoreCase(gatewayStatus) && !"authorized".equalsIgnoreCase(gatewayStatus)) {
+      paymentOrder.setVerificationStatus("failed");
+      paymentOrder.setPaymentStatus(gatewayStatus == null ? "failed" : gatewayStatus.toLowerCase(Locale.ROOT));
+      paymentOrder.setUpdatedAt(Instant.now());
       premiumPaymentOrderRepository.save(paymentOrder);
-      applyPremiumPlan(user, paymentOrder.getPlan());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment is not completed.");
     }
 
+    paymentOrder.setProviderPaymentId(razorpayPaymentId);
+    paymentOrder.setVerificationStatus("verified");
+    paymentOrder.setPaymentStatus("paid");
+    paymentOrder.setUpdatedAt(Instant.now());
+    premiumPaymentOrderRepository.save(paymentOrder);
+    applyPremiumPlan(user, paymentOrder.getPlan());
+
+    return ResponseEntity.ok(buildPremiumStatus(user));
+  }
+
+  private Map<String, Object> buildPremiumStatus(User user) {
     Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("premiumActive", true);
-    payload.put("premiumUntil", user.getPremiumUntil().toString());
-    return ResponseEntity.ok(payload);
+    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
+    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
+    payload.put("planTier", user.getPlanTier());
+    payload.put("subscriptionStatus", user.getSubscriptionStatus());
+    return payload;
   }
 
   private void applyPremiumPlan(User user, String plan) {

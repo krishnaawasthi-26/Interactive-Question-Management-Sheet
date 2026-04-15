@@ -2,6 +2,7 @@ package com.iqms.backend.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iqms.backend.config.properties.RazorpayProperties;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,7 +15,6 @@ import java.util.Base64;
 import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,22 +24,26 @@ public class RazorpayService {
 
   private static final String RAZORPAY_BASE_URL = "https://api.razorpay.com/v1";
 
+  private final boolean enabled;
   private final String keyId;
   private final String keySecret;
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
 
   public RazorpayService(
-      @Value("${app.payment.razorpay.key-id:}") String keyId,
-      @Value("${app.payment.razorpay.key-secret:}") String keySecret,
+      RazorpayProperties razorpayProperties,
       ObjectMapper objectMapper) {
-    this.keyId = keyId == null ? "" : keyId.trim();
-    this.keySecret = keySecret == null ? "" : keySecret.trim();
+    this.enabled = razorpayProperties.isEnabled();
+    this.keyId = razorpayProperties.getKeyId();
+    this.keySecret = razorpayProperties.getKeySecret();
     this.objectMapper = objectMapper;
     this.httpClient = HttpClient.newHttpClient();
   }
 
   public boolean isConfigured() {
+    if (!enabled) {
+      return false;
+    }
     return !keyId.isBlank() && !keySecret.isBlank();
   }
 

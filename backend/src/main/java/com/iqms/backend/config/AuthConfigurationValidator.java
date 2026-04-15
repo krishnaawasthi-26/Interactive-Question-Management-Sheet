@@ -2,6 +2,7 @@ package com.iqms.backend.config;
 
 import com.iqms.backend.config.properties.GoogleOAuthProperties;
 import com.iqms.backend.config.properties.MailProperties;
+import com.iqms.backend.config.properties.RazorpayProperties;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +15,17 @@ public class AuthConfigurationValidator {
 
   private final GoogleOAuthProperties googleOAuthProperties;
   private final MailProperties mailProperties;
+  private final RazorpayProperties razorpayProperties;
   private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
   public AuthConfigurationValidator(
       GoogleOAuthProperties googleOAuthProperties,
       MailProperties mailProperties,
+      RazorpayProperties razorpayProperties,
       ObjectProvider<JavaMailSender> mailSenderProvider) {
     this.googleOAuthProperties = googleOAuthProperties;
     this.mailProperties = mailProperties;
+    this.razorpayProperties = razorpayProperties;
     this.mailSenderProvider = mailSenderProvider;
   }
 
@@ -62,6 +66,15 @@ public class AuthConfigurationValidator {
         if (!mailProperties.isStarttls()) {
           errors.add("For Gmail SMTP, APP_MAIL_STARTTLS must be true.");
         }
+      }
+    }
+
+    if (razorpayProperties.isEnabled()) {
+      if (razorpayProperties.getKeyId().isBlank()) {
+        errors.add("RAZORPAY_KEY_ID is missing.");
+      }
+      if (razorpayProperties.getKeySecret().isBlank()) {
+        errors.add("RAZORPAY_KEY_SECRET is missing.");
       }
     }
 
