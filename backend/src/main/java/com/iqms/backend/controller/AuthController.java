@@ -62,7 +62,7 @@ public class AuthController {
 
   @GetMapping("/google/config")
   public ResponseEntity<GoogleAuthConfigResponse> googleConfig() {
-    return ResponseEntity.ok(new GoogleAuthConfigResponse(googleOAuthProperties.getClientId()));
+    return ResponseEntity.ok(new GoogleAuthConfigResponse(googleOAuthProperties.getPrimaryClientId()));
   }
 
   @PostMapping("/google")
