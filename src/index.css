@@ -379,6 +379,7 @@ canvas {
 }
 
 .sidebar-scroll {
+  flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
@@ -545,7 +546,8 @@ canvas {
   .sidebar-desktop {
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - 32px);
+    align-self: start;
+    height: calc(100dvh - 28px);
     border-right: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
     padding: 12px 10px;
     position: sticky;
