@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { archiveNotification, clearAllNotifications, deleteNotification, dismissNotification, fetchNotifications, fetchUnreadCount, markAllNotificationsRead, markNotificationDone, markNotificationRead, registerPushSubscription, rescheduleNotification, snoozeNotification } from "../api/notificationApi";
 import { getNotificationPermissionState, requestNotificationPermission, subscribeToPushIfPossible } from "../services/notifications";
 import { emitNotificationChanged, subscribeNotificationChanged } from "../services/notificationEvents";
@@ -10,6 +10,8 @@ import NotificationDrawer from "./NotificationDrawer";
 
 function NotificationBell({ compact = false }) {
   const token = useAuthStore((state) => state.currentUser?.token);
+  const containerRef = useRef(null);
+  const bellButtonRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -100,13 +102,40 @@ function NotificationBell({ compact = false }) {
 
   const sections = useMemo(() => buildNotificationSections(notifications), [notifications]);
 
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      const containerNode = containerRef.current;
+      const bellNode = bellButtonRef.current;
+      if (containerNode?.contains(target) || bellNode?.contains(target)) return;
+      setOpen(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   const buttonClass = compact
     ? "btn-base btn-outline relative px-3 py-2 text-sm"
     : "btn-base btn-ghost relative flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm";
 
   return (
-    <div className="relative">
-      <button type="button" className={buttonClass} onClick={() => setOpen((value) => !value)}>
+    <div ref={containerRef} className="relative">
+      <button ref={bellButtonRef} type="button" className={buttonClass} onClick={() => setOpen((value) => !value)}>
         <span aria-hidden>🔔</span>
         {!compact ? <span>Notifications</span> : null}
         {unreadCount > 0 ? <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--accent-danger)] px-1.5 text-[10px] font-semibold text-white">{unreadCount}</span> : null}
