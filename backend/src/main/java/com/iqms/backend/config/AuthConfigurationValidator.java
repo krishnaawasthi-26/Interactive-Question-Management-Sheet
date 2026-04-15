@@ -34,9 +34,7 @@ public class AuthConfigurationValidator {
     List<String> errors = new ArrayList<>();
 
     String clientId = googleOAuthProperties.getClientId();
-    if (clientId.isBlank()) {
-      errors.add("APP_AUTH_GOOGLE_CLIENT_ID is missing.");
-    } else if (!clientId.endsWith(".apps.googleusercontent.com")) {
+    if (!clientId.isBlank() && !clientId.endsWith(".apps.googleusercontent.com")) {
       errors.add("APP_AUTH_GOOGLE_CLIENT_ID must be a Google Web OAuth client id ending with .apps.googleusercontent.com.");
     }
 
