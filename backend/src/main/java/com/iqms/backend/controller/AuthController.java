@@ -1,8 +1,12 @@
 package com.iqms.backend.controller;
 
 import com.iqms.backend.dto.AuthResponse;
+import com.iqms.backend.dto.GoogleAuthRequest;
 import com.iqms.backend.dto.LoginRequest;
+import com.iqms.backend.dto.SignUpInitiateResponse;
+import com.iqms.backend.dto.SignUpOtpRequest;
 import com.iqms.backend.dto.SignUpRequest;
+import com.iqms.backend.dto.SignUpResendOtpRequest;
 import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,8 +32,23 @@ public class AuthController {
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<AuthResponse> signUp(@Valid @RequestBody SignUpRequest request) {
+  public ResponseEntity<SignUpInitiateResponse> signUp(@Valid @RequestBody SignUpRequest request) {
     return ResponseEntity.ok(authService.signUp(request));
+  }
+
+  @PostMapping("/signup/resend-otp")
+  public ResponseEntity<SignUpInitiateResponse> resendOtp(@Valid @RequestBody SignUpResendOtpRequest request) {
+    return ResponseEntity.ok(authService.resendSignupOtp(request.getEmail()));
+  }
+
+  @PostMapping("/signup/verify-otp")
+  public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody SignUpOtpRequest request) {
+    return ResponseEntity.ok(authService.verifySignupOtp(request.getEmail(), request.getOtp()));
+  }
+
+  @PostMapping("/google")
+  public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
+    return ResponseEntity.ok(authService.authenticateWithGoogle(request.getIdToken()));
   }
 
   @PostMapping("/login")

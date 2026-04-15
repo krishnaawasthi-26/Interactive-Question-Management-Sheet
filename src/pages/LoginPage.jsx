@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
+  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const authError = useAuthStore((state) => state.authError);
   const authLoading = useAuthStore((state) => state.authLoading);
   const loginBlockedUntil = useAuthStore((state) => state.loginBlockedUntil);
@@ -28,6 +30,11 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const submit = async (event) => {
     event.preventDefault();
     const success = await login(form);
+    if (success) onLoginSuccess();
+  };
+
+  const handleGoogleLogin = async (idToken) => {
+    const success = await loginWithGoogle(idToken);
     if (success) onLoginSuccess();
   };
 
@@ -71,6 +78,14 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
             {isLocked ? `Try again in ${lockSeconds}s` : authLoading ? "Checking account..." : "Login"}
           </button>
         </form>
+
+        <div className="my-4 text-center text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">or</div>
+        <GoogleAuthButton
+          disabled={authLoading || isLocked}
+          text="signin_with"
+          onCredential={handleGoogleLogin}
+          onError={(message) => useAuthStore.setState({ authError: message })}
+        />
 
         <button type="button" disabled={authLoading} onClick={onGoToSignUp} className="link-base mt-4 text-sm">
           Don&apos;t have an account? Sign up
