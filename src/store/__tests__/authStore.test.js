@@ -1,9 +1,12 @@
 import { useAuthStore } from "../authStore";
-import { loginUser, signUpUser } from "../../api/authApi";
+import { loginUser, signUpUser, verifySignUpOtp } from "../../api/authApi";
 
 vi.mock("../../api/authApi", () => ({
   loginUser: vi.fn(),
   signUpUser: vi.fn(),
+  resendSignUpOtp: vi.fn(),
+  verifySignUpOtp: vi.fn(),
+  googleAuth: vi.fn(),
 }));
 
 describe("authStore", () => {
@@ -14,12 +17,14 @@ describe("authStore", () => {
       authError: null,
       authLoading: false,
       loginBlockedUntil: 0,
+      pendingSignupEmail: "",
+      otpResendAvailableInSeconds: 0,
     });
     window.localStorage.clear();
   });
 
-  it("signUp stores returned user and clears auth error", async () => {
-    signUpUser.mockResolvedValue({ id: "u1", token: "abc", username: "new_user" });
+  it("signUp stores pending signup email and cooldown", async () => {
+    signUpUser.mockResolvedValue({ email: "user@example.com", resendAvailableInSeconds: 60 });
 
     const result = await useAuthStore.getState().signUp({
       name: " New User ",
@@ -35,7 +40,21 @@ describe("authStore", () => {
       username: "new_user",
       password: "password123",
     });
+    expect(useAuthStore.getState().pendingSignupEmail).toBe("user@example.com");
+  });
+
+  it("verifyOtp stores returned user and clears pending signup", async () => {
+    useAuthStore.setState({ pendingSignupEmail: "user@example.com" });
+    verifySignUpOtp.mockResolvedValue({ id: "u1", token: "abc", username: "new_user" });
+
+    const result = await useAuthStore.getState().verifyOtp({
+      email: "user@example.com",
+      otp: "123456",
+    });
+
+    expect(result).toBe(true);
     expect(useAuthStore.getState().currentUser).toMatchObject({ token: "abc", id: "u1" });
+    expect(useAuthStore.getState().pendingSignupEmail).toBe("");
   });
 
   it("login handles lock response and stores blocked timestamp", async () => {

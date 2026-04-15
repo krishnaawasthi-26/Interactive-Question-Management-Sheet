@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { loginUser, signUpUser } from "../api/authApi";
+import { googleAuth, loginUser, resendSignUpOtp, signUpUser, verifySignUpOtp } from "../api/authApi";
 import { updateProfile as updateProfileApi } from "../api/profileApi";
 
 const CURRENT_USER_KEY = "iqms-current-user";
@@ -54,20 +54,64 @@ export const useAuthStore = create((set, get) => ({
   authError: null,
   authLoading: false,
   loginBlockedUntil: readLoginLockUntil(),
+  pendingSignupEmail: "",
+  otpResendAvailableInSeconds: 0,
 
   clearAuthError: () => set({ authError: null }),
 
   signUp: async ({ name, email, username, password }) => {
     set({ authLoading: true, authError: null });
     try {
-      const user = await signUpUser({
+      const response = await signUpUser({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         username: username.trim().toLowerCase(),
         password: password.trim(),
       });
+      set({
+        pendingSignupEmail: response?.email ?? email.trim().toLowerCase(),
+        otpResendAvailableInSeconds: Number(response?.resendAvailableInSeconds ?? 60),
+        authError: null,
+        authLoading: false,
+      });
+      return true;
+    } catch (error) {
+      set({ authError: error.message, authLoading: false });
+      return false;
+    }
+  },
+
+  resendOtp: async (emailOverride) => {
+    const email = (emailOverride || get().pendingSignupEmail || "").trim().toLowerCase();
+    if (!email) {
+      set({ authError: "Missing signup email. Please sign up again." });
+      return false;
+    }
+
+    set({ authLoading: true, authError: null });
+    try {
+      const response = await resendSignUpOtp({ email });
+      set({
+        pendingSignupEmail: response?.email ?? email,
+        otpResendAvailableInSeconds: Number(response?.resendAvailableInSeconds ?? 60),
+        authLoading: false,
+      });
+      return true;
+    } catch (error) {
+      set({ authError: error.message, authLoading: false });
+      return false;
+    }
+  },
+
+  verifyOtp: async ({ email, otp }) => {
+    set({ authLoading: true, authError: null });
+    try {
+      const user = await verifySignUpOtp({
+        email: (email || get().pendingSignupEmail || "").trim().toLowerCase(),
+        otp: otp.trim(),
+      });
       writeCurrentUser(user);
-      set({ currentUser: user, authError: null, authLoading: false });
+      set({ currentUser: user, pendingSignupEmail: "", otpResendAvailableInSeconds: 0, authError: null, authLoading: false });
       return true;
     } catch (error) {
       set({ authError: error.message, authLoading: false });
@@ -112,6 +156,19 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  loginWithGoogle: async (idToken) => {
+    set({ authLoading: true, authError: null });
+    try {
+      const user = await googleAuth({ idToken });
+      writeCurrentUser(user);
+      set({ currentUser: user, authError: null, authLoading: false, pendingSignupEmail: "" });
+      return true;
+    } catch (error) {
+      set({ authError: error.message, authLoading: false });
+      return false;
+    }
+  },
+
   updateProfile: async (payload) => {
     const user = get().currentUser;
     if (!user?.token) return false;
@@ -130,6 +187,6 @@ export const useAuthStore = create((set, get) => ({
 
   logout: () => {
     writeCurrentUser(null);
-    set({ currentUser: null, authError: null, authLoading: false });
+    set({ currentUser: null, authError: null, authLoading: false, pendingSignupEmail: "", otpResendAvailableInSeconds: 0 });
   },
 }));

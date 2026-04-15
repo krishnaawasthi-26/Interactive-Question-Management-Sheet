@@ -23,6 +23,12 @@ public class User {
 
   private String password;
   private String authProvider;
+  private boolean emailVerified = false;
+  private String emailOtpHash;
+  private Instant emailOtpExpiresAt;
+  private Instant emailOtpLastSentAt;
+  private int emailOtpFailedAttempts = 0;
+  private Instant emailOtpLockedUntil;
 
   @Indexed(unique = true)
   private String profileShareId;
@@ -86,6 +92,54 @@ public class User {
 
   public void setAuthProvider(String authProvider) {
     this.authProvider = authProvider;
+  }
+
+  public boolean isEmailVerified() {
+    return emailVerified;
+  }
+
+  public void setEmailVerified(boolean emailVerified) {
+    this.emailVerified = emailVerified;
+  }
+
+  public String getEmailOtpHash() {
+    return emailOtpHash;
+  }
+
+  public void setEmailOtpHash(String emailOtpHash) {
+    this.emailOtpHash = emailOtpHash;
+  }
+
+  public Instant getEmailOtpExpiresAt() {
+    return emailOtpExpiresAt;
+  }
+
+  public void setEmailOtpExpiresAt(Instant emailOtpExpiresAt) {
+    this.emailOtpExpiresAt = emailOtpExpiresAt;
+  }
+
+  public Instant getEmailOtpLastSentAt() {
+    return emailOtpLastSentAt;
+  }
+
+  public void setEmailOtpLastSentAt(Instant emailOtpLastSentAt) {
+    this.emailOtpLastSentAt = emailOtpLastSentAt;
+  }
+
+  public int getEmailOtpFailedAttempts() {
+    return emailOtpFailedAttempts;
+  }
+
+  public void setEmailOtpFailedAttempts(int emailOtpFailedAttempts) {
+    this.emailOtpFailedAttempts = Math.max(0, emailOtpFailedAttempts);
+  }
+
+  public Instant getEmailOtpLockedUntil() {
+    return emailOtpLockedUntil;
+  }
+
+  public void setEmailOtpLockedUntil(Instant emailOtpLockedUntil) {
+    this.emailOtpLockedUntil = emailOtpLockedUntil;
   }
 
   public void setUsername(String username) {
