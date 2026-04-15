@@ -13,7 +13,7 @@ vi.mock("../../services/routes", async () => {
   };
 });
 
-describe("Sidebar alarm navigation", () => {
+describe("Sidebar inbox navigation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuthStore.setState({
@@ -24,14 +24,14 @@ describe("Sidebar alarm navigation", () => {
     });
   });
 
-  it("navigates to alarms without logging out", () => {
+  it("navigates to unified inbox without logging out", () => {
     const logoutSpy = vi.spyOn(useAuthStore.getState(), "logout");
 
     render(<Sidebar isSidebarOpen onToggle={() => {}} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Alarm" }));
+    fireEvent.click(screen.getByRole("button", { name: "Inbox" }));
 
-    expect(navigateTo).toHaveBeenCalledWith(ROUTES.ALARMS);
+    expect(navigateTo).toHaveBeenCalledWith(ROUTES.NOTIFICATIONS);
     expect(logoutSpy).not.toHaveBeenCalled();
   });
 });
