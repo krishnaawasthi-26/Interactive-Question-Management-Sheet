@@ -1,6 +1,7 @@
 package com.iqms.backend.service;
 
 import com.iqms.backend.config.properties.GoogleOAuthProperties;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,8 +38,19 @@ public class GoogleTokenVerifier {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token.");
     }
 
+    List<String> configuredClientIds = googleOAuthProperties.getClientIds();
+    if (configuredClientIds.isEmpty()) {
+      throw new ResponseStatusException(
+          HttpStatus.SERVICE_UNAVAILABLE,
+          "Google login is not configured on the server. Set APP_AUTH_GOOGLE_CLIENT_ID.");
+    }
+
     String audience = String.valueOf(response.getOrDefault("aud", ""));
-    if (!googleOAuthProperties.getClientId().equals(audience)) {
+    String authorizedParty = String.valueOf(response.getOrDefault("azp", ""));
+    boolean matchesClientId =
+        configuredClientIds.contains(audience)
+            || (!authorizedParty.isBlank() && configuredClientIds.contains(authorizedParty));
+    if (!matchesClientId) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google token audience mismatch.");
     }
 
