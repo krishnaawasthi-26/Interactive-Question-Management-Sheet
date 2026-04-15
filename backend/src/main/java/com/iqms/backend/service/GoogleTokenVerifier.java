@@ -42,7 +42,7 @@ public class GoogleTokenVerifier {
     if (configuredClientIds.isEmpty()) {
       throw new ResponseStatusException(
           HttpStatus.SERVICE_UNAVAILABLE,
-          "Google login is not configured on the server. Set APP_AUTH_GOOGLE_CLIENT_ID.");
+          "Google login is not configured on the backend. Set APP_AUTH_GOOGLE_CLIENT_ID or APP_AUTH_GOOGLE_CLIENT_IDS.");
     }
 
     String audience = String.valueOf(response.getOrDefault("aud", ""));

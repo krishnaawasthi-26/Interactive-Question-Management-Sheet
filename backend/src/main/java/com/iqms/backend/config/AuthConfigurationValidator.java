@@ -47,7 +47,7 @@ public class AuthConfigurationValidator {
   private void validateGoogleConfig(List<String> errors) {
     for (String clientId : googleOAuthProperties.getClientIds()) {
       if (!clientId.endsWith(".apps.googleusercontent.com")) {
-        errors.add("Each APP_AUTH_GOOGLE_CLIENT_ID value must end with .apps.googleusercontent.com.");
+        errors.add("Each APP_AUTH_GOOGLE_CLIENT_ID/APP_AUTH_GOOGLE_CLIENT_IDS value must end with .apps.googleusercontent.com.");
       }
     }
   }
