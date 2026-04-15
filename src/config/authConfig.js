@@ -12,27 +12,6 @@ const normalizeClientId = (value) => {
   return normalizedValue ? normalizedValue : "";
 };
 
-const parseClientIdList = (value) => {
-  if (typeof value !== "string") {
-    return [];
-  }
-
-  return value
-    .split(",")
-    .map((entry) => entry.trim())
-    .map((entry) => {
-      if (entry.length >= 2) {
-        const wrappedInDoubleQuotes = entry.startsWith('"') && entry.endsWith('"');
-        const wrappedInSingleQuotes = entry.startsWith("'") && entry.endsWith("'");
-        if (wrappedInDoubleQuotes || wrappedInSingleQuotes) {
-          return entry.slice(1, -1).trim();
-        }
-      }
-      return entry;
-    })
-    .filter(Boolean);
-};
-
 export const getFrontendGoogleClientId = () => {
   const primaryClientId = normalizeClientId(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_ID);
   if (primaryClientId) {
@@ -40,16 +19,7 @@ export const getFrontendGoogleClientId = () => {
   }
 
   const legacyAliasClientId = normalizeClientId(import.meta.env.VITE_GOOGLE_CLIENT_ID);
-  if (legacyAliasClientId) {
-    return legacyAliasClientId;
-  }
-
-  const listClientId = parseClientIdList(import.meta.env.VITE_APP_AUTH_GOOGLE_CLIENT_IDS)[0];
-  if (listClientId) {
-    return listClientId;
-  }
-
-  return parseClientIdList(import.meta.env.VITE_GOOGLE_CLIENT_IDS)[0] || "";
+  return legacyAliasClientId || "";
 };
 
 const logFrontendGoogleConfigDetection = (clientId) => {
@@ -64,7 +34,7 @@ const GOOGLE_AUTH_CONFIG_MISSING_CODE = "GOOGLE_AUTH_CONFIG_MISSING";
 
 const createMissingConfigError = () => {
   const error = new Error(
-    "Google Sign-In is disabled because no Google Web Client ID is configured. Backend accepts APP_AUTH_GOOGLE_CLIENT_ID / APP_AUTH_GOOGLE_CLIENT_IDS (also GOOGLE_CLIENT_ID / GOOGLE_CLIENT_IDS / GOOGLE_WEB_CLIENT_ID / GOOGLE_WEB_CLIENT_IDS). Frontend accepts VITE_APP_AUTH_GOOGLE_CLIENT_ID / VITE_GOOGLE_CLIENT_ID (or *_CLIENT_IDS variants). Then restart both apps."
+    "Google Sign-In is disabled because no Google Web Client ID is configured. Backend accepts APP_AUTH_GOOGLE_CLIENT_ID / APP_AUTH_GOOGLE_CLIENT_IDS. Frontend accepts VITE_APP_AUTH_GOOGLE_CLIENT_ID / VITE_GOOGLE_CLIENT_ID. Then restart both apps."
   );
   error.code = GOOGLE_AUTH_CONFIG_MISSING_CODE;
   return error;
