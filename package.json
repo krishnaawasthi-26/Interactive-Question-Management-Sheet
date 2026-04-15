@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "dev": "vite --host 127.0.0.1 --port 5172 --strictPort",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "start": "vite --host 127.0.0.1 --port 5172 --strictPort",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -16,8 +16,8 @@
     "@hello-pangea/dnd": "^18.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "zustand": "^5.0.11",
-    "react-router-dom": "^7.9.4"
+    "react-router-dom": "^7.9.4",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -36,6 +36,6 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "vite": "^7.2.4",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.4"
   }
 }

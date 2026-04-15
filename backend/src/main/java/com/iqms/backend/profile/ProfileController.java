@@ -69,7 +69,7 @@ public class ProfileController {
     payload.put("sheets", sheets);
     return ResponseEntity.ok(payload);
   }
-
+  
   @PutMapping
   public ResponseEntity<Map<String, Object>> updateProfile(HttpServletRequest request, @RequestBody(required = false) Map<String, String> body) {
     User user = findUser(currentUser.getUserId(request));
