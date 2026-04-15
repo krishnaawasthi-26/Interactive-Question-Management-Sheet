@@ -504,12 +504,15 @@ canvas {
   position: absolute;
   left: calc(100% + 8px);
   top: 50%;
+  z-index: 20;
   transform: translate(4px, -50%);
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--surface-elevated) 95%, black);
   padding: 4px 8px;
   font-size: 11px;
+  white-space: nowrap;
+  color: var(--text-primary);
   opacity: 0;
   transition: opacity 120ms ease, transform 120ms ease;
 }
