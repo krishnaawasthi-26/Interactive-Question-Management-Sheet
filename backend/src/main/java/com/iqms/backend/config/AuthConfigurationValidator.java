@@ -33,53 +33,72 @@ public class AuthConfigurationValidator {
   public void validate() {
     List<String> errors = new ArrayList<>();
 
-    String clientId = googleOAuthProperties.getClientId();
-    if (!clientId.isBlank() && !clientId.endsWith(".apps.googleusercontent.com")) {
-      errors.add("APP_AUTH_GOOGLE_CLIENT_ID must be a Google Web OAuth client id ending with .apps.googleusercontent.com.");
-    }
-
-    if (mailProperties.isEnabled()) {
-      if (mailSenderProvider.getIfAvailable() == null) {
-        errors.add("JavaMailSender bean is missing. Ensure spring-boot-starter-mail is on the classpath.");
-      }
-      if (mailProperties.getHost().isBlank()) {
-        errors.add("APP_MAIL_HOST is missing.");
-      }
-      if (mailProperties.getUsername().isBlank()) {
-        errors.add("APP_MAIL_USERNAME is missing.");
-      }
-      if (mailProperties.getPassword().isBlank()) {
-        errors.add("APP_MAIL_PASSWORD is missing.");
-      }
-      if (mailProperties.getFromAddress().isBlank()) {
-        errors.add("APP_MAIL_FROM is missing.");
-      }
-      if ("smtp.gmail.com".equalsIgnoreCase(mailProperties.getHost())) {
-        if (mailProperties.getPort() != 587) {
-          errors.add("For Gmail SMTP, APP_MAIL_PORT must be 587 (STARTTLS).");
-        }
-        if (!mailProperties.isAuth()) {
-          errors.add("For Gmail SMTP, APP_MAIL_AUTH must be true.");
-        }
-        if (!mailProperties.isStarttls()) {
-          errors.add("For Gmail SMTP, APP_MAIL_STARTTLS must be true.");
-        }
-      }
-    }
-
-    if (razorpayProperties.isEnabled()) {
-      if (razorpayProperties.getKeyId().isBlank()) {
-        errors.add("RAZORPAY_KEY_ID is missing.");
-      }
-      if (razorpayProperties.getKeySecret().isBlank()) {
-        errors.add("RAZORPAY_KEY_SECRET is missing.");
-      }
-    }
+    validateGoogleConfig(errors);
+    validateMailConfig(errors);
+    validateRazorpayConfig(errors);
 
     if (!errors.isEmpty()) {
       throw new IllegalStateException(
-          "Invalid auth/mail configuration. Fix these environment variables before starting: "
+          "Invalid auth/mail/payment configuration. Fix these settings before starting: "
               + String.join(" ", errors));
     }
+  }
+
+  private void validateGoogleConfig(List<String> errors) {
+    String clientId = safeTrim(googleOAuthProperties.getClientId());
+    if (hasText(clientId) && !clientId.endsWith(".apps.googleusercontent.com")) {
+      errors.add("APP_AUTH_GOOGLE_CLIENT_ID must end with .apps.googleusercontent.com.");
+    }
+  }
+
+  private void validateMailConfig(List<String> errors) {
+    if (!mailProperties.isEnabled()) {
+      return;
+    }
+
+    if (mailSenderProvider.getIfAvailable() == null) {
+      errors.add("APP_MAIL_ENABLED=true requires a JavaMailSender bean (spring-boot-starter-mail).");
+    }
+
+    requireNonBlank(errors, mailProperties.getHost(), "APP_MAIL_HOST");
+    requireNonBlank(errors, mailProperties.getUsername(), "APP_MAIL_USERNAME");
+    requireNonBlank(errors, mailProperties.getPassword(), "APP_MAIL_PASSWORD");
+    requireNonBlank(errors, mailProperties.getFromAddress(), "APP_MAIL_FROM (or APP_MAIL_FROM_ADDRESS)");
+
+    String host = safeTrim(mailProperties.getHost());
+    if ("smtp.gmail.com".equalsIgnoreCase(host)) {
+      if (mailProperties.getPort() != 587) {
+        errors.add("For Gmail SMTP, APP_MAIL_PORT must be 587 (STARTTLS).");
+      }
+      if (!mailProperties.isAuth()) {
+        errors.add("For Gmail SMTP, APP_MAIL_AUTH must be true.");
+      }
+      if (!mailProperties.isStarttls()) {
+        errors.add("For Gmail SMTP, APP_MAIL_STARTTLS must be true.");
+      }
+    }
+  }
+
+  private void validateRazorpayConfig(List<String> errors) {
+    if (!razorpayProperties.isEnabled()) {
+      return;
+    }
+
+    requireNonBlank(errors, razorpayProperties.getKeyId(), "RAZORPAY_KEY_ID");
+    requireNonBlank(errors, razorpayProperties.getKeySecret(), "RAZORPAY_KEY_SECRET");
+  }
+
+  private void requireNonBlank(List<String> errors, String value, String propertyName) {
+    if (!hasText(value)) {
+      errors.add(propertyName + " is required when its integration is enabled.");
+    }
+  }
+
+  private boolean hasText(String value) {
+    return value != null && !value.isBlank();
+  }
+
+  private String safeTrim(String value) {
+    return value == null ? "" : value.trim();
   }
 }
