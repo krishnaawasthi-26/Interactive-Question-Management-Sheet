@@ -432,7 +432,7 @@ canvas {
 
 .sidebar-scroll {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   min-height: 0;
 }
 
@@ -698,6 +698,10 @@ canvas {
     padding: 14px 10px;
     position: sticky;
     top: 0;
+  }
+
+  .sidebar-mobile .sidebar-scroll {
+    overflow-y: auto;
   }
 
   .sidebar-desktop-collapsed {
