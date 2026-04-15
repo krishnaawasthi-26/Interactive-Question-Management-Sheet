@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "app.payment.razorpay")
 public class RazorpayProperties {
 
-  private boolean enabled = true;
+  private boolean enabled = false;
   private String keyId;
   private String keySecret;
 
