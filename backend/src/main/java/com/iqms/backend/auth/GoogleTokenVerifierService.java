@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -72,6 +73,10 @@ public class GoogleTokenVerifierService {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
           "Google token verification failed. Please try again.");
     }
+  }
+
+  public List<String> getAudience() {
+    return Collections.unmodifiableList(audience);
   }
 
   private List<String> splitIds(String raw) {
