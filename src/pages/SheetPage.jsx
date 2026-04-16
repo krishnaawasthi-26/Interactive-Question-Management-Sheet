@@ -412,86 +412,105 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     [sheetProgressById, sheets, sortBy, typeFilter]
   );
 
+  const handleSheetActionError = useCallback((key, title, error) => {
+    setActiveDialog({
+      key,
+      title,
+      message: error?.message || "Please try again in a moment.",
+      actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: closeDialog }],
+    });
+  }, [closeDialog]);
+
+  const createSheetActions = useCallback(
+    (sheet) => [
+      {
+        key: "save-name",
+        label: "Save Name",
+        className: "btn-success",
+        onClick: async () => {
+          const nextTitle = (sheetTitles[sheet.id] || "").trim();
+          if (!nextTitle) return;
+          await renameSheet(currentUser.token, sheet.id, nextTitle);
+        },
+      },
+      {
+        key: "open",
+        label: "Open",
+        className: "btn-neutral",
+        onClick: () => navigateTo(`${ROUTES.APP}/${sheet.id}`),
+      },
+      {
+        key: "visibility",
+        label: sheet.isPublic ? "Make Private" : "Make Public",
+        className: "btn-neutral",
+        onClick: async () => {
+          try {
+            await setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic);
+          } catch (error) {
+            handleSheetActionError("visibility-error", "Could not update visibility", error);
+          }
+        },
+      },
+      {
+        key: "archive",
+        label: sheet.isArchived ? "Restore" : "Archive",
+        className: "btn-neutral",
+        onClick: async () => {
+          try {
+            await setSheetArchived(currentUser.token, sheet.id, !sheet.isArchived);
+          } catch (error) {
+            handleSheetActionError("archive-error", "Could not update archive state", error);
+          }
+        },
+      },
+      {
+        key: "copy",
+        label: "Copy",
+        className: "btn-neutral",
+        onClick: async () => {
+          const copied = await duplicateSheetById(currentUser.token, sheet.id);
+          if (!copied) return;
+          navigateTo(`${ROUTES.APP}/${copied.id}`);
+        },
+      },
+      {
+        key: "delete",
+        label: "Delete",
+        className: "btn-danger",
+        onClick: async () => {
+          if (!window.confirm("Are you sure to delete this sheet?")) return;
+          await deleteSheet(currentUser.token, sheet.id);
+          if (sheetId === sheet.id) {
+            navigateTo(ROUTES.APP);
+          }
+        },
+      },
+    ],
+    [
+      currentUser?.token,
+      deleteSheet,
+      duplicateSheetById,
+      handleSheetActionError,
+      renameSheet,
+      setSheetArchived,
+      setSheetVisibility,
+      sheetId,
+      sheetTitles,
+    ]
+  );
+
   const groupedSheetActionsById = useMemo(
     () =>
       Object.fromEntries(
         filteredAndSortedSheets.map((sheet) => [
           sheet.id,
-          [
-            {
-              key: "save-name",
-              label: "Save Name",
-              className: "btn-success",
-              onClick: async () => {
-                const nextTitle = (sheetTitles[sheet.id] || "").trim();
-                if (!nextTitle) return;
-                await renameSheet(currentUser.token, sheet.id, nextTitle);
-              },
-            },
-            {
-              key: "open",
-              label: "Open",
-              className: "btn-neutral",
-              onClick: () => navigateTo(`${ROUTES.APP}/${sheet.id}`),
-            },
-            {
-              key: "visibility",
-              label: sheet.isPublic ? "Make Private" : "Make Public",
-              className: "btn-neutral",
-              onClick: async () => {
-                try {
-                  await setSheetVisibility(currentUser.token, sheet.id, !sheet.isPublic);
-                } catch (error) {
-                  setActiveDialog({
-                    key: "visibility-error",
-                    title: "Could not update visibility",
-                    message: error?.message || "Please try again in a moment.",
-                    actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: closeDialog }],
-                  });
-                }
-              },
-            },
-            {
-              key: "archive",
-              label: sheet.isArchived ? "Restore" : "Archive",
-              className: "btn-neutral",
-              onClick: async () => {
-                try {
-                  await setSheetArchived(currentUser.token, sheet.id, !sheet.isArchived);
-                } catch (error) {
-                  setActiveDialog({
-                    key: "archive-error",
-                    title: "Could not update archive state",
-                    message: error?.message || "Please try again in a moment.",
-                    actions: [{ key: "ok", label: "OK", variant: "neutral", onClick: closeDialog }],
-                  });
-                }
-              },
-            },
-            {
-              key: "copy",
-              label: "Copy",
-              className: "btn-neutral",
-              onClick: async () => {
-                const copied = await duplicateSheetById(currentUser.token, sheet.id);
-                if (!copied) return;
-                navigateTo(`${ROUTES.APP}/${copied.id}`);
-              },
-            },
-            {
-              key: "delete",
-              label: "Delete",
-              className: "btn-danger",
-              onClick: async () => {
-                if (!window.confirm("Are you sure to delete this sheet?")) return;
-                await deleteSheet(currentUser.token, sheet.id);
-              },
-            },
-          ],
+          createSheetActions(sheet),
         ])
       ),
-    [currentUser?.token, deleteSheet, duplicateSheetById, filteredAndSortedSheets, renameSheet, setSheetArchived, setSheetVisibility, sheetTitles]
+    [createSheetActions, filteredAndSortedSheets]
   );
+  const openedSheet = useMemo(() => sheets.find((sheet) => sheet.id === sheetId) || null, [sheetId, sheets]);
+  const openedSheetActions = useMemo(() => (openedSheet ? createSheetActions(openedSheet) : []), [createSheetActions, openedSheet]);
 
   const sheetActionButtons = [
     { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
@@ -611,6 +630,21 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             </div>
           ) : (
             <>
+              {openedSheet ? (
+                <div className="mb-3 space-y-2 panel-elevated rounded-xl p-3">
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {openedSheet.isPublic ? "Public" : "Private"}
+                    {openedSheet.isArchived ? " • Archived" : ""}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {openedSheetActions.filter((action) => ["visibility", "archive", "copy", "delete"].includes(action.key)).map((action) => (
+                      <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {isEditing && (
             <>
               <AddTopicForm title={title} onTitleChange={(event) => setTitle(event.target.value)} onAdd={handleAdd} />
