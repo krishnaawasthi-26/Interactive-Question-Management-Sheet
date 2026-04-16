@@ -40,7 +40,9 @@ function AppShell({
             userLabel={userLabel}
             actions={(
               <>
-                <NotificationBell compact />
+                <div className="flex-none">
+                  <NotificationBell compact />
+                </div>
                 {headerActions}
               </>
             )}
