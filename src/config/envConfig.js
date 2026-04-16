@@ -82,7 +82,7 @@ const resolveApiBaseUrl = () => {
     return browserOrigin;
   }
 
-  return "http://localhost:8080";
+  return "/api";
 };
 
 export const googleAuthClientIds = readEnvList([
