@@ -34,15 +34,28 @@ export default function ThemeCinematicToggle() {
     const root = document.documentElement;
     if (!root || !toggleRef.current) return undefined;
 
+    let frameId = null;
+    let observer = null;
+
     const syncBatmanPath = () => {
       const toggleRect = toggleRef.current?.getBoundingClientRect();
       if (!toggleRect) return;
 
       const logoutButton = document.querySelector('.sidebar-desktop .sidebar-footer [aria-label="Log Out"]');
+      const sidebar = document.querySelector(".sidebar-desktop");
       const logoutRect = logoutButton?.getBoundingClientRect();
+      const sidebarRect = sidebar?.getBoundingClientRect();
 
-      const startX = logoutRect ? logoutRect.left + (logoutRect.width / 2) : 24;
-      const startY = logoutRect ? logoutRect.bottom : (window.innerHeight - 48);
+      const startX = logoutRect
+        ? logoutRect.left + (logoutRect.width * 0.22)
+        : sidebarRect
+          ? sidebarRect.left + (sidebarRect.width * 0.2)
+          : 24;
+      const startY = logoutRect
+        ? logoutRect.top + (logoutRect.height * 0.7)
+        : sidebarRect
+          ? sidebarRect.bottom - 28
+          : (window.innerHeight - 48);
       const endX = toggleRect.left + (toggleRect.width / 2);
       const endY = toggleRect.top + (toggleRect.height / 2);
 
@@ -52,13 +65,34 @@ export default function ThemeCinematicToggle() {
       root.style.setProperty("--bat-flight-dy", `${Math.round(endY - startY)}px`);
     };
 
-    syncBatmanPath();
-    window.addEventListener("resize", syncBatmanPath);
-    window.addEventListener("scroll", syncBatmanPath, true);
+    const scheduleSyncBatmanPath = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        syncBatmanPath();
+      });
+    };
+
+    scheduleSyncBatmanPath();
+    window.addEventListener("resize", scheduleSyncBatmanPath);
+    window.addEventListener("scroll", scheduleSyncBatmanPath, true);
+
+    if ("ResizeObserver" in window) {
+      observer = new ResizeObserver(scheduleSyncBatmanPath);
+      observer.observe(toggleRef.current);
+      const logoutButton = document.querySelector('.sidebar-desktop .sidebar-footer [aria-label="Log Out"]');
+      const sidebar = document.querySelector(".sidebar-desktop");
+      if (logoutButton) observer.observe(logoutButton);
+      if (sidebar) observer.observe(sidebar);
+    }
 
     return () => {
-      window.removeEventListener("resize", syncBatmanPath);
-      window.removeEventListener("scroll", syncBatmanPath, true);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      observer?.disconnect();
+      window.removeEventListener("resize", scheduleSyncBatmanPath);
+      window.removeEventListener("scroll", scheduleSyncBatmanPath, true);
     };
   }, []);
 
