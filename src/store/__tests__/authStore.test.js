@@ -19,12 +19,17 @@ describe("authStore", () => {
       loginBlockedUntil: 0,
       pendingSignupEmail: "",
       otpResendAvailableInSeconds: 0,
+      otpInfoMessage: "",
     });
     window.localStorage.clear();
   });
 
   it("signUp stores pending signup email and cooldown", async () => {
-    signUpUser.mockResolvedValue({ email: "user@example.com", resendAvailableInSeconds: 60 });
+    signUpUser.mockResolvedValue({
+      email: "user@example.com",
+      resendAvailableInSeconds: 60,
+      message: "OTP sent to your email.",
+    });
 
     const result = await useAuthStore.getState().signUp({
       name: " New User ",
@@ -41,6 +46,7 @@ describe("authStore", () => {
       password: "password123",
     });
     expect(useAuthStore.getState().pendingSignupEmail).toBe("user@example.com");
+    expect(useAuthStore.getState().otpInfoMessage).toBe("OTP sent to your email.");
   });
 
   it("verifyOtp stores returned user and clears pending signup", async () => {

@@ -56,6 +56,7 @@ export const useAuthStore = create((set, get) => ({
   loginBlockedUntil: readLoginLockUntil(),
   pendingSignupEmail: "",
   otpResendAvailableInSeconds: 0,
+  otpInfoMessage: "",
 
   clearAuthError: () => set({ authError: null }),
 
@@ -71,6 +72,7 @@ export const useAuthStore = create((set, get) => ({
       set({
         pendingSignupEmail: response?.email ?? email.trim().toLowerCase(),
         otpResendAvailableInSeconds: Number(response?.resendAvailableInSeconds ?? 60),
+        otpInfoMessage: response?.message ?? "",
         authError: null,
         authLoading: false,
       });
@@ -94,6 +96,7 @@ export const useAuthStore = create((set, get) => ({
       set({
         pendingSignupEmail: response?.email ?? email,
         otpResendAvailableInSeconds: Number(response?.resendAvailableInSeconds ?? 60),
+        otpInfoMessage: response?.message ?? "",
         authLoading: false,
       });
       return true;
@@ -111,7 +114,14 @@ export const useAuthStore = create((set, get) => ({
         otp: otp.trim(),
       });
       writeCurrentUser(user);
-      set({ currentUser: user, pendingSignupEmail: "", otpResendAvailableInSeconds: 0, authError: null, authLoading: false });
+      set({
+        currentUser: user,
+        pendingSignupEmail: "",
+        otpResendAvailableInSeconds: 0,
+        otpInfoMessage: "",
+        authError: null,
+        authLoading: false,
+      });
       return true;
     } catch (error) {
       set({ authError: error.message, authLoading: false });
@@ -161,7 +171,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const user = await googleAuth({ idToken });
       writeCurrentUser(user);
-      set({ currentUser: user, authError: null, authLoading: false, pendingSignupEmail: "" });
+      set({ currentUser: user, authError: null, authLoading: false, pendingSignupEmail: "", otpInfoMessage: "" });
       return true;
     } catch (error) {
       set({ authError: error.message, authLoading: false });
@@ -187,6 +197,13 @@ export const useAuthStore = create((set, get) => ({
 
   logout: () => {
     writeCurrentUser(null);
-    set({ currentUser: null, authError: null, authLoading: false, pendingSignupEmail: "", otpResendAvailableInSeconds: 0 });
+    set({
+      currentUser: null,
+      authError: null,
+      authLoading: false,
+      pendingSignupEmail: "",
+      otpResendAvailableInSeconds: 0,
+      otpInfoMessage: "",
+    });
   },
 }));

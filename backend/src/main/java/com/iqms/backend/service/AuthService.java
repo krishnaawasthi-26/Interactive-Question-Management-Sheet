@@ -2,6 +2,7 @@ package com.iqms.backend.service;
 
 import com.iqms.backend.auth.GoogleTokenPayload;
 import com.iqms.backend.auth.GoogleTokenVerifierService;
+import com.iqms.backend.config.properties.MailProperties;
 import com.iqms.backend.dto.AuthResponse;
 import com.iqms.backend.dto.LoginRequest;
 import com.iqms.backend.dto.SignUpInitiateResponse;
@@ -37,6 +38,7 @@ public class AuthService {
   private final PremiumAccessService premiumAccessService;
   private final AuthMailService authMailService;
   private final GoogleTokenVerifierService googleTokenVerifierService;
+  private final MailProperties mailProperties;
   private final SecureRandom secureRandom = new SecureRandom();
 
   public AuthService(
@@ -46,7 +48,8 @@ public class AuthService {
       PasswordEncoder passwordEncoder,
       PremiumAccessService premiumAccessService,
       AuthMailService authMailService,
-      GoogleTokenVerifierService googleTokenVerifierService) {
+      GoogleTokenVerifierService googleTokenVerifierService,
+      MailProperties mailProperties) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.loginAttemptService = loginAttemptService;
@@ -54,6 +57,7 @@ public class AuthService {
     this.premiumAccessService = premiumAccessService;
     this.authMailService = authMailService;
     this.googleTokenVerifierService = googleTokenVerifierService;
+    this.mailProperties = mailProperties;
   }
 
   public SignUpInitiateResponse signUp(SignUpRequest request) {
@@ -98,11 +102,12 @@ public class AuthService {
     }
 
     user.setEmailVerified(false);
-    user = setAndSendOtp(user, true);
+    OtpDispatchResult otpDispatchResult = setAndSendOtp(user, true);
+    user = otpDispatchResult.user();
     userRepository.save(user);
 
     return new SignUpInitiateResponse(
-        "OTP sent to your email.",
+        buildOtpMessage("OTP sent to your email.", otpDispatchResult.otp()),
         user.getEmail(),
         OTP_RESEND_COOLDOWN.getSeconds());
   }
@@ -116,11 +121,12 @@ public class AuthService {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Account is already verified. Please login.");
     }
 
-    user = setAndSendOtp(user, false);
+    OtpDispatchResult otpDispatchResult = setAndSendOtp(user, false);
+    user = otpDispatchResult.user();
     userRepository.save(user);
 
     return new SignUpInitiateResponse(
-        "OTP resent successfully.",
+        buildOtpMessage("OTP resent successfully.", otpDispatchResult.otp()),
         user.getEmail(),
         OTP_RESEND_COOLDOWN.getSeconds());
   }
@@ -245,7 +251,7 @@ public class AuthService {
     return toResponse(user);
   }
 
-  private User setAndSendOtp(User user, boolean ignoreCooldown) {
+  private OtpDispatchResult setAndSendOtp(User user, boolean ignoreCooldown) {
     Instant now = Instant.now();
     Instant lastSent = user.getEmailOtpLastSentAt();
 
@@ -270,7 +276,14 @@ public class AuthService {
     user.setEmailOtpLockedUntil(null);
 
     authMailService.sendSignupOtp(user.getEmail(), otp);
-    return user;
+    return new OtpDispatchResult(user, otp);
+  }
+
+  private String buildOtpMessage(String baseMessage, String otp) {
+    if (mailProperties.isEnabled()) {
+      return baseMessage;
+    }
+    return baseMessage + " Email delivery is disabled on this server, use this OTP: " + otp;
   }
 
   private void clearOtpState(User user) {
@@ -385,4 +398,6 @@ public class AuthService {
     }
     return "LOCAL";
   }
+
+  private record OtpDispatchResult(User user, String otp) {}
 }
