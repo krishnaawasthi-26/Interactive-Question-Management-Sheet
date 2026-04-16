@@ -9,6 +9,12 @@ export const THEME_NAMES = {
 const THEME_STORAGE_KEY = "iqms-cinematic-theme";
 const SWITCH_COUNT_STORAGE_KEY = "iqms-cinematic-theme-switch-count";
 const JOKER_TRIGGER_COUNT = 5;
+const THEME_ASSET_PRELOAD = [
+  "https://banner2.cleanpng.com/lnd/20240602/lpj/ay80pi6xf.webp",
+  "https://www.vhv.rs/dpng/d/220-2208569_bat-silhouette-new-batman-adventures-symbol-hd-png.png",
+  "https://icon2.cleanpng.com/20240227/qst/transparent-batman-batman-in-black-suit-serious-expression-1710862505969.webp",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgsnZNhidGSZ7Lwit3LkhUYr1_z5DnSvCDGw&s",
+];
 
 const VALID_THEMES = new Set(Object.values(THEME_NAMES));
 
@@ -39,6 +45,14 @@ export function ThemeProvider({ children }) {
   const [animationTheme, setAnimationTheme] = useState(themeState.theme);
 
   useEffect(() => {
+    THEME_ASSET_PRELOAD.forEach((src) => {
+      const img = new window.Image();
+      img.decoding = "async";
+      img.src = src;
+    });
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = themeState.theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, themeState.theme);
     window.localStorage.setItem(SWITCH_COUNT_STORAGE_KEY, String(themeState.switchCount));
@@ -49,11 +63,16 @@ export function ThemeProvider({ children }) {
     root.dataset.themeAnimation = animationTheme;
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const durationMap = {
+      [THEME_NAMES.SUPERMAN]: 1500,
+      [THEME_NAMES.BATMAN]: 1200,
+      [THEME_NAMES.JOKER]: 0,
+    };
     const timeout = window.setTimeout(() => {
       if (root.dataset.themeAnimation === animationTheme) {
         root.removeAttribute("data-theme-animation");
       }
-    }, prefersReducedMotion ? 20 : 760);
+    }, prefersReducedMotion ? 20 : durationMap[animationTheme] ?? 900);
 
     return () => window.clearTimeout(timeout);
   }, [animationTheme]);
@@ -74,7 +93,7 @@ export function ThemeProvider({ children }) {
           : THEME_NAMES.SUPERMAN;
 
       const next = { theme: nextTheme, switchCount: nextCount };
-      setAnimationTheme(nextTheme);
+      setAnimationTheme(nextTheme === THEME_NAMES.JOKER ? "" : nextTheme);
       return next;
     });
   }, []);

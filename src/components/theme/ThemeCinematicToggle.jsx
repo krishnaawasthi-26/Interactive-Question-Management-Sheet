@@ -2,19 +2,23 @@ import { THEME_NAMES, useTheme } from "../../theme/themeContext";
 
 const THEME_CONTENT = {
   [THEME_NAMES.SUPERMAN]: {
-    label: "Superman light",
-    icon: "☀",
+    label: "Light mode",
+    icon: "https://banner2.cleanpng.com/lnd/20240602/lpj/ay80pi6xf.webp",
+    fallbackIcon: "☀",
     cue: "Uplift",
   },
   [THEME_NAMES.BATMAN]: {
-    label: "Batman dark",
-    icon: "◐",
+    label: "Batman mode",
+    icon: "https://icon2.cleanpng.com/20240227/qst/transparent-batman-batman-in-black-suit-serious-expression-1710862505969.webp",
+    fallbackIcon: "◐",
+    batSymbol: "https://www.vhv.rs/dpng/d/220-2208569_bat-silhouette-new-batman-adventures-symbol-hd-png.png",
     cue: "Stealth",
   },
   [THEME_NAMES.JOKER]: {
-    label: "Joker blue",
-    icon: "✦",
-    cue: "Chaos",
+    label: "Blue mode",
+    icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgsnZNhidGSZ7Lwit3LkhUYr1_z5DnSvCDGw&s",
+    fallbackIcon: "✦",
+    cue: "Blue",
   },
 };
 
@@ -33,8 +37,31 @@ export default function ThemeCinematicToggle() {
       title={`Current ${current.label} • Next ${next.label}`}
     >
       <span className="theme-cinematic-toggle__halo" aria-hidden="true" />
+      <span className="theme-cinematic-toggle__scene" aria-hidden="true">
+        <span className="theme-cinematic-toggle__light-beam theme-cinematic-toggle__light-beam--left" />
+        <span className="theme-cinematic-toggle__light-beam theme-cinematic-toggle__light-beam--right" />
+        <img
+          src={THEME_CONTENT[THEME_NAMES.BATMAN].batSymbol}
+          alt=""
+          className="theme-cinematic-toggle__bat-sweep"
+          onError={(event) => { event.currentTarget.style.display = "none"; }}
+        />
+      </span>
       <span className="theme-cinematic-toggle__content">
-        <span className="theme-cinematic-toggle__icon" aria-hidden="true">{current.icon}</span>
+        <span className="theme-cinematic-toggle__icon" aria-hidden="true">
+          <img
+            src={current.icon}
+            alt=""
+            loading="eager"
+            decoding="async"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+              const fallback = event.currentTarget.nextElementSibling;
+              if (fallback) fallback.hidden = false;
+            }}
+          />
+          <span hidden>{current.fallbackIcon}</span>
+        </span>
         <span className="theme-cinematic-toggle__meta">
           <span className="theme-cinematic-toggle__label">{current.label}</span>
           <span className="theme-cinematic-toggle__hint">
