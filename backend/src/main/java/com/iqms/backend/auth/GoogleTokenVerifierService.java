@@ -45,6 +45,10 @@ public class GoogleTokenVerifierService {
 
   public GoogleTokenPayload verify(String idToken) {
     log.info("[GoogleAuth] Verify request received. tokenPresent={}", idToken != null && !idToken.isBlank());
+    if (idToken == null || idToken.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Google id token is required.");
+    }
+
     if (verifier == null) {
       log.warn("[GoogleAuth] Verify request rejected because backend Google auth is not configured.");
       throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,

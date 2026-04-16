@@ -15,12 +15,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -58,7 +60,16 @@ public class AuthController {
   @PostMapping("/google")
   public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
     log.info("[GoogleAuth] /api/auth/google request received.");
-    return ResponseEntity.ok(authService.authenticateWithGoogle(request.getIdToken()));
+    try {
+      return ResponseEntity.ok(authService.authenticateWithGoogle(request.getIdToken()));
+    } catch (ResponseStatusException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      log.error("[GoogleAuth] Unexpected failure in /api/auth/google.", ex);
+      throw new ResponseStatusException(
+          HttpStatus.SERVICE_UNAVAILABLE,
+          "Google authentication is temporarily unavailable. Please verify backend configuration and try again.");
+    }
   }
 
   @PostMapping("/login")
