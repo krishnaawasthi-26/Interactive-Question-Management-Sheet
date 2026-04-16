@@ -16,7 +16,7 @@
   background:
     radial-gradient(1000px 420px at 92% -20%, color-mix(in srgb, var(--accent-primary) 17%, transparent), transparent 58%),
     linear-gradient(170deg, color-mix(in srgb, var(--surface-elevated) 96%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
-  box-shadow: 0 18px 36px rgba(2, 7, 18, 0.36), inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  box-shadow: var(--shadow-md), inset 0 1px 0 color-mix(in srgb, var(--text-primary) 8%, transparent);
   animation: premiumFadeUp 500ms ease-out both;
 }
 
@@ -131,7 +131,7 @@
   background:
     linear-gradient(150deg, color-mix(in srgb, var(--surface-elevated) 95%, transparent), color-mix(in srgb, var(--surface) 94%, transparent));
   padding: 18px;
-  box-shadow: 0 14px 30px rgba(2, 8, 20, 0.28), inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 color-mix(in srgb, var(--text-primary) 7%, transparent);
   animation: premiumFadeUp 540ms ease-out both;
   animation-delay: var(--card-stagger, 0ms);
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
@@ -140,7 +140,7 @@
 .premium-card:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--border-strong) 98%, transparent);
-  box-shadow: 0 18px 36px rgba(2, 8, 20, 0.36), inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+  box-shadow: var(--shadow-md), inset 0 1px 0 color-mix(in srgb, var(--text-primary) 9%, transparent);
 }
 
 .premium-card--featured {
@@ -148,7 +148,7 @@
   background:
     radial-gradient(420px 220px at 100% 0%, color-mix(in srgb, var(--accent-primary) 14%, transparent), transparent 72%),
     linear-gradient(160deg, color-mix(in srgb, var(--surface-elevated) 96%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
-  box-shadow: 0 22px 40px rgba(5, 10, 26, 0.44), 0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  box-shadow: var(--shadow-md), 0 0 0 1px color-mix(in srgb, var(--accent-primary) 20%, transparent);
 }
 
 .premium-card--featured-lite {

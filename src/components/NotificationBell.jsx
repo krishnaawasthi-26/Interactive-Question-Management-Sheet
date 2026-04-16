@@ -138,7 +138,7 @@ function NotificationBell({ compact = false }) {
       <button ref={bellButtonRef} type="button" className={buttonClass} onClick={() => setOpen((value) => !value)}>
         <span aria-hidden>🔔</span>
         {!compact ? <span>Notifications</span> : null}
-        {unreadCount > 0 ? <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--accent-danger)] px-1.5 text-[10px] font-semibold text-white">{unreadCount}</span> : null}
+        {unreadCount > 0 ? <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--accent-danger)] px-1.5 text-[10px] font-semibold text-[var(--text-on-danger)]">{unreadCount}</span> : null}
       </button>
       <NotificationDrawer
         open={open}

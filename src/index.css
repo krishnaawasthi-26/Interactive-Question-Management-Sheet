@@ -3,6 +3,12 @@
 :root,
 :root[data-theme="superman-light"] {
   color-scheme: light;
+  --background: #f6f8fc;
+  --surface-1: #ffffff;
+  --surface-2: #f9fbff;
+  --text: #111c2f;
+  --muted-text: #4a5d78;
+  --ring: #2762f2;
   --color-background: #f6f8fc;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
@@ -21,6 +27,7 @@
   --bg-muted: #ebf0f7;
   --surface: var(--color-surface);
   --surface-elevated: #f9fbff;
+  --surface-subtle: #eef3fa;
   --surface-soft: rgba(39, 85, 176, 0.05);
   --text-primary: var(--color-text-primary);
   --text-secondary: var(--color-text-secondary);
@@ -35,10 +42,13 @@
   --accent-warning: var(--color-warning);
   --accent-info: #2762f2;
   --focus-ring: color-mix(in srgb, var(--accent-info) 58%, transparent);
+  --overlay-backdrop: color-mix(in srgb, #030712 62%, transparent);
   --danger-color: var(--accent-danger);
   --btn-accent-primary: var(--accent-primary);
   --btn-accent-primary-hover: var(--accent-primary-hover);
-  --btn-on-primary: #3a2700;
+  --btn-on-primary: var(--text-on-accent);
+  --text-on-accent: #ffffff;
+  --text-on-danger: #ffffff;
   --btn-on-success: #ffffff;
   --btn-on-danger: #ffffff;
   --btn-on-warning: #ffffff;
@@ -53,6 +63,12 @@
 
 :root[data-theme="batman-dark"] {
   color-scheme: dark;
+  --background: #0a111c;
+  --surface-1: #171f2c;
+  --surface-2: #1d2735;
+  --text: #e8eefb;
+  --muted-text: #b6c1d8;
+  --ring: #7aa5ff;
   --color-background: #0a111c;
   --color-surface: #171f2c;
   --color-surface-elevated: #1d2735;
@@ -71,6 +87,7 @@
   --bg-muted: #111827;
   --surface: var(--color-surface);
   --surface-elevated: var(--color-surface-elevated);
+  --surface-subtle: #131c2b;
   --surface-soft: rgba(112, 135, 170, 0.12);
   --text-primary: var(--color-text-primary);
   --text-secondary: var(--color-text-secondary);
@@ -85,10 +102,13 @@
   --accent-warning: var(--color-warning);
   --accent-info: #7aa5ff;
   --focus-ring: color-mix(in srgb, var(--accent-info) 62%, transparent);
+  --overlay-backdrop: color-mix(in srgb, #02060e 74%, transparent);
   --danger-color: var(--accent-danger);
   --btn-accent-primary: var(--accent-primary);
   --btn-accent-primary-hover: var(--accent-primary-hover);
-  --btn-on-primary: #111827;
+  --btn-on-primary: var(--text-on-accent);
+  --text-on-accent: #111827;
+  --text-on-danger: #2f080d;
   --btn-on-success: #062719;
   --btn-on-danger: #2f080d;
   --btn-on-warning: #2a1a05;
@@ -99,6 +119,12 @@
 
 :root[data-theme="joker-blue"] {
   color-scheme: dark;
+  --background: #071326;
+  --surface-1: #122341;
+  --surface-2: #193055;
+  --text: #eaf6ff;
+  --muted-text: #bfdaf5;
+  --ring: #69d3ff;
   --color-background: #071326;
   --color-surface: #122341;
   --color-surface-elevated: #193055;
@@ -117,6 +143,7 @@
   --bg-muted: #0d1b35;
   --surface: var(--color-surface);
   --surface-elevated: var(--color-surface-elevated);
+  --surface-subtle: #0f2140;
   --surface-soft: rgba(100, 184, 255, 0.16);
   --text-primary: var(--color-text-primary);
   --text-secondary: var(--color-text-secondary);
@@ -131,10 +158,13 @@
   --accent-warning: var(--color-warning);
   --accent-info: #69d3ff;
   --focus-ring: color-mix(in srgb, var(--accent-primary) 58%, transparent);
+  --overlay-backdrop: color-mix(in srgb, #020916 72%, transparent);
   --danger-color: var(--accent-danger);
   --btn-accent-primary: var(--accent-primary);
   --btn-accent-primary-hover: var(--accent-primary-hover);
-  --btn-on-primary: #041121;
+  --btn-on-primary: var(--text-on-accent);
+  --text-on-accent: #041121;
+  --text-on-danger: #2f080d;
   --btn-on-success: #04192d;
   --btn-on-danger: #2f080d;
   --btn-on-warning: #041121;

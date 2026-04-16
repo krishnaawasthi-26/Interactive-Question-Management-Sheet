@@ -111,7 +111,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     }
   };
 
-  if (error) return <div className="p-6 text-red-300">{error}</div>;
+  if (error) return <div className="p-6 text-[var(--accent-danger)]">{error}</div>;
 
   if (shareType === "profile" || shareType === "public-profile") {
     const totalDownloadCount = (profile?.sheets || []).reduce(
@@ -422,7 +422,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
           )}
         </div>
         {engagementViewer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] p-4">
             <div className="surface-card w-full max-w-lg rounded-xl p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
@@ -501,7 +501,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         onRequireCopy={() => setCopyPromptOpen(true)}
       />
       {showRemixModal && !isOwnerViewingSheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] p-4 backdrop-blur-sm">
           <div className="surface-card w-full max-w-xl rounded-2xl shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4">
               <h2 className="section-title text-xl font-semibold">Remix Sheet</h2>
@@ -556,7 +556,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         </div>
       )}
       {copyPromptOpen && !isOwnerViewingSheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] p-4">
           <div className="surface-card w-full max-w-md p-5">
             <h3 className="section-title text-lg">Copy this sheet to track your own progress.</h3>
             <p className="meta-text mt-2 text-sm">This public sheet is read-only. Create your own copy to mark questions complete.</p>

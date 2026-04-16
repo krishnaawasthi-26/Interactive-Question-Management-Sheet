@@ -649,7 +649,7 @@ function TopicList({
         />
       )}
       {activeNotesPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] px-4 backdrop-blur-sm">
           <div className="panel w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">Problem Notes</h2>

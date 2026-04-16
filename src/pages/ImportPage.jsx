@@ -42,7 +42,7 @@ function ImportPage({ theme, onThemeChange, onBack }) {
         <a href="/sample-import-sheet.json" download className="btn-base btn-neutral mb-4 inline-block">Download sample JSON file</a>
         <input type="file" accept="application/json,.json" onChange={onFileChange} className="field-base mb-4 block w-full" />
         {message && <p className="mb-3 text-[var(--accent-success)]">{message}</p>}
-        {errors.length > 0 && <ul className="mb-4 list-disc space-y-1 rounded-md border border-[color-mix(in_srgb,var(--accent-danger)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-danger)_11%,var(--surface-elevated))] p-4 pl-8 text-sm text-[#ffc9c9]">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
+        {errors.length > 0 && <ul className="mb-4 list-disc space-y-1 rounded-md border border-[color-mix(in_srgb,var(--accent-danger)_55%,transparent)] bg-[color-mix(in_srgb,var(--accent-danger)_11%,var(--surface-elevated))] p-4 pl-8 text-sm text-[var(--accent-danger)]">{errors.map((error) => <li key={error}>{error}</li>)}</ul>}
         <button type="button" onClick={onBack} className="btn-base btn-neutral">Back to App</button>
       </div>
     </AppShell>

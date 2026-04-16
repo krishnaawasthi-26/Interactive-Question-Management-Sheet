@@ -32,7 +32,7 @@ function TopicReminderAlarmPanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] p-4">
       <section className="w-full max-w-xl rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Clock-style topic scheduler</h2>
