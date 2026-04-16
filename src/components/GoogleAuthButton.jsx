@@ -19,26 +19,37 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
     let active = true;
 
     if (googleAuthEnabled) {
+      console.info("[GoogleAuthButton] Google client ID loaded from frontend env.");
       return () => {
         active = false;
       };
     }
 
+    console.info("[GoogleAuthButton] Frontend Google client ID missing, loading backend client config.");
     getGoogleClientConfig()
       .then((config) => {
         if (!active) {
           return;
         }
 
+        console.info("[GoogleAuthButton] Backend config response received.", {
+          googleAuthEnabled: Boolean(config?.googleAuthEnabled),
+          googleAuthClientIdConfigured: Boolean(config?.googleAuthClientIdConfigured),
+        });
+
         if (config?.googleAuthEnabled && typeof config?.clientId === "string" && config.clientId.trim()) {
           setGoogleAuthClientIdState(config.clientId.trim());
+          return;
         }
+
+        onError?.("Google Sign-In is not configured. Missing Google client ID.");
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active || didReportErrorRef.current) {
           return;
         }
         didReportErrorRef.current = true;
+        console.error("[GoogleAuthButton] Failed to load backend Google config.", error);
         onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
       })
       .finally(() => {
@@ -54,6 +65,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
 
   useEffect(() => {
     if (!isGoogleAuthConfigured) {
+      console.warn("[GoogleAuthButton] Google Sign-In skipped because client ID is not configured.");
       return;
     }
 
@@ -62,6 +74,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
 
     if (existing) {
       if (window.google?.accounts?.id) {
+        console.info("[GoogleAuthButton] Google script already loaded.");
         handleReady();
       } else {
         existing.addEventListener("load", handleReady, { once: true });
@@ -82,6 +95,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
         return;
       }
       didReportErrorRef.current = true;
+      console.error("[GoogleAuthButton] Google script failed to load.");
       onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
     };
 
@@ -99,9 +113,14 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
     }
 
     try {
+      console.info("[GoogleAuthButton] Initializing Google Identity Services.");
       window.google.accounts.id.initialize({
         client_id: googleAuthClientIdState,
         callback: (response) => {
+          console.info("[GoogleAuthButton] Google callback started.", {
+            hasCredential: Boolean(response?.credential),
+            selectBy: response?.select_by ?? null,
+          });
           if (!response?.credential) {
             onError?.("Google did not return a valid token. Please try again.");
             return;
@@ -124,6 +143,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
         return;
       }
       didReportErrorRef.current = true;
+      console.error("[GoogleAuthButton] Failed to initialize/render Google button.");
       onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
     }
   }, [googleAuthClientIdState, scriptReady, isGoogleAuthConfigured, onCredential, onError, text]);

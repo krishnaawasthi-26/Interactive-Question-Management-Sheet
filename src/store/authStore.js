@@ -167,13 +167,37 @@ export const useAuthStore = create((set, get) => ({
   },
 
   loginWithGoogle: async (idToken) => {
+    const sanitizedTokenPreview = typeof idToken === "string" ? `${idToken.slice(0, 18)}...` : null;
+    console.info("[AuthStore] Google login start.", { hasToken: Boolean(idToken), tokenPreview: sanitizedTokenPreview });
+    if (typeof idToken !== "string" || !idToken.trim()) {
+      const message = "Google callback payload is malformed: missing credential token.";
+      console.error("[AuthStore] Google login aborted.", { reason: message });
+      set({ authError: message });
+      return false;
+    }
+
     set({ authLoading: true, authError: null });
     try {
+      console.info("[AuthStore] Sending Google credential token to backend /api/auth/google.");
       const user = await googleAuth({ idToken });
+      console.info("[AuthStore] Google auth backend response received.", {
+        hasToken: Boolean(user?.token),
+        userId: user?.id ?? null,
+        username: user?.username ?? null,
+      });
       writeCurrentUser(user);
+      console.info("[AuthStore] Auth state updated after Google login.", {
+        currentUserId: user?.id ?? null,
+      });
       set({ currentUser: user, authError: null, authLoading: false, pendingSignupEmail: "", otpInfoMessage: "" });
       return true;
     } catch (error) {
+      console.error("[AuthStore] Google login failed.", {
+        message: error?.message || "Unknown error",
+        status: error?.status ?? null,
+        code: error?.code ?? null,
+        details: error?.details ?? null,
+      });
       set({ authError: error.message, authLoading: false });
       return false;
     }

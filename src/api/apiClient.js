@@ -148,6 +148,7 @@ const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
 };
 
 const trimTrailingSlashes = (value) => value.replace(/\/+$/, "");
+const sanitizeForLog = (value) => `${value || ""}`.replace(/([?&]token=)[^&]+/gi, "$1[redacted]");
 const buildGetCacheKey = ({ method, requestUrl, token, headers }) =>
   JSON.stringify({
     method,
@@ -227,7 +228,23 @@ export const apiRequest = async (
       if (error?.name === "AbortError") {
         throw createApiError(API_ERROR_MESSAGES.timeout, { code: "REQUEST_TIMEOUT" });
       }
-      throw createApiError(API_ERROR_MESSAGES.network);
+      const isGoogleAuthRequest = /\/api\/auth\/google(\/|$|\?)/i.test(requestUrl);
+      const inBrowser = typeof window !== "undefined";
+      const isHttpsPage = inBrowser && window.location?.protocol === "https:";
+      const isHttpApiTarget = /^http:\/\//i.test(requestUrl);
+      const networkMessage = isGoogleAuthRequest
+        ? isHttpsPage && isHttpApiTarget
+          ? "Google sign-in failed because this page is HTTPS but API URL is HTTP. Please update API base URL to HTTPS."
+          : `Unable to reach auth server (${sanitizeForLog(requestUrl)}). Please verify API base URL and backend availability.`
+        : API_ERROR_MESSAGES.network;
+
+      throw createApiError(networkMessage, {
+        code: "NETWORK_ERROR",
+        details: {
+          cause: error?.message || "fetch_failed",
+          requestUrl: sanitizeForLog(requestUrl),
+        },
+      });
     } finally {
       globalThis.clearTimeout(timeout);
     }

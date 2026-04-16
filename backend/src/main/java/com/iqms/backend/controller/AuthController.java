@@ -13,6 +13,8 @@ import com.iqms.backend.security.RequestFingerprintService;
 import com.iqms.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+  private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
   private final AuthService authService;
   private final RequestFingerprintService requestFingerprintService;
@@ -54,6 +57,7 @@ public class AuthController {
 
   @PostMapping("/google")
   public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
+    log.info("[GoogleAuth] /api/auth/google request received.");
     return ResponseEntity.ok(authService.authenticateWithGoogle(request.getIdToken()));
   }
 
@@ -69,6 +73,8 @@ public class AuthController {
   public ResponseEntity<GoogleClientConfigResponse> googleClientConfig() {
     String clientId = googleTokenVerifierService.getPrimaryGoogleAuthClientId();
     boolean googleAuthEnabled = googleTokenVerifierService.isGoogleAuthEnabled();
+    log.info("[GoogleAuth] /api/auth/google/client-config served. enabled={} clientIdConfigured={}",
+        googleAuthEnabled, !clientId.isBlank());
     return ResponseEntity.ok(
         new GoogleClientConfigResponse(clientId, googleAuthEnabled, !clientId.isBlank()));
   }

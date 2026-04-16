@@ -8,6 +8,8 @@ const isPlaceholder = (value) => {
   return (
     normalized.startsWith("<") ||
     normalized.includes("your_google_web_client_id") ||
+    normalized.includes("your_backend_url") ||
+    normalized.includes("your_api_base_url") ||
     normalized.includes("replace_me") ||
     normalized.includes("changeme")
   );
@@ -30,7 +32,7 @@ const isLocalHostname = (hostname) => {
 };
 
 const resolveApiBaseUrl = () => {
-  const configured = readEnvValue(["VITE_API_BASE_URL"]);
+  const configured = readEnvValue(["VITE_API_BASE_URL", "VITE_APP_API_BASE_URL"]);
   if (configured) {
     return configured;
   }
