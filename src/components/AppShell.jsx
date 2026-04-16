@@ -7,8 +7,6 @@ import NotificationBell from "./NotificationBell";
 function AppShell({
   title,
   subtitle,
-  theme,
-  onThemeChange,
   userLabel,
   headerActions,
   rightPanel,
@@ -39,8 +37,6 @@ function AppShell({
 
         <div className="app-content">
           <TopBar
-            theme={theme}
-            onThemeChange={onThemeChange}
             userLabel={userLabel}
             actions={(
               <>
