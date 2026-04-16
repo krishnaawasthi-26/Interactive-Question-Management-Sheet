@@ -1,3 +1,3 @@
-const rawGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+import { googleAuthClientId, googleAuthClientIds, googleAuthEnabled } from "./envConfig";
 
-export const GOOGLE_CLIENT_ID = typeof rawGoogleClientId === "string" ? rawGoogleClientId.trim() : "";
+export { googleAuthClientId, googleAuthClientIds, googleAuthEnabled };

@@ -4,12 +4,9 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import java.util.Arrays;
-import java.util.Collections;
+import com.iqms.backend.config.GoogleAuthConfigService;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,16 +15,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class GoogleTokenVerifierService {
 
   private final GoogleIdTokenVerifier verifier;
-  private final List<String> audience;
+  private final GoogleAuthConfigService googleAuthConfigService;
 
-  public GoogleTokenVerifierService(
-      @Value("${app.auth.google-client-id:}") String clientId,
-      @Value("${app.auth.google-client-ids:}") String clientIds) {
-    this.audience = Stream.concat(splitIds(clientId).stream(), splitIds(clientIds).stream())
-        .distinct()
-        .toList();
+  public GoogleTokenVerifierService(GoogleAuthConfigService googleAuthConfigService) {
+    this.googleAuthConfigService = googleAuthConfigService;
 
-    if (this.audience.isEmpty()) {
+    if (!googleAuthConfigService.isGoogleAuthEnabled()) {
       this.verifier = null;
       return;
     }
@@ -36,7 +29,7 @@ public class GoogleTokenVerifierService {
       this.verifier = new GoogleIdTokenVerifier.Builder(
           GoogleNetHttpTransport.newTrustedTransport(),
           JacksonFactory.getDefaultInstance())
-          .setAudience(this.audience)
+          .setAudience(googleAuthConfigService.getGoogleAuthClientIds())
           .build();
     } catch (Exception ex) {
       throw new IllegalStateException("Unable to initialize Google token verifier", ex);
@@ -75,18 +68,15 @@ public class GoogleTokenVerifierService {
     }
   }
 
-  public List<String> getAudience() {
-    return Collections.unmodifiableList(audience);
+  public List<String> getGoogleAuthClientIds() {
+    return googleAuthConfigService.getGoogleAuthClientIds();
   }
 
-  private List<String> splitIds(String raw) {
-    if (raw == null || raw.isBlank()) {
-      return List.of();
-    }
+  public String getPrimaryGoogleAuthClientId() {
+    return googleAuthConfigService.getPrimaryGoogleAuthClientId();
+  }
 
-    return Arrays.stream(raw.split(","))
-        .map(value -> value == null ? "" : value.trim())
-        .filter(value -> !value.isBlank())
-        .toList();
+  public boolean isGoogleAuthEnabled() {
+    return googleAuthConfigService.isGoogleAuthEnabled();
   }
 }

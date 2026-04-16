@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GOOGLE_CLIENT_ID } from "../config/authConfig";
 import { getGoogleClientConfig } from "../api/authApi";
+import { googleAuthClientId, googleAuthEnabled } from "../config/envConfig";
 
 const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+const GOOGLE_UNAVAILABLE_MESSAGE = "Google Sign-In is currently unavailable.";
 
 function GoogleAuthButton({ disabled = false, onCredential, onError, text = "continue_with" }) {
   const hostRef = useRef(null);
+  const didReportErrorRef = useRef(false);
+
   const [scriptReady, setScriptReady] = useState(false);
-  const [resolvedClientId, setResolvedClientId] = useState(() => GOOGLE_CLIENT_ID);
-  const [configLookupComplete, setConfigLookupComplete] = useState(() => Boolean(GOOGLE_CLIENT_ID));
-  const hasClientId = useMemo(() => Boolean(resolvedClientId), [resolvedClientId]);
+  const [googleAuthClientIdState, setGoogleAuthClientIdState] = useState(() => googleAuthClientId);
+  const [configLookupComplete, setConfigLookupComplete] = useState(() => googleAuthEnabled);
+
+  const isGoogleAuthConfigured = useMemo(() => Boolean(googleAuthClientIdState), [googleAuthClientIdState]);
 
   useEffect(() => {
     let active = true;
 
-    if (GOOGLE_CLIENT_ID) {
+    if (googleAuthEnabled) {
       return () => {
         active = false;
       };
@@ -22,17 +26,25 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
 
     getGoogleClientConfig()
       .then((config) => {
-        if (!active) return;
-        if (typeof config?.clientId === "string" && config.clientId.trim()) {
-          setResolvedClientId(config.clientId.trim());
+        if (!active) {
+          return;
+        }
+
+        if (config?.googleAuthEnabled && typeof config?.clientId === "string" && config.clientId.trim()) {
+          setGoogleAuthClientIdState(config.clientId.trim());
         }
       })
       .catch(() => {
-        if (!active) return;
-        onError?.("Google Sign-In setup is incomplete. Configure Google auth on the server.");
+        if (!active || didReportErrorRef.current) {
+          return;
+        }
+        didReportErrorRef.current = true;
+        onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
       })
       .finally(() => {
-        if (active) setConfigLookupComplete(true);
+        if (active) {
+          setConfigLookupComplete(true);
+        }
       });
 
     return () => {
@@ -41,7 +53,9 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
   }, [onError]);
 
   useEffect(() => {
-    if (!hasClientId) return;
+    if (!isGoogleAuthConfigured) {
+      return;
+    }
 
     const existing = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
     const handleReady = () => setScriptReady(true);
@@ -52,7 +66,10 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
       } else {
         existing.addEventListener("load", handleReady, { once: true });
       }
-      return () => existing.removeEventListener("load", handleReady);
+
+      return () => {
+        existing.removeEventListener("load", handleReady);
+      };
     }
 
     const script = document.createElement("script");
@@ -60,23 +77,30 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
     script.async = true;
     script.defer = true;
     script.onload = handleReady;
-    script.onerror = () => onError?.("Unable to load Google Sign-In right now.");
+    script.onerror = () => {
+      if (didReportErrorRef.current) {
+        return;
+      }
+      didReportErrorRef.current = true;
+      onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
+    };
+
     document.head.appendChild(script);
 
     return () => {
       script.onload = null;
       script.onerror = null;
     };
-  }, [hasClientId, onError]);
+  }, [isGoogleAuthConfigured, onError]);
 
   useEffect(() => {
-    if (!scriptReady || !hostRef.current || !window.google?.accounts?.id || !hasClientId) {
+    if (!scriptReady || !hostRef.current || !window.google?.accounts?.id || !isGoogleAuthConfigured) {
       return;
     }
 
     try {
       window.google.accounts.id.initialize({
-        client_id: resolvedClientId,
+        client_id: googleAuthClientIdState,
         callback: (response) => {
           if (!response?.credential) {
             onError?.("Google did not return a valid token. Please try again.");
@@ -96,12 +120,16 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
         size: "large",
       });
     } catch {
-      onError?.("Unable to initialize Google Sign-In.");
+      if (didReportErrorRef.current) {
+        return;
+      }
+      didReportErrorRef.current = true;
+      onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
     }
-  }, [resolvedClientId, scriptReady, hasClientId, onCredential, onError, text]);
+  }, [googleAuthClientIdState, scriptReady, isGoogleAuthConfigured, onCredential, onError, text]);
 
-  if (!hasClientId && configLookupComplete) {
-    return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Configure Google auth on the server and retry.</p>;
+  if (!isGoogleAuthConfigured && configLookupComplete) {
+    return <p className="text-xs text-[var(--accent-danger)]">{GOOGLE_UNAVAILABLE_MESSAGE}</p>;
   }
 
   return (
