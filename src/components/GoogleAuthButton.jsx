@@ -8,14 +8,10 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
   const hostRef = useRef(null);
   const [scriptReady, setScriptReady] = useState(false);
   const [resolvedClientId, setResolvedClientId] = useState(() => GOOGLE_CLIENT_ID);
-  const [configLookupComplete, setConfigLookupComplete] = useState(() => Boolean(GOOGLE_CLIENT_ID));
+  const [configLookupComplete, setConfigLookupComplete] = useState(false);
   const hasClientId = useMemo(() => Boolean(resolvedClientId), [resolvedClientId]);
 
   useEffect(() => {
-    if (GOOGLE_CLIENT_ID) {
-      return;
-    }
-
     let active = true;
     getGoogleClientConfig()
       .then((config) => {
@@ -26,7 +22,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
       })
       .catch(() => {
         if (!active) return;
-        onError?.("Google Sign-In setup is incomplete. Add a frontend Google client ID.");
+        onError?.("Google Sign-In setup is incomplete. Configure Google auth on the server.");
       })
       .finally(() => {
         if (active) setConfigLookupComplete(true);
@@ -98,7 +94,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
   }, [resolvedClientId, scriptReady, hasClientId, onCredential, onError, text]);
 
   if (!hasClientId && configLookupComplete) {
-    return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Set VITE_APP_AUTH_GOOGLE_CLIENT_ID (or VITE_GOOGLE_CLIENT_ID) in the frontend .env and restart Vite.</p>;
+    return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Configure Google auth on the server and retry.</p>;
   }
 
   return (
