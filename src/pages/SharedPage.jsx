@@ -307,7 +307,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                       publicSheets.map((sheet) => (
                         <div className="surface-card surface-card-elevated flex items-center justify-between gap-3 p-3" key={sheet.id}>
                           <div className="flex items-center gap-3">
-                            <a href={`#/shared/sheet/${sheet.shareId}`} className="card-title underline-offset-2 hover:underline">
+                            <a href={`${ROUTES.SHARED_PREFIX}/sheet/${sheet.shareId}`} className="card-title underline-offset-2 hover:underline">
                               {sheet.title}
                             </a>
                             {profile?.username && (

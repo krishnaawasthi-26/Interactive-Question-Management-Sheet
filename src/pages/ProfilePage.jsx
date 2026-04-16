@@ -44,7 +44,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
     loadProfile();
   }, [currentUser?.token]);
 
-  const persistedUsername = (currentUser?.username || "username").trim().toLowerCase();
+  const persistedUsername = (profileDetails?.username || currentUser?.username || "username").trim().toLowerCase();
   const profileShareUrl = `${window.location.origin}/profile/${persistedUsername}`;
   const overallProgress = calculateOverallProgress(sheets);
   const ongoingSheets = sheets.filter((sheet) => !sheet.isArchived);
