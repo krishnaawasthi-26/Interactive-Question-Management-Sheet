@@ -60,21 +60,34 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.themeAnimation = animationTheme;
+    if (!animationTheme) {
+      root.removeAttribute("data-theme-animation");
+      return undefined;
+    }
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const durationMap = {
-      [THEME_NAMES.SUPERMAN]: 1500,
-      [THEME_NAMES.BATMAN]: 1200,
-      [THEME_NAMES.JOKER]: 0,
+    root.removeAttribute("data-theme-animation");
+
+    let timeout;
+    const frame = window.requestAnimationFrame(() => {
+      root.dataset.themeAnimation = animationTheme;
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const durationMap = {
+        [THEME_NAMES.SUPERMAN]: 1500,
+        [THEME_NAMES.BATMAN]: 1500,
+      };
+
+      timeout = window.setTimeout(() => {
+        if (root.dataset.themeAnimation === animationTheme) {
+          root.removeAttribute("data-theme-animation");
+        }
+      }, prefersReducedMotion ? 20 : durationMap[animationTheme] ?? 900);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (timeout) window.clearTimeout(timeout);
     };
-    const timeout = window.setTimeout(() => {
-      if (root.dataset.themeAnimation === animationTheme) {
-        root.removeAttribute("data-theme-animation");
-      }
-    }, prefersReducedMotion ? 20 : durationMap[animationTheme] ?? 900);
-
-    return () => window.clearTimeout(timeout);
   }, [animationTheme]);
 
   const cycleTheme = useCallback(() => {
