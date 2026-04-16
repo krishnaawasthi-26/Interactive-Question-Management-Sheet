@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { THEME_NAMES, useTheme } from "../../theme/themeContext";
 
 const THEME_CONTENT = {
@@ -24,12 +25,46 @@ const THEME_CONTENT = {
 
 export default function ThemeCinematicToggle() {
   const { theme, nextTheme, cycleTheme, switchCount, jokerTriggerCount } = useTheme();
+  const toggleRef = useRef(null);
   const current = THEME_CONTENT[theme];
   const next = THEME_CONTENT[nextTheme];
   const switchesRemaining = Math.max(jokerTriggerCount - (switchCount % jokerTriggerCount), 0);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!root || !toggleRef.current) return undefined;
+
+    const syncBatmanPath = () => {
+      const toggleRect = toggleRef.current?.getBoundingClientRect();
+      if (!toggleRect) return;
+
+      const logoutButton = document.querySelector('.sidebar-desktop .sidebar-footer [aria-label="Log Out"]');
+      const logoutRect = logoutButton?.getBoundingClientRect();
+
+      const startX = logoutRect ? logoutRect.left + (logoutRect.width / 2) : 24;
+      const startY = logoutRect ? logoutRect.bottom : (window.innerHeight - 48);
+      const endX = toggleRect.left + (toggleRect.width / 2);
+      const endY = toggleRect.top + (toggleRect.height / 2);
+
+      root.style.setProperty("--bat-flight-start-x", `${Math.round(startX)}px`);
+      root.style.setProperty("--bat-flight-start-y", `${Math.round(startY)}px`);
+      root.style.setProperty("--bat-flight-dx", `${Math.round(endX - startX)}px`);
+      root.style.setProperty("--bat-flight-dy", `${Math.round(endY - startY)}px`);
+    };
+
+    syncBatmanPath();
+    window.addEventListener("resize", syncBatmanPath);
+    window.addEventListener("scroll", syncBatmanPath, true);
+
+    return () => {
+      window.removeEventListener("resize", syncBatmanPath);
+      window.removeEventListener("scroll", syncBatmanPath, true);
+    };
+  }, []);
+
   return (
     <button
+      ref={toggleRef}
       type="button"
       onClick={cycleTheme}
       className="theme-cinematic-toggle"

@@ -296,8 +296,8 @@ body {
 .theme-cinematic-toggle__bat-sweep {
   position: fixed;
   width: clamp(56px, 9vw, 120px);
-  bottom: max(8px, env(safe-area-inset-bottom));
-  left: max(8px, env(safe-area-inset-left));
+  left: var(--bat-flight-start-x, max(8px, env(safe-area-inset-left)));
+  top: var(--bat-flight-start-y, calc(100vh - max(8px, env(safe-area-inset-bottom))));
   opacity: 0;
   transform: translate3d(0, 0, 0) scale(0.75);
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
@@ -343,7 +343,7 @@ body {
 }
 
 :root[data-theme-animation="batman-dark"] .theme-cinematic-toggle {
-  animation: batmanEntrance 1080ms cubic-bezier(0.2, 0.85, 0.2, 1);
+  animation: batmanEntrance 1500ms cubic-bezier(0.2, 0.85, 0.2, 1);
 }
 
 :root[data-theme-animation="superman-light"] .theme-cinematic-toggle__light-beam {
@@ -351,7 +351,7 @@ body {
 }
 
 :root[data-theme-animation="batman-dark"] .theme-cinematic-toggle__bat-sweep {
-  animation: batSweep 1100ms cubic-bezier(0.19, 0.86, 0.22, 1) 120ms both;
+  animation: batSweep 1500ms cubic-bezier(0.19, 0.86, 0.22, 1) both;
 }
 
 :root[data-theme-animation="batman-dark"] .theme-cinematic-toggle__icon > img {
@@ -377,10 +377,13 @@ body {
 }
 
 @keyframes batSweep {
-  0% { opacity: 0; transform: translate3d(-22vw, 0, 0) scale(0.72) rotate(-25deg); }
+  0% { opacity: 0; transform: translate3d(-18px, 10px, 0) scale(0.72) rotate(-25deg); }
   8% { opacity: 0.9; }
   55% { opacity: 1; }
-  100% { opacity: 0; transform: translate3d(122vw, 0, 0) scale(0.98) rotate(700deg); }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--bat-flight-dx, 220px), var(--bat-flight-dy, -220px), 0) scale(0.98) rotate(700deg);
+  }
 }
 
 @keyframes batmanRise {
