@@ -14,7 +14,7 @@ import {
 } from "../services/reminderNotifications";
 import { useAuthStore } from "../store/authStore";
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 10_000;
 const MAX_VISIBLE_TOASTS = 4;
 
 const formatDueLabel = (scheduledFor) => {
@@ -96,6 +96,23 @@ function ReminderNotificationCenter() {
     pollDueNotifications();
     const timer = window.setInterval(pollDueNotifications, POLL_INTERVAL_MS);
     return () => window.clearInterval(timer);
+  }, [pollDueNotifications, token]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const triggerRefresh = () => {
+      if (document.visibilityState === "hidden") return;
+      pollDueNotifications();
+    };
+
+    window.addEventListener("focus", triggerRefresh);
+    document.addEventListener("visibilitychange", triggerRefresh);
+
+    return () => {
+      window.removeEventListener("focus", triggerRefresh);
+      document.removeEventListener("visibilitychange", triggerRefresh);
+    };
   }, [pollDueNotifications, token]);
 
   const canRequestPermission = permissionState === "default";
