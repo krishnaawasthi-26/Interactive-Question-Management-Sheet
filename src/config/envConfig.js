@@ -49,14 +49,37 @@ const isLocalHostname = (hostname) => {
   return normalized === "localhost" || normalized === "127.0.0.1";
 };
 
+const isLocalApiUrl = (value) => {
+  if (!value) return false;
+
+  try {
+    const parsed = new URL(value, "http://localhost");
+    return isLocalHostname(parsed.hostname);
+  } catch {
+    return false;
+  }
+};
+
 const resolveApiBaseUrl = () => {
   const configured = readEnvValue(["VITE_API_BASE_URL", "VITE_APP_API_BASE_URL"]);
+  const inBrowser = typeof window !== "undefined";
+  const browserOrigin = inBrowser ? window.location?.origin : "";
+  const browserHostname = inBrowser ? window.location?.hostname : "";
+  const isDeployedFrontend = inBrowser && browserOrigin && !isLocalHostname(browserHostname);
+
   if (configured) {
+    if (isDeployedFrontend && isLocalApiUrl(configured)) {
+      console.warn(
+        `[envConfig] Ignoring local API base URL "${configured}" on deployed frontend (${browserOrigin}). Falling back to same-origin API.`
+      );
+      return browserOrigin;
+    }
+
     return configured;
   }
 
-  if (typeof window !== "undefined" && window.location?.origin && !isLocalHostname(window.location.hostname)) {
-    return window.location.origin;
+  if (isDeployedFrontend) {
+    return browserOrigin;
   }
 
   return "http://localhost:8080";

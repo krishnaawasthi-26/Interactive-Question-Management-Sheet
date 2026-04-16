@@ -72,7 +72,7 @@ cp .env.example .env
 ```
 
 Variables:
-- `VITE_API_BASE_URL` (default: `http://localhost:8080`)
+- `VITE_API_BASE_URL` (optional; when empty, frontend auto-resolves to `http://localhost:8080` in local dev and same-origin in deployments)
 - `VITE_SYNC_API_BASE_URL` (default: `/api/sync/outbox`)
 - `VITE_PUBLIC_SHEET_API_BASE_URL` (default: public sheet endpoint)
 - `VITE_RAZORPAY_KEY_ID` (Razorpay publishable key id; optional fallback if backend does not return key id)
