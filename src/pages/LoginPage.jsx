@@ -35,7 +35,11 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
 
   const handleGoogleLogin = async (idToken) => {
     const success = await loginWithGoogle(idToken);
-    if (success) onLoginSuccess();
+    console.info("[LoginPage] Google login handler completed.", { success });
+    if (success) {
+      console.info("[LoginPage] Redirecting after successful Google login.");
+      onLoginSuccess();
+    }
   };
 
   return (

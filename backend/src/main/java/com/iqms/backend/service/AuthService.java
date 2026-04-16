@@ -16,6 +16,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
   private static final int MAX_USERNAME_CHANGES = 7;
   private static final int MAX_EMAIL_CHANGES = 7;
@@ -222,8 +225,11 @@ public class AuthService {
   }
 
   public AuthResponse authenticateWithGoogle(String idToken) {
+    log.info("[GoogleAuth] Starting Google credential-token auth flow.");
     GoogleTokenPayload payload = googleTokenVerifierService.verify(idToken);
+    log.info("[GoogleAuth] Token verified. email={} subject={}", payload.email(), payload.subject());
     User user = userRepository.findByEmailIgnoreCase(payload.email()).orElse(null);
+    log.info("[GoogleAuth] User lookup complete. existingUser={}", user != null);
 
     if (user == null) {
       user = new User();
@@ -238,7 +244,11 @@ public class AuthService {
       user.setEmailChangeCount(0);
       user.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
       user = userRepository.save(user);
-      return toResponse(user);
+      log.info("[GoogleAuth] New user created. userId={} email={}", user.getId(), user.getEmail());
+      AuthResponse response = toResponse(user);
+      log.info("[GoogleAuth] Auth response generated for new user. userId={} tokenIssued={}",
+          response.getId(), response.getToken() != null && !response.getToken().isBlank());
+      return response;
     }
 
     user.setEmailVerified(true);
@@ -248,7 +258,14 @@ public class AuthService {
     }
     clearOtpState(user);
     user = userRepository.save(user);
-    return toResponse(user);
+    log.info("[GoogleAuth] Existing user updated for Google login. userId={} provider={}",
+        user.getId(), user.getAuthProvider());
+    // Important: Google and password login intentionally return the same AuthResponse shape
+    // so frontend can run one shared success path (token persistence + auth-state redirect).
+    AuthResponse response = toResponse(user);
+    log.info("[GoogleAuth] Auth response generated for existing user. userId={} tokenIssued={}",
+        response.getId(), response.getToken() != null && !response.getToken().isBlank());
+    return response;
   }
 
   private OtpDispatchResult setAndSendOtp(User user, boolean ignoreCooldown) {
