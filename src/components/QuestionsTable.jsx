@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 
 const STATUS_STYLES = {
-  "In Progress": "bg-amber-500/15 text-amber-300 border border-amber-500/30",
-  "Solve!": "bg-rose-500/15 text-rose-300 border border-rose-500/30",
-  Completed: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+  "In Progress": "status-pill--progress",
+  "Solve!": "status-pill--pending",
+  Completed: "status-pill--completed",
 };
 
 function QuestionsTable({ rows }) {
