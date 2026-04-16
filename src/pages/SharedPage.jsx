@@ -267,7 +267,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                   key={tab}
                   type="button"
                   className={`${tabButtonBaseClassName} ${
-                    tab === activeProfileTab ? "btn-primary text-white" : "btn-ghost text-[var(--text-secondary)]"
+                    tab === activeProfileTab ? "btn-primary" : "btn-ghost text-[var(--text-secondary)]"
                   }`}
                   onClick={() => setActiveProfileTab(tab)}
                 >
@@ -423,31 +423,31 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         </div>
         {engagementViewer && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-zinc-900 p-4">
+            <div className="surface-card w-full max-w-lg rounded-xl p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
                 <button
                   type="button"
-                  className="rounded border border-gray-700 px-2 py-1 text-xs"
+                  className="btn-base btn-neutral btn-sm rounded px-2 py-1 text-xs"
                   onClick={() => setEngagementViewer(null)}
                 >
                   Close
                 </button>
               </div>
               {engagementViewer.users.length === 0 ? (
-                <p className="text-sm text-zinc-400">No users yet.</p>
+                <p className="meta-text text-sm">No users yet.</p>
               ) : (
                 <div className="max-h-72 space-y-2 overflow-auto">
                   {engagementViewer.users.map((entry, index) => (
                     <div
                       key={`${entry.username}-${entry.sheetTitle}-${index}`}
-                      className="rounded border border-gray-700 p-2 text-sm"
+                      className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/55 p-2 text-sm"
                     >
                       <p className="font-medium">@{entry.username}</p>
                       {entry.sheetTitle ? (
-                        <p className="text-xs text-zinc-400">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
+                        <p className="meta-text text-xs">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
                       ) : (
-                        <p className="text-xs text-zinc-400">{entry.name ? entry.name : "Create Sheets user"}</p>
+                        <p className="meta-text text-xs">{entry.name ? entry.name : "Create Sheets user"}</p>
                       )}
                     </div>
                   ))}
@@ -501,26 +501,26 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         onRequireCopy={() => setCopyPromptOpen(true)}
       />
       {showRemixModal && !isOwnerViewingSheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100/65 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+          <div className="surface-card w-full max-w-xl rounded-2xl shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4">
-              <h2 className="text-xl font-semibold text-slate-900">Remix Sheet</h2>
+              <h2 className="section-title text-xl font-semibold">Remix Sheet</h2>
               <button
                 type="button"
-                className="rounded-md border border-slate-200 px-2 py-1 text-slate-600 hover:bg-slate-50"
+                className="btn-base btn-neutral btn-sm rounded-md px-2 py-1"
                 onClick={() => setShowRemixModal(false)}
               >
                 ✕
               </button>
             </div>
-            <div className="border-t border-slate-200" />
-            <div className="space-y-5 px-6 py-5 text-slate-800">
+            <div className="border-t border-[var(--border-subtle)]" />
+            <div className="space-y-5 px-6 py-5 text-[var(--text-primary)]">
               <label className="block text-sm font-medium" htmlFor="remix-title-input">
                 New Title:
               </label>
               <input
                 id="remix-title-input"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm outline-none ring-0 focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                className="field-base w-full rounded-md px-3 py-2 text-sm"
                 value={remixTitle}
                 onChange={(event) => setRemixTitle(event.target.value)}
               />
@@ -535,11 +535,11 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 </label>
               </div>
             </div>
-            <div className="border-t border-slate-200" />
+            <div className="border-t border-[var(--border-subtle)]" />
             <div className="flex justify-end px-6 py-4">
               <button
                 type="button"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                className="btn-base btn-primary rounded-md px-4 py-2 text-sm font-semibold shadow-sm disabled:cursor-not-allowed"
                 disabled={copyPending}
                 onClick={async () => {
                   if (!currentUser?.token || !sharedSheet) return;
