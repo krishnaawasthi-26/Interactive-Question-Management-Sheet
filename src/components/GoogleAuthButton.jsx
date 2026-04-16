@@ -98,7 +98,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
   }, [resolvedClientId, scriptReady, hasClientId, onCredential, onError, text]);
 
   if (!hasClientId && configLookupComplete) {
-    return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Missing frontend Google client ID.</p>;
+    return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Set VITE_APP_AUTH_GOOGLE_CLIENT_ID (or VITE_GOOGLE_CLIENT_ID) in the frontend .env and restart Vite.</p>;
   }
 
   return (
