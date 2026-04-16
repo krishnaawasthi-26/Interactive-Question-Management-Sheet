@@ -42,7 +42,6 @@ function AppShell({
             theme={theme}
             onThemeChange={onThemeChange}
             userLabel={userLabel}
-            onMenuToggle={() => setIsMobileNavOpen((prev) => !prev)}
             actions={(
               <>
                 <NotificationBell compact />

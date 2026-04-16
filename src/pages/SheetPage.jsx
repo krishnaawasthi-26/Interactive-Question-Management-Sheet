@@ -541,7 +541,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       onClick: () => requestNavigation(onOpenExport, "open export"),
       disabled: false,
     },
-    { key: "view-only", label: isEditing ? "View Only" : "Edit Sheet", onClick: () => setIsEditing((value) => !value), disabled: false },
+    ...(sheetId
+      ? [{ key: "view-only", label: isEditing ? "View Only" : "Edit Sheet", onClick: () => setIsEditing((value) => !value), disabled: false }]
+      : []),
   ];
 
   return (
@@ -575,9 +577,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                   <span className="mb-1 block text-[var(--text-secondary)]">Sheet type</span>
                   <select className="field-base min-w-44" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
                     <option value="all">All sheets</option>
-                    <option value="public">Public only</option>
-                    <option value="private">Private only</option>
-                    <option value="archived">Archived only</option>
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                    <option value="archived">Archived</option>
                   </select>
                 </label>
               </div>
