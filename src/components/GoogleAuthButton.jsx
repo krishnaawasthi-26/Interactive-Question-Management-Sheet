@@ -8,11 +8,18 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
   const hostRef = useRef(null);
   const [scriptReady, setScriptReady] = useState(false);
   const [resolvedClientId, setResolvedClientId] = useState(() => GOOGLE_CLIENT_ID);
-  const [configLookupComplete, setConfigLookupComplete] = useState(false);
+  const [configLookupComplete, setConfigLookupComplete] = useState(() => Boolean(GOOGLE_CLIENT_ID));
   const hasClientId = useMemo(() => Boolean(resolvedClientId), [resolvedClientId]);
 
   useEffect(() => {
     let active = true;
+
+    if (GOOGLE_CLIENT_ID) {
+      return () => {
+        active = false;
+      };
+    }
+
     getGoogleClientConfig()
       .then((config) => {
         if (!active) return;
