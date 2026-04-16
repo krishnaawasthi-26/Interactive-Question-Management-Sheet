@@ -1,17 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GOOGLE_CLIENT_ID } from "../config/authConfig";
+import { getGoogleClientConfig } from "../api/authApi";
 
 const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
 function GoogleAuthButton({ disabled = false, onCredential, onError, text = "continue_with" }) {
   const hostRef = useRef(null);
   const [scriptReady, setScriptReady] = useState(false);
-  const hasClientId = useMemo(() => Boolean(GOOGLE_CLIENT_ID), []);
+  const [resolvedClientId, setResolvedClientId] = useState(() => GOOGLE_CLIENT_ID);
+  const [configLookupComplete, setConfigLookupComplete] = useState(() => Boolean(GOOGLE_CLIENT_ID));
+  const hasClientId = useMemo(() => Boolean(resolvedClientId), [resolvedClientId]);
+
+  useEffect(() => {
+    if (GOOGLE_CLIENT_ID) {
+      return;
+    }
+
+    let active = true;
+    getGoogleClientConfig()
+      .then((config) => {
+        if (!active) return;
+        if (typeof config?.clientId === "string" && config.clientId.trim()) {
+          setResolvedClientId(config.clientId.trim());
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        onError?.("Google Sign-In setup is incomplete. Add a frontend Google client ID.");
+      })
+      .finally(() => {
+        if (active) setConfigLookupComplete(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [onError]);
 
   useEffect(() => {
     if (!hasClientId) return;
 
-    const existing = document.querySelector(`script[src=\"${GOOGLE_SCRIPT_SRC}\"]`);
+    const existing = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
     const handleReady = () => setScriptReady(true);
 
     if (existing) {
@@ -44,7 +73,7 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
 
     try {
       window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: resolvedClientId,
         callback: (response) => {
           if (!response?.credential) {
             onError?.("Google did not return a valid token. Please try again.");
@@ -66,9 +95,9 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
     } catch {
       onError?.("Unable to initialize Google Sign-In.");
     }
-  }, [scriptReady, hasClientId, onCredential, onError, text]);
+  }, [resolvedClientId, scriptReady, hasClientId, onCredential, onError, text]);
 
-  if (!hasClientId) {
+  if (!hasClientId && configLookupComplete) {
     return <p className="text-xs text-[var(--accent-danger)]">Google Sign-In is unavailable. Missing frontend Google client ID.</p>;
   }
 

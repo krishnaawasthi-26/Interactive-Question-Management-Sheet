@@ -8,3 +8,4 @@ export const resendSignUpOtp = (payload) => authRequest("/api/auth/signup/resend
 export const verifySignUpOtp = (payload) => authRequest("/api/auth/signup/verify-otp", "POST", payload);
 export const loginUser = (payload) => authRequest("/api/auth/login", "POST", payload);
 export const googleAuth = (payload) => authRequest("/api/auth/google", "POST", payload);
+export const getGoogleClientConfig = () => authRequest("/api/auth/google/client-config", "GET");
