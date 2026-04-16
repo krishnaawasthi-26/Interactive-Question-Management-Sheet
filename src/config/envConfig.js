@@ -24,6 +24,24 @@ const readEnvValue = (keys) => {
   return "";
 };
 
+const isLocalHostname = (hostname) => {
+  const normalized = `${hostname || ""}`.toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1";
+};
+
+const resolveApiBaseUrl = () => {
+  const configured = readEnvValue(["VITE_API_BASE_URL"]);
+  if (configured) {
+    return configured;
+  }
+
+  if (typeof window !== "undefined" && window.location?.origin && !isLocalHostname(window.location.hostname)) {
+    return window.location.origin;
+  }
+
+  return "http://localhost:8080";
+};
+
 export const googleAuthClientId = readEnvValue([
   "VITE_APP_AUTH_GOOGLE_CLIENT_ID",
   "VITE_GOOGLE_CLIENT_ID",
@@ -32,7 +50,7 @@ export const googleAuthClientId = readEnvValue([
 export const googleAuthClientIds = googleAuthClientId ? [googleAuthClientId] : [];
 export const googleAuthEnabled = googleAuthClientIds.length > 0;
 
-export const apiBaseUrl = readEnvValue(["VITE_API_BASE_URL"]) || "http://localhost:8080";
+export const apiBaseUrl = resolveApiBaseUrl();
 export const razorpayKeyId = readEnvValue(["VITE_RAZORPAY_KEY_ID"]);
 export const appName = readEnvValue(["VITE_APP_NAME"]) || "Create Sheets";
 
