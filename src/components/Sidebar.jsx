@@ -141,7 +141,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
   return (
     <>
       {isMobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
+        <div className="fixed inset-0 z-40 bg-[var(--overlay-backdrop)] lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
       ) : null}
 
       <aside className={`sidebar-desktop ${sidebarWidth}`}>

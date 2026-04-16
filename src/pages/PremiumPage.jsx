@@ -179,6 +179,10 @@ function PremiumPage({ theme, onThemeChange }) {
           reject(new Error("Payment configuration is unavailable."));
           return;
         }
+        const razorpayThemeColor = window.getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent-primary")
+          .trim() || "var(--accent-primary)";
+
         const razorpay = new window.Razorpay({
           key: checkoutKey,
           amount: order.amount,
@@ -190,9 +194,7 @@ function PremiumPage({ theme, onThemeChange }) {
             name: currentUser.name || currentUser.username || "",
             email: currentUser.email || "",
           },
-          theme: {
-            color: "#4f46e5",
-          },
+          theme: { color: razorpayThemeColor },
           handler: async (paymentResponse) => {
             try {
               const verified = await verifyPremiumPayment(currentUser.token, {
