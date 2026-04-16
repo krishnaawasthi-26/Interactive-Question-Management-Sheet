@@ -119,7 +119,7 @@ function ReminderNotificationCenter() {
   if (!token || (!toasts.length && !pollError && !canRequestPermission)) return null;
 
   return (
-    <div className="pointer-events-none fixed right-4 top-4 z-[2147483647] w-[min(92vw,420px)] space-y-3">
+    <div className="pointer-events-none fixed right-4 top-4 z-[2147483597] w-[min(92vw,420px)] space-y-3">
       {canRequestPermission ? (
         <div className="pointer-events-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-xl">
           <p className="text-sm font-medium text-[var(--text-primary)]">Enable browser reminders</p>

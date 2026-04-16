@@ -298,6 +298,7 @@ body {
   width: clamp(56px, 9vw, 120px);
   left: var(--bat-flight-start-x, max(8px, env(safe-area-inset-left)));
   top: var(--bat-flight-start-y, calc(100vh - max(8px, env(safe-area-inset-bottom))));
+  z-index: 2147483647;
   opacity: 0;
   transform: translate3d(0, 0, 0) scale(0.75);
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
@@ -305,26 +306,31 @@ body {
 }
 
 .theme-cinematic-toggle__light-beam {
-  position: absolute;
-  top: 8px;
-  width: 44px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: clamp(120px, 26vw, 320px);
   height: 6px;
   border-radius: 999px;
   opacity: 0;
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(111, 195, 255, 0.85), transparent);
-  filter: blur(0.2px) drop-shadow(0 0 6px rgba(106, 199, 255, 0.62));
+  z-index: 2147483646;
+  background: linear-gradient(90deg, rgba(255, 214, 214, 0.96), rgba(255, 24, 24, 0.94), transparent);
+  filter: blur(0.2px) drop-shadow(0 0 7px rgba(255, 36, 36, 0.75));
+  will-change: transform, opacity;
 }
 
 .theme-cinematic-toggle__light-beam--left {
-  left: 16px;
-  --beam-angle: rotate(0deg);
+  left: 0;
+  top: 0;
+  --beam-angle: rotate(18deg);
   transform: var(--beam-angle) scaleX(0.08);
 }
 
 .theme-cinematic-toggle__light-beam--right {
-  left: 18px;
-  --beam-angle: rotate(0deg);
+  left: 0;
+  top: 0;
+  --beam-angle: rotate(16deg);
   transform: var(--beam-angle) scaleX(0.08);
 }
 
@@ -393,10 +399,10 @@ body {
 }
 
 @keyframes supermanLaser {
-  0% { opacity: 0; transform: var(--beam-angle) scaleX(0.08); }
-  12% { opacity: 0.92; transform: var(--beam-angle) scaleX(0.92); }
-  58% { opacity: 0.85; transform: var(--beam-angle) scaleX(1.08); }
-  100% { opacity: 0; transform: var(--beam-angle) scaleX(0.06); }
+  0% { opacity: 0; transform: translate3d(var(--beam-origin-x, 95vw), var(--beam-origin-y, 82px), 0) var(--beam-angle) scaleX(0.08); }
+  12% { opacity: 0.95; transform: translate3d(var(--beam-origin-x, 95vw), var(--beam-origin-y, 82px), 0) var(--beam-angle) scaleX(0.95); }
+  68% { opacity: 0.88; transform: translate3d(-8vw, 84vh, 0) var(--beam-angle) scaleX(1.25); }
+  100% { opacity: 0; transform: translate3d(-18vw, 102vh, 0) var(--beam-angle) scaleX(0.08); }
 }
 
 @media (prefers-reduced-motion: reduce) {
