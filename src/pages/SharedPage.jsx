@@ -41,7 +41,14 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   const loadProfileForRoute = async (targetUsername) => {
     if (!targetUsername) return null;
     if (currentUser?.token) {
-      return fetchViewerPublicProfile(currentUser.token, targetUsername);
+      try {
+        return await fetchViewerPublicProfile(currentUser.token, targetUsername);
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          return fetchPublicProfile(targetUsername);
+        }
+        throw error;
+      }
     }
     return fetchPublicProfile(targetUsername);
   };
