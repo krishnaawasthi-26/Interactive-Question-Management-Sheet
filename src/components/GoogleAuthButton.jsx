@@ -11,21 +11,15 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
 
   const [scriptReady, setScriptReady] = useState(false);
   const [googleAuthClientIdState, setGoogleAuthClientIdState] = useState(() => googleAuthClientId);
-  const [configLookupComplete, setConfigLookupComplete] = useState(() => googleAuthEnabled);
+  const [configLookupComplete, setConfigLookupComplete] = useState(false);
 
   const isGoogleAuthConfigured = useMemo(() => Boolean(googleAuthClientIdState), [googleAuthClientIdState]);
 
   useEffect(() => {
     let active = true;
-
-    if (googleAuthEnabled) {
-      console.info("[GoogleAuthButton] Google client ID loaded from frontend env.");
-      return () => {
-        active = false;
-      };
-    }
-
-    console.info("[GoogleAuthButton] Frontend Google client ID missing, loading backend client config.");
+    console.info("[GoogleAuthButton] Loading Google client config.", {
+      frontendGoogleConfigured: googleAuthEnabled,
+    });
     getGoogleClientConfig()
       .then((config) => {
         if (!active) {
@@ -37,20 +31,31 @@ function GoogleAuthButton({ disabled = false, onCredential, onError, text = "con
           googleAuthClientIdConfigured: Boolean(config?.googleAuthClientIdConfigured),
         });
 
-        if (config?.googleAuthEnabled && typeof config?.clientId === "string" && config.clientId.trim()) {
-          setGoogleAuthClientIdState(config.clientId.trim());
+        if (config?.googleAuthEnabled && typeof config?.clientId === "string" && config.clientId.trim().length > 0) {
+          const backendClientId = config.clientId.trim();
+          setGoogleAuthClientIdState(backendClientId);
+          if (googleAuthClientId && googleAuthClientId !== backendClientId) {
+            console.warn("[GoogleAuthButton] Frontend/backend Google client IDs differ. Using backend value.");
+          }
+          return;
+        }
+
+        if (googleAuthClientId) {
+          console.warn("[GoogleAuthButton] Backend Google client ID missing; using frontend env fallback.");
           return;
         }
 
         onError?.("Google Sign-In is not configured. Missing Google client ID.");
       })
       .catch((error) => {
-        if (!active || didReportErrorRef.current) {
+        if (!active) {
           return;
         }
-        didReportErrorRef.current = true;
         console.error("[GoogleAuthButton] Failed to load backend Google config.", error);
-        onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
+        if (!googleAuthClientId && !didReportErrorRef.current) {
+          didReportErrorRef.current = true;
+          onError?.(GOOGLE_UNAVAILABLE_MESSAGE);
+        }
       })
       .finally(() => {
         if (active) {
