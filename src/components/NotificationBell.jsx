@@ -12,6 +12,7 @@ function NotificationBell({ compact = false }) {
   const token = useAuthStore((state) => state.currentUser?.token);
   const containerRef = useRef(null);
   const bellButtonRef = useRef(null);
+  const drawerRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -128,7 +129,8 @@ function NotificationBell({ compact = false }) {
       const target = event.target;
       const containerNode = containerRef.current;
       const bellNode = bellButtonRef.current;
-      if (containerNode?.contains(target) || bellNode?.contains(target)) return;
+      const drawerNode = drawerRef.current;
+      if (containerNode?.contains(target) || bellNode?.contains(target) || drawerNode?.contains(target)) return;
       setOpen(false);
     };
 
@@ -180,6 +182,7 @@ function NotificationBell({ compact = false }) {
         onMarkAllRead={onMarkAllRead}
         onClearAll={onClearAll}
         position={drawerPosition}
+        drawerRef={drawerRef}
         onOpenAll={() => {
           setOpen(false);
           navigateTo(ROUTES.NOTIFICATIONS);

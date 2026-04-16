@@ -21,6 +21,7 @@ function NotificationDrawer({
   onClearAll,
   onOpenAll,
   position,
+  drawerRef,
 }) {
   const [activeTab, setActiveTab] = useState("active");
   const tabs = useMemo(() => [
@@ -34,6 +35,7 @@ function NotificationDrawer({
 
   return createPortal((
     <div
+      ref={drawerRef}
       className="fixed z-[120] max-h-[82dvh] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl"
       style={{ top: `${position?.top ?? 56}px`, right: `${position?.right ?? 12}px`, width: `${position?.width ?? 460}px` }}
     >
