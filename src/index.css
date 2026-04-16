@@ -318,13 +318,13 @@ body {
 
 .theme-cinematic-toggle__light-beam--left {
   left: 16px;
-  --beam-angle: rotate(-11deg);
+  --beam-angle: rotate(0deg);
   transform: var(--beam-angle) scaleX(0.08);
 }
 
 .theme-cinematic-toggle__light-beam--right {
   left: 18px;
-  --beam-angle: rotate(7deg);
+  --beam-angle: rotate(0deg);
   transform: var(--beam-angle) scaleX(0.08);
 }
 
@@ -377,10 +377,10 @@ body {
 }
 
 @keyframes batSweep {
-  0% { opacity: 0; transform: translate3d(0, 24px, 0) scale(0.72) rotate(-8deg); }
-  12% { opacity: 0.95; }
-  58% { opacity: 0.95; }
-  100% { opacity: 0; transform: translate3d(104vw, -64vh, 0) scale(0.98) rotate(7deg); }
+  0% { opacity: 0; transform: translate3d(-22vw, 0, 0) scale(0.72) rotate(-25deg); }
+  8% { opacity: 0.9; }
+  55% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(122vw, 0, 0) scale(0.98) rotate(700deg); }
 }
 
 @keyframes batmanRise {
