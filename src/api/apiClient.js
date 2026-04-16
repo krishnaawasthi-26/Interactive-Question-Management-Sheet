@@ -149,6 +149,10 @@ const maybeEnforceRateLimit = ({ rateLimit = false } = {}) => {
 
 const trimTrailingSlashes = (value) => value.replace(/\/+$/, "");
 const sanitizeForLog = (value) => `${value || ""}`.replace(/([?&]token=)[^&]+/gi, "$1[redacted]");
+const isLocalhost = (hostname) => {
+  const normalized = `${hostname || ""}`.toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1";
+};
 const buildGetCacheKey = ({ method, requestUrl, token, headers }) =>
   JSON.stringify({
     method,
@@ -170,6 +174,25 @@ const toRequestUrl = ({ path, baseUrl }) => {
   }
 
   return `${normalizedBaseUrl}${normalizedPath}`;
+};
+
+const resolveFallbackApiUrl = (requestUrl) => {
+  if (typeof window === "undefined" || !window.location?.origin) return null;
+
+  try {
+    const currentOrigin = new URL(window.location.origin);
+    const parsedUrl = new URL(requestUrl, currentOrigin.origin);
+    const isAbsoluteRequest = /^https?:\/\//i.test(requestUrl);
+    const isApiPath = /^\/api(\/|$)/i.test(parsedUrl.pathname);
+    const isDifferentOrigin = parsedUrl.origin !== currentOrigin.origin;
+    const shouldFallbackToOriginProxy =
+      isAbsoluteRequest && isApiPath && isDifferentOrigin && isLocalhost(parsedUrl.hostname);
+
+    if (!shouldFallbackToOriginProxy) return null;
+    return `${currentOrigin.origin}${parsedUrl.pathname}${parsedUrl.search}`;
+  } catch {
+    return null;
+  }
 };
 
 const parseResponseData = async (response) => {
@@ -206,7 +229,7 @@ export const apiRequest = async (
     }
   }
 
-  const performRequest = async () => {
+  const performRequest = async (effectiveRequestUrl, { isFallbackAttempt = false } = {}) => {
     let response;
     const controller = new AbortController();
     const timeout = globalThis.setTimeout(() => {
@@ -214,7 +237,7 @@ export const apiRequest = async (
     }, API_REQUEST_TIMEOUT_MS);
 
     try {
-      response = await fetch(requestUrl, {
+      response = await fetch(effectiveRequestUrl, {
         method: normalizedMethod,
         signal: controller.signal,
         headers: {
@@ -228,21 +251,25 @@ export const apiRequest = async (
       if (error?.name === "AbortError") {
         throw createApiError(API_ERROR_MESSAGES.timeout, { code: "REQUEST_TIMEOUT" });
       }
+      const fallbackRequestUrl = isFallbackAttempt ? null : resolveFallbackApiUrl(effectiveRequestUrl);
+      if (fallbackRequestUrl) {
+        return performRequest(fallbackRequestUrl, { isFallbackAttempt: true });
+      }
       const isGoogleAuthRequest = /\/api\/auth\/google(\/|$|\?)/i.test(requestUrl);
       const inBrowser = typeof window !== "undefined";
       const isHttpsPage = inBrowser && window.location?.protocol === "https:";
-      const isHttpApiTarget = /^http:\/\//i.test(requestUrl);
+      const isHttpApiTarget = /^http:\/\//i.test(effectiveRequestUrl);
       const networkMessage = isGoogleAuthRequest
         ? isHttpsPage && isHttpApiTarget
           ? "Google sign-in failed because this page is HTTPS but API URL is HTTP. Please update API base URL to HTTPS."
-          : `Unable to reach auth server (${sanitizeForLog(requestUrl)}). Please verify API base URL and backend availability.`
+          : `Unable to reach auth server (${sanitizeForLog(effectiveRequestUrl)}). Please verify API base URL and backend availability.`
         : API_ERROR_MESSAGES.network;
 
       throw createApiError(networkMessage, {
         code: "NETWORK_ERROR",
         details: {
           cause: error?.message || "fetch_failed",
-          requestUrl: sanitizeForLog(requestUrl),
+          requestUrl: sanitizeForLog(effectiveRequestUrl),
         },
       });
     } finally {
@@ -261,11 +288,11 @@ export const apiRequest = async (
   };
 
   if (!shouldUseGetCache) {
-    return performRequest();
+    return performRequest(requestUrl);
   }
 
   const cacheKey = buildGetCacheKey({ method: normalizedMethod, requestUrl, token, headers });
-  const pendingPromise = performRequest().catch((error) => {
+  const pendingPromise = performRequest(requestUrl).catch((error) => {
     inMemoryGetCache.delete(cacheKey);
     throw error;
   });
