@@ -65,9 +65,17 @@ const resolveApiBaseUrl = () => {
   const inBrowser = typeof window !== "undefined";
   const browserOrigin = inBrowser ? window.location?.origin : "";
   const browserHostname = inBrowser ? window.location?.hostname : "";
+  const browserProtocol = inBrowser ? window.location?.protocol : "";
   const isDeployedFrontend = inBrowser && browserOrigin && !isLocalHostname(browserHostname);
 
   if (configured) {
+    if (inBrowser && browserProtocol === "https:" && /^http:\/\//i.test(configured) && isLocalApiUrl(configured)) {
+      console.warn(
+        `[envConfig] Ignoring insecure local API base URL "${configured}" on secure frontend (${browserOrigin}). Falling back to same-origin API.`
+      );
+      return browserOrigin;
+    }
+
     if (isDeployedFrontend && isLocalApiUrl(configured)) {
       console.warn(
         `[envConfig] Ignoring local API base URL "${configured}" on deployed frontend (${browserOrigin}). Falling back to same-origin API.`
