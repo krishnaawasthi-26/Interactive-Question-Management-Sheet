@@ -211,7 +211,7 @@ function TopicList({
                         {editingTopicId === topic.id && isEditing ? (
                           <div className="flex gap-2 flex-1">
                             <input
-                              className="border border-gray-700 px-2 py-1 rounded-md flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              className="field-base flex-1 rounded-md px-2 py-1 text-sm"
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
                               onKeyDown={(e) => {
@@ -219,7 +219,7 @@ function TopicList({
                               }}
                             />
                             <button
-                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+                              className="btn-base btn-success px-2 py-1 text-xs"
                               onClick={() => saveTopic(topic.id)}
                             >
                               Save
@@ -257,7 +257,7 @@ function TopicList({
                           <div className="mb-2 mt-2 flex flex-wrap gap-2">
                             <input
                               placeholder="Add Subtopic"
-                              className="flex-1 bg-transparent border border-gray-700 px-2 py-1 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              className="field-base flex-1 rounded-md px-2 py-1 text-sm"
                               value={subInput[topic.id] || ""}
                               onChange={(e) =>
                                 setSubInput({ ...subInput, [topic.id]: e.target.value })
@@ -273,7 +273,7 @@ function TopicList({
                             />
 
                             <button
-                              className="rounded-md bg-[var(--btn-accent-primary)] px-2.5 py-2 text-xs font-medium text-white transition hover:bg-[var(--btn-accent-primary-hover)]"
+                              className="btn-base btn-primary rounded-md px-2.5 py-2 text-xs font-medium"
                               onClick={() => {
                                 if (!subInput[topic.id]) return;
                                 addSubTopic(topic.id, subInput[topic.id]).then((created) => {
@@ -315,7 +315,7 @@ function TopicList({
                                           {editingSubId === sub.id && isEditing ? (
                                             <div className="flex gap-2 flex-1">
                                               <input
-                                                className="border border-gray-700 px-2 py-1 rounded-md flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                className="field-base flex-1 rounded-md px-2 py-1 text-sm"
                                                 value={editValue}
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onKeyDown={(e) => {
@@ -323,7 +323,7 @@ function TopicList({
                                                 }}
                                               />
                                               <button
-                                                className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+                                                className="btn-base btn-success px-2 py-1 text-xs"
                                                 onClick={() => saveSubtopic(topic.id, sub.id)}
                                               >
                                                 Save
@@ -361,7 +361,7 @@ function TopicList({
                                             <div className="mb-1 mt-1 flex flex-wrap gap-2">
                                               <input
                                                 placeholder="Add Question"
-                                                className="flex-1 bg-transparent border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                className="field-base flex-1 rounded-md px-2 py-1 text-sm"
                                                 value={questionInput[sub.id] || ""}
                                                 onChange={(e) =>
                                                   setQuestionInput({
@@ -379,7 +379,7 @@ function TopicList({
                                                 }}
                                               />
                                               <button
-                                                className="rounded-md bg-green-600 px-2 py-2 text-white transition hover:bg-green-700"
+                                                className="btn-base btn-success rounded-md px-2 py-2 text-xs"
                                                 onClick={() => {
                                                   if (!questionInput[sub.id]) return;
                                                   addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
@@ -413,7 +413,7 @@ function TopicList({
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
                                                             <input
-                                                              className="border border-gray-700 px-2 py-1 rounded-md flex-1 bg-transparent text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                              className="field-base flex-1 rounded-md px-2 py-1 text-sm"
                                                               value={editValue}
                                                               onChange={(e) => setEditValue(e.target.value)}
                                                               onKeyDown={(e) => {
@@ -421,7 +421,7 @@ function TopicList({
                                                               }}
                                                             />
                                                             <button
-                                                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
+                                                              className="btn-base btn-success px-2 py-1 text-xs"
                                                               onClick={() => saveQuestion(topic.id, sub.id, q.id)}
                                                             >
                                                               Save
@@ -436,8 +436,8 @@ function TopicList({
                                                                   onClick={() => handleToggleProgress(topic.id, sub.id, q, topic.title, sub.title)}
                                                                   className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${
                                                                     q.done
-                                                                      ? "border-emerald-500 bg-emerald-500 text-white"
-                                                                      : "border-zinc-500 bg-transparent text-transparent"
+                                                                      ? "border-[color-mix(in_srgb,var(--accent-success)_80%,black)] bg-[var(--accent-success)] text-[var(--btn-on-success)]"
+                                                                      : "border-[var(--border-strong)] bg-transparent text-transparent"
                                                                   } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-pointer opacity-85"}`}
                                                                   aria-label={q.done ? "Mark as not done" : "Mark as done"}
                                                                   title={q.done ? "Solved" : "Unsolved"}
@@ -459,7 +459,7 @@ function TopicList({
                                                                 <>
                                                                   <div className="hidden items-center gap-1 sm:flex">
                                                                     <button
-                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                       onClick={() => {
                                                                         setEditingQuestionId(q.id);
                                                                         setEditValue(q.text);
@@ -468,13 +468,13 @@ function TopicList({
                                                                       Edit
                                                                     </button>
                                                                     <button
-                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                       onClick={() => deleteQuestion(topic.id, sub.id, q.id)}
                                                                     >
                                                                       Delete
                                                                     </button>
                                                                     <button
-                                                                      className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 transition hover:border-zinc-400"
+                                                                      className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                       onClick={() => startResourceEdit(q)}
                                                                     >
                                                                       Resources
@@ -482,7 +482,7 @@ function TopicList({
                                                                   </div>
                                                                   <button
                                                                     type="button"
-                                                                    className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200 sm:hidden"
+                                                                    className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs sm:hidden"
                                                                     onClick={() =>
                                                                       setMobileActionQuestionId((current) => (current === q.id ? null : q.id))
                                                                     }
@@ -513,7 +513,7 @@ function TopicList({
                                                             {isEditing && mobileActionQuestionId === q.id && (
                                                               <div className="mt-2 flex flex-wrap gap-1 pl-3 sm:hidden">
                                                                 <button
-                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                   onClick={() => {
                                                                     setEditingQuestionId(q.id);
                                                                     setEditValue(q.text);
@@ -523,7 +523,7 @@ function TopicList({
                                                                   Edit
                                                                 </button>
                                                                 <button
-                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                   onClick={() => {
                                                                     deleteQuestion(topic.id, sub.id, q.id);
                                                                     setMobileActionQuestionId(null);
@@ -532,7 +532,7 @@ function TopicList({
                                                                   Delete
                                                                 </button>
                                                                 <button
-                                                                  className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                  className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                   onClick={() => startResourceEdit(q)}
                                                                 >
                                                                   Resources
@@ -541,7 +541,7 @@ function TopicList({
                                                             )}
 
                                                             {isEditing && resourceEditorByQuestion[q.id] && (
-                                                              <div className="mt-3 space-y-2 rounded-md border border-zinc-700 bg-[rgba(0,0,0,0.2)] p-3 pl-3 sm:pl-7">
+                                                              <div className="mt-3 space-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-soft)] p-3 pl-3 sm:pl-7">
                                                                 <input
                                                                   value={resourceDraftByQuestion[q.id]?.link || ""}
                                                                   onChange={(event) =>
@@ -551,7 +551,7 @@ function TopicList({
                                                                     }))
                                                                   }
                                                                   placeholder="Problem link"
-                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
                                                                 />
                                                                 <input
                                                                   value={resourceDraftByQuestion[q.id]?.articleLink || ""}
@@ -562,7 +562,7 @@ function TopicList({
                                                                     }))
                                                                   }
                                                                   placeholder="Article link"
-                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
                                                                 />
                                                                 <input
                                                                   value={resourceDraftByQuestion[q.id]?.videoLink || ""}
@@ -573,7 +573,7 @@ function TopicList({
                                                                     }))
                                                                   }
                                                                   placeholder="Video link"
-                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
                                                                 />
                                                                 <textarea
                                                                   value={resourceDraftByQuestion[q.id]?.notes || ""}
@@ -584,18 +584,18 @@ function TopicList({
                                                                     }))
                                                                   }
                                                                   placeholder="Notes"
-                                                                  className="w-full rounded-md border border-zinc-700 bg-transparent px-2 py-1 text-sm"
+                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
                                                                   rows={3}
                                                                 />
                                                                 <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-1">
                                                                   <button
-                                                                    className="rounded-md bg-green-600 px-2 py-1 text-xs text-white"
+                                                                    className="btn-base btn-success btn-sm rounded-md px-2 py-1 text-xs"
                                                                     onClick={() => saveResourceEdit(topic.id, sub.id, q.id)}
                                                                   >
                                                                     Save resources
                                                                   </button>
                                                                   <button
-                                                                    className="rounded-md border border-zinc-600 px-2 py-1 text-xs text-zinc-200"
+                                                                    className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                     onClick={() =>
                                                                       setResourceEditorByQuestion((current) => ({ ...current, [q.id]: false }))
                                                                     }
