@@ -9,8 +9,8 @@ function TopBar({ userLabel = "Account", actions }) {
   return (
     <header className="panel-elevated theme-topbar mb-4 px-4 py-3 sm:px-5">
       <div className="theme-topbar__accent" aria-hidden="true" />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 md:flex-nowrap">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_16%,transparent),var(--surface))] text-sm">📘</div>
           <div className="min-w-0">
             <p className="eyebrow">Create Sheets Workspace</p>
@@ -18,10 +18,14 @@ function TopBar({ userLabel = "Account", actions }) {
           </div>
         </div>
 
-        <div className="flex w-full flex-nowrap items-center justify-end gap-2 sm:w-auto">
-          {actions}
-          <ThemeCinematicToggle />
-          <Link to={getUserProfileRoute(currentUsername)} className="btn-base btn-neutral max-w-full truncate px-3 py-1.5 text-sm font-medium sm:max-w-44">
+        <div className="flex w-full min-w-0 flex-nowrap items-center justify-end gap-2 md:w-auto md:flex-none">
+          <div className="flex flex-none items-center gap-2">
+            {actions}
+          </div>
+          <div className="flex-none">
+            <ThemeCinematicToggle />
+          </div>
+          <Link to={getUserProfileRoute(currentUsername)} className="btn-base btn-neutral min-w-0 max-w-[clamp(8rem,20vw,13rem)] truncate px-3 py-1.5 text-sm font-medium">
             {userLabel}
           </Link>
         </div>
