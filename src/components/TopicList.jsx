@@ -438,7 +438,7 @@ function TopicList({
                                                                     q.done
                                                                       ? "border-[color-mix(in_srgb,var(--accent-success)_80%,black)] bg-[var(--accent-success)] text-[var(--btn-on-success)]"
                                                                       : "border-[var(--border-strong)] bg-transparent text-transparent"
-                                                                  } ${allowProgressToggle ? "hover:border-emerald-400" : "cursor-pointer opacity-85"}`}
+                                                                  } ${allowProgressToggle ? "question-done-toggle--open" : "cursor-pointer opacity-85"}`}
                                                                   aria-label={q.done ? "Mark as not done" : "Mark as done"}
                                                                   title={q.done ? "Solved" : "Unsolved"}
                                                                 >
@@ -448,7 +448,7 @@ function TopicList({
                                                                   <button
                                                                     type="button"
                                                                     onClick={() => onPremiumLocked?.("Attempt duration and reminder features are premium.")}
-                                                                    className="rounded-md border border-amber-700/60 bg-amber-900/20 px-2 py-0.5 text-xs text-amber-200 opacity-70"
+                                                                    className="premium-lock-badge"
                                                                   >
                                                                     🔒 Premium
                                                                   </button>

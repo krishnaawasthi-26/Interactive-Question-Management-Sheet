@@ -24,8 +24,8 @@ function OverviewRail({ summary, topicsCount, updatedAt }) {
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Metric label="Topics" value={topicsCount} />
           <Metric label="Questions" value={summary.tasks} />
-          <Metric label="Completed" value={summary.completed} accent="text-emerald-300" />
-          <Metric label="Pending" value={summary.pending} accent="text-amber-300" />
+          <Metric label="Completed" value={summary.completed} accent="metric-accent-success" />
+          <Metric label="Pending" value={summary.pending} accent="metric-accent-warning" />
         </div>
       </section>
 

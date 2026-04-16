@@ -182,8 +182,8 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
         </SurfaceCard>
 
         <SurfaceCard title="Create New Sheet" description="Start a new tracking sheet with dynamic title support.">
-          {createSheetError ? <div className="rounded-md border border-rose-600/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{createSheetError}</div> : null}
-          {limitWarning ? <div className="mb-3 flex items-center justify-between rounded-md border border-amber-600/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-200"><span>{limitWarning}</span><button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>Dismiss</button></div> : null}
+          {createSheetError ? <div className="alert-banner alert-banner--danger">{createSheetError}</div> : null}
+          {limitWarning ? <div className="alert-banner alert-banner--warning mb-3 flex items-center justify-between gap-2"><span>{limitWarning}</span><button type="button" className="btn-base btn-neutral px-2 py-1 text-xs" onClick={clearLimitWarning}>Dismiss</button></div> : null}
           <div className="flex flex-wrap gap-2">
             <input className="field-base w-full flex-1 sm:min-w-[280px]" placeholder="New sheet title" value={newSheetTitle} onChange={(e) => { setNewSheetTitle(e.target.value); if (createSheetError) setCreateSheetError(""); }} />
             <button
