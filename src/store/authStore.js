@@ -192,13 +192,19 @@ export const useAuthStore = create((set, get) => ({
       set({ currentUser: user, authError: null, authLoading: false, pendingSignupEmail: "", otpInfoMessage: "" });
       return true;
     } catch (error) {
+      const fallbackMessage = error?.status === 401
+        ? "Google verification failed. Please choose the same Google account configured for this app."
+        : error?.status === 503
+          ? "Google Sign-In is not configured on the server. Please contact support."
+          : "Unable to complete Google sign-in right now.";
+      const safeMessage = error?.message || fallbackMessage;
       console.error("[AuthStore] Google login failed.", {
-        message: error?.message || "Unknown error",
+        message: safeMessage,
         status: error?.status ?? null,
         code: error?.code ?? null,
         details: error?.details ?? null,
       });
-      set({ authError: error.message, authLoading: false });
+      set({ authError: safeMessage, authLoading: false });
       return false;
     }
   },

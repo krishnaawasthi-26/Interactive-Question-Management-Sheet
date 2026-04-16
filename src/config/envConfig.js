@@ -26,6 +26,24 @@ const readEnvValue = (keys) => {
   return "";
 };
 
+const readEnvList = (keys) => {
+  const values = [];
+  for (const key of keys) {
+    const raw = getRawEnv(key);
+    if (!raw || isPlaceholder(raw)) {
+      continue;
+    }
+
+    raw
+      .split(",")
+      .map((value) => value.trim())
+      .filter((value) => value && !isPlaceholder(value))
+      .forEach((value) => values.push(value));
+  }
+
+  return [...new Set(values)];
+};
+
 const isLocalHostname = (hostname) => {
   const normalized = `${hostname || ""}`.toLowerCase();
   return normalized === "localhost" || normalized === "127.0.0.1";
@@ -44,12 +62,13 @@ const resolveApiBaseUrl = () => {
   return "http://localhost:8080";
 };
 
-export const googleAuthClientId = readEnvValue([
+export const googleAuthClientIds = readEnvList([
+  "VITE_APP_AUTH_GOOGLE_CLIENT_IDS",
+  "VITE_GOOGLE_CLIENT_IDS",
   "VITE_APP_AUTH_GOOGLE_CLIENT_ID",
   "VITE_GOOGLE_CLIENT_ID",
 ]);
-
-export const googleAuthClientIds = googleAuthClientId ? [googleAuthClientId] : [];
+export const googleAuthClientId = googleAuthClientIds[0] || "";
 export const googleAuthEnabled = googleAuthClientIds.length > 0;
 
 export const apiBaseUrl = resolveApiBaseUrl();
