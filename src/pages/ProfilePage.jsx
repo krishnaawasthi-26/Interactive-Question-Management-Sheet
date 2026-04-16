@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchProfile } from "../api/profileApi";
 import AppShell from "../components/AppShell";
 import EmptyState from "../components/ui/EmptyState";
@@ -29,6 +29,10 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
   const [sheetTitles, setSheetTitles] = useState({});
   const [engagementViewer, setEngagementViewer] = useState(null);
   const [profileDetails, setProfileDetails] = useState(currentUser || null);
+  const totalSheetsSectionRef = useRef(null);
+  const publicSheetsSectionRef = useRef(null);
+  const archivedSheetsSectionRef = useRef(null);
+  const copiedSectionRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser?.token) return;
@@ -71,6 +75,10 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
     { label: "LinkedIn", href: normalizeUrl(profileDetails?.linkedinUrl) },
     { label: "Resume", href: normalizeUrl(profileDetails?.resumeUrl) },
   ].filter((item) => item.href), [profileDetails]);
+
+  const scrollToSection = (sectionRef) => {
+    sectionRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const renderSheetRow = (sheet, options = { showManageActions: false }) => {
     const progress = calculateSheetProgress(sheet);
@@ -153,10 +161,10 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
         </SurfaceCard>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total Sheets" value={sheets.length} />
-          <StatCard label="Public" value={publicSheets.length} />
-          <StatCard label="Archived" value={archivedSheets.length} />
-          <StatCard label="Copied by You" value={profileDetails?.copiedSheetsCount ?? 0} />
+          <StatCard label="Total Sheets" value={sheets.length} helper="Jump to On-going Sheets" onClick={() => scrollToSection(totalSheetsSectionRef)} />
+          <StatCard label="Public" value={publicSheets.length} helper="Jump to Public Sheets" onClick={() => scrollToSection(publicSheetsSectionRef)} />
+          <StatCard label="Archived" value={archivedSheets.length} helper="Jump to Archived Sheets" onClick={() => scrollToSection(archivedSheetsSectionRef)} />
+          <StatCard label="Copied by You" value={profileDetails?.copiedSheetsCount ?? 0} helper="Jump to Recently Updated" onClick={() => scrollToSection(copiedSectionRef)} />
         </div>
 
         <SurfaceCard title="Overall Progress" description="Private overview across all your sheets.">
@@ -202,36 +210,44 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
           </div>
         </SurfaceCard>
 
-        <SurfaceCard title="On-going Sheets" description="Active sheets with full action controls.">
-          {ongoingSheets.length === 0 ? <EmptyState title="No active sheets" description="Create a sheet to begin interview tracking." icon="🗂️" /> : <div className="space-y-3">{ongoingSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
-        </SurfaceCard>
-
-        <div className="grid gap-4 xl:grid-cols-2">
-          <SurfaceCard title="Public Sheets" description="Visible on your public profile URL.">
-            {publicSheets.length === 0 ? <EmptyState title="No public sheets" description="Change visibility on a sheet to publish it." icon="🌐" /> : <div className="space-y-3">{publicSheets.map((sheet) => renderSheetRow(sheet))}</div>}
-          </SurfaceCard>
-          <SurfaceCard title="Archived Sheets" description="Archived sheets can be restored at any time.">
-            {archivedSheets.length === 0 ? <EmptyState title="No archived sheets" description="Archived sheets will appear here for quick restore." icon="🗃️" /> : <div className="space-y-3">{archivedSheets.map((sheet) => renderSheetRow(sheet))}</div>}
+        <div ref={totalSheetsSectionRef}>
+          <SurfaceCard title="On-going Sheets" description="Active sheets with full action controls.">
+            {ongoingSheets.length === 0 ? <EmptyState title="No active sheets" description="Create a sheet to begin interview tracking." icon="🗂️" /> : <div className="space-y-3">{ongoingSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
           </SurfaceCard>
         </div>
 
-        <SurfaceCard title="Recently Updated Sheets" description="Most recent updates in your workspace.">
-          {sheets.length === 0 ? (
-            <EmptyState title="No updates yet" description="Create your first sheet to start tracking preparation progress." icon="⏱️" />
-          ) : (
-            <div className="space-y-2">
-              {[...sheets].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)).slice(0, 5).map((sheet) => (
-                <div key={sheet.id} className="surface-card surface-card-elevated flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="card-title">{sheet.title || "Untitled Sheet"}</p>
-                    <p className="meta-text">{calculateSheetProgress(sheet).completedQuestions}/{calculateSheetProgress(sheet).totalQuestions} solved</p>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div ref={publicSheetsSectionRef}>
+            <SurfaceCard title="Public Sheets" description="Visible on your public profile URL.">
+              {publicSheets.length === 0 ? <EmptyState title="No public sheets" description="Change visibility on a sheet to publish it." icon="🌐" /> : <div className="space-y-3">{publicSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
+            </SurfaceCard>
+          </div>
+          <div ref={archivedSheetsSectionRef}>
+            <SurfaceCard title="Archived Sheets" description="Archived sheets can be restored at any time.">
+              {archivedSheets.length === 0 ? <EmptyState title="No archived sheets" description="Archived sheets will appear here for quick restore." icon="🗃️" /> : <div className="space-y-3">{archivedSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
+            </SurfaceCard>
+          </div>
+        </div>
+
+        <div ref={copiedSectionRef}>
+          <SurfaceCard title="Recently Updated Sheets" description="Most recent updates in your workspace.">
+            {sheets.length === 0 ? (
+              <EmptyState title="No updates yet" description="Create your first sheet to start tracking preparation progress." icon="⏱️" />
+            ) : (
+              <div className="space-y-2">
+                {[...sheets].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)).slice(0, 5).map((sheet) => (
+                  <div key={sheet.id} className="surface-card surface-card-elevated flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="card-title">{sheet.title || "Untitled Sheet"}</p>
+                      <p className="meta-text">{calculateSheetProgress(sheet).completedQuestions}/{calculateSheetProgress(sheet).totalQuestions} solved</p>
+                    </div>
+                    <button className="btn-base btn-neutral" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
                   </div>
-                  <button className="btn-base btn-neutral" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </SurfaceCard>
+                ))}
+              </div>
+            )}
+          </SurfaceCard>
+        </div>
 
         {engagementViewer ? (
           <div className="overlay-shell">
