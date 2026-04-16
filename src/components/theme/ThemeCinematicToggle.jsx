@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { THEME_NAMES, useTheme } from "../../theme/themeContext";
 
 const THEME_CONTENT = {
@@ -21,13 +20,11 @@ const THEME_CONTENT = {
 
 export default function ThemeCinematicToggle() {
   const { theme, nextTheme, cycleTheme } = useTheme();
-  const toggleRef = useRef(null);
   const current = THEME_CONTENT[theme];
   const next = THEME_CONTENT[nextTheme];
 
   return (
     <button
-      ref={toggleRef}
       type="button"
       onClick={cycleTheme}
       className="theme-cinematic-toggle"
@@ -37,18 +34,20 @@ export default function ThemeCinematicToggle() {
       <span className="theme-cinematic-toggle__halo" aria-hidden="true" />
       <span className="theme-cinematic-toggle__content">
         <span className="theme-cinematic-toggle__icon" aria-hidden="true">
-          <img
-            src={current.icon}
-            alt=""
-            loading="eager"
-            decoding="async"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              const fallback = event.currentTarget.nextElementSibling;
-              if (fallback) fallback.hidden = false;
-            }}
-          />
-          <span hidden>{current.fallbackIcon}</span>
+          <span key={theme} className="theme-cinematic-toggle__icon-enter">
+            <img
+              src={current.icon}
+              alt=""
+              loading="eager"
+              decoding="async"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                const fallback = event.currentTarget.nextElementSibling;
+                if (fallback) fallback.hidden = false;
+              }}
+            />
+            <span hidden>{current.fallbackIcon}</span>
+          </span>
         </span>
       </span>
     </button>
