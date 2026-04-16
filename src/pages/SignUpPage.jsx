@@ -12,6 +12,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
   const authLoading = useAuthStore((state) => state.authLoading);
   const pendingSignupEmail = useAuthStore((state) => state.pendingSignupEmail);
   const otpResendAvailableInSeconds = useAuthStore((state) => state.otpResendAvailableInSeconds);
+  const otpInfoMessage = useAuthStore((state) => state.otpInfoMessage);
   const clearAuthError = useAuthStore((state) => state.clearAuthError);
 
   const [form, setForm] = useState({ name: "", email: "", username: "", password: "" });
@@ -82,6 +83,7 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
         ) : (
           <form className="stack-form" onSubmit={submitOtp}>
             <p className="text-sm text-[var(--text-muted)]">Enter the 6-digit code sent to <span className="font-semibold text-[var(--text-primary)]">{pendingSignupEmail}</span>.</p>
+            {otpInfoMessage && <p className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-subtle)] px-3 py-2 text-xs text-[var(--text-secondary)]">{otpInfoMessage}</p>}
             <label>
               <span className="stack-form-label">Verification code</span>
               <input type="text" required pattern="\d{6}" minLength={6} maxLength={6} value={otp} disabled={authLoading} onChange={(event) => { clearAuthError(); setOtp(event.target.value.replace(/\D/g, "").slice(0, 6)); }} className="field-base w-full tracking-[0.4em] text-center" placeholder="000000" />
