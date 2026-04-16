@@ -18,6 +18,7 @@ function NotificationBell({ compact = false }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [permissionState, setPermissionState] = useState(() => getNotificationPermissionState());
+  const [drawerPosition, setDrawerPosition] = useState({ top: 56, right: 12, width: 460 });
 
   const loadAll = useCallback(async () => {
     if (!token) return;
@@ -106,6 +107,23 @@ function NotificationBell({ compact = false }) {
   useEffect(() => {
     if (!open) return undefined;
 
+    const updateDrawerPosition = () => {
+      const bellNode = bellButtonRef.current;
+      if (!bellNode) return;
+      const rect = bellNode.getBoundingClientRect();
+      const viewportPadding = 12;
+      const maxDrawerWidth = 460;
+      const desiredWidth = Math.min(maxDrawerWidth, window.innerWidth - viewportPadding * 2);
+      const right = Math.max(viewportPadding, window.innerWidth - rect.right);
+      setDrawerPosition({
+        top: Math.round(rect.bottom + 8),
+        right: Math.round(right),
+        width: Math.round(desiredWidth),
+      });
+    };
+
+    updateDrawerPosition();
+
     const handlePointerDown = (event) => {
       const target = event.target;
       const containerNode = containerRef.current;
@@ -120,10 +138,14 @@ function NotificationBell({ compact = false }) {
       }
     };
 
+    window.addEventListener("resize", updateDrawerPosition);
+    window.addEventListener("scroll", updateDrawerPosition, true);
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      window.removeEventListener("resize", updateDrawerPosition);
+      window.removeEventListener("scroll", updateDrawerPosition, true);
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -157,6 +179,7 @@ function NotificationBell({ compact = false }) {
         onReschedule={onReschedule}
         onMarkAllRead={onMarkAllRead}
         onClearAll={onClearAll}
+        position={drawerPosition}
         onOpenAll={() => {
           setOpen(false);
           navigateTo(ROUTES.NOTIFICATIONS);

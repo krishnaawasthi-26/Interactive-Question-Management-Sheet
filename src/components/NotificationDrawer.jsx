@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import NotificationItemCard from "./ui/NotificationItemCard";
 
 function NotificationDrawer({
@@ -19,6 +20,7 @@ function NotificationDrawer({
   onMarkAllRead,
   onClearAll,
   onOpenAll,
+  position,
 }) {
   const [activeTab, setActiveTab] = useState("active");
   const tabs = useMemo(() => [
@@ -30,8 +32,11 @@ function NotificationDrawer({
   if (!open) return null;
   const items = sections[activeTab] || [];
 
-  return (
-    <div className="fixed inset-x-3 top-3 z-50 max-h-[82dvh] w-auto rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:max-h-none sm:w-[min(460px,92vw)]">
+  return createPortal((
+    <div
+      className="fixed z-[120] max-h-[82dvh] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl"
+      style={{ top: `${position?.top ?? 56}px`, right: `${position?.right ?? 12}px`, width: `${position?.width ?? 460}px` }}
+    >
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Notification center</h3>
         <div className="flex items-center gap-2">
@@ -68,7 +73,7 @@ function NotificationDrawer({
         ))}
       </div>
     </div>
-  );
+  ), document.body);
 }
 
 export default NotificationDrawer;
