@@ -17,6 +17,8 @@ const toList = (raw) => {
 };
 
 const runtimeEnv = (typeof import.meta !== "undefined" && import.meta.env) || {};
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "69284629770-hsaoj4qr3rs3e4d1hc2276pu0vljlf3a.apps.googleusercontent.com";
 
 export const GOOGLE_CLIENT_IDS = Array.from(
   new Set([
@@ -32,6 +34,7 @@ export const GOOGLE_CLIENT_IDS = Array.from(
     ...toList(runtimeEnv.APP_AUTH_GOOGLE_CLIENT_IDS),
     ...toList(runtimeEnv.GOOGLE_CLIENT_IDS),
     ...toList(runtimeEnv.APP_GOOGLE_CLIENT_IDS),
+    DEFAULT_GOOGLE_CLIENT_ID,
   ])
 );
 

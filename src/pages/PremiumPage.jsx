@@ -32,6 +32,8 @@ const loadRazorpayCheckoutScript = () =>
     document.body.appendChild(script);
   });
 
+const DEFAULT_RAZORPAY_KEY_ID = "rzp_test_SdTP3SmnzAzkVk";
+
 const formatPrice = (amountPaise, currency = "INR") =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -173,7 +175,7 @@ function PremiumPage({ theme, onThemeChange }) {
       const order = await createPremiumOrder(currentUser.token, planId);
 
       await new Promise((resolve, reject) => {
-        const checkoutKey = import.meta.env.VITE_RAZORPAY_KEY_ID || order.keyId;
+        const checkoutKey = import.meta.env.VITE_RAZORPAY_KEY_ID || order.keyId || DEFAULT_RAZORPAY_KEY_ID;
         if (!checkoutKey) {
           reject(new Error("Payment configuration is unavailable."));
           return;
