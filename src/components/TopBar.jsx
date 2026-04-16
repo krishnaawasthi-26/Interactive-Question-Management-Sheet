@@ -7,7 +7,7 @@ function TopBar({ userLabel = "Account", actions }) {
   const currentUsername = useAuthStore((state) => state.currentUser?.username);
 
   return (
-    <header className="panel-elevated theme-topbar mb-4 px-4 py-3 sm:px-5">
+    <header className="panel-elevated theme-topbar mb-4 px-4 py-3 sm:px-5 overflow-visible">
       <div className="theme-topbar__accent" aria-hidden="true" />
       <div className="flex flex-wrap items-center justify-between gap-3 md:flex-nowrap">
         <div className="flex min-w-0 flex-1 items-center gap-3">

@@ -157,8 +157,11 @@ function NotificationBell({ compact = false }) {
         onReschedule={onReschedule}
         onMarkAllRead={onMarkAllRead}
         onClearAll={onClearAll}
+        onOpenAll={() => {
+          setOpen(false);
+          navigateTo(ROUTES.NOTIFICATIONS);
+        }}
       />
-      {open ? <button className="mt-2 text-xs text-[var(--accent-info)]" onClick={() => navigateTo(ROUTES.NOTIFICATIONS)}>Open all notifications →</button> : null}
     </div>
   );
 }

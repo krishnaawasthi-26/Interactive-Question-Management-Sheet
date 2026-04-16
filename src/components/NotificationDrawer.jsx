@@ -1,7 +1,25 @@
 import { useMemo, useState } from "react";
 import NotificationItemCard from "./ui/NotificationItemCard";
 
-function NotificationDrawer({ open, loading, error, permissionState, sections, onEnablePermission, onOpenItem, onRead, onDone, onDismiss, onArchive, onDelete, onSnooze, onReschedule, onMarkAllRead, onClearAll }) {
+function NotificationDrawer({
+  open,
+  loading,
+  error,
+  permissionState,
+  sections,
+  onEnablePermission,
+  onOpenItem,
+  onRead,
+  onDone,
+  onDismiss,
+  onArchive,
+  onDelete,
+  onSnooze,
+  onReschedule,
+  onMarkAllRead,
+  onClearAll,
+  onOpenAll,
+}) {
   const [activeTab, setActiveTab] = useState("active");
   const tabs = useMemo(() => [
     ["all", "All"],
@@ -13,13 +31,16 @@ function NotificationDrawer({ open, loading, error, permissionState, sections, o
   const items = sections[activeTab] || [];
 
   return (
-    <div className="fixed inset-x-3 top-16 z-50 max-h-[78dvh] w-auto rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-none sm:w-[min(460px,92vw)]">
+    <div className="fixed inset-x-3 top-3 z-50 max-h-[82dvh] w-auto rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:max-h-none sm:w-[min(460px,92vw)]">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Notification center</h3>
         <div className="flex items-center gap-2">
           <button className="text-xs text-[var(--accent-primary)]" onClick={onMarkAllRead}>Mark all read</button>
           <button className="text-xs text-[var(--accent-danger)]" onClick={onClearAll}>Clear all</button>
         </div>
+      </div>
+      <div className="mb-2">
+        <button type="button" className="text-xs text-[var(--accent-info)] hover:underline" onClick={onOpenAll}>Open all notifications →</button>
       </div>
       {permissionState === "default" ? <button className="btn-base btn-neutral mb-2 w-full py-2 text-xs" onClick={onEnablePermission}>Enable browser alerts</button> : null}
       {error ? <p className="mb-2 text-xs text-[var(--accent-danger)]">{error}</p> : null}
