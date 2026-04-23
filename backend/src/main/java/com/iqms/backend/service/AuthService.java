@@ -101,7 +101,6 @@ public class AuthService {
       user.setCreatedAt(Instant.now());
       user.setUsernameChangeCount(0);
       user.setEmailChangeCount(0);
-      user.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
     }
 
     user.setEmailVerified(false);
@@ -183,6 +182,7 @@ public class AuthService {
     }
 
     user.setEmailVerified(true);
+    premiumAccessService.grantNewUserTrialIfEligible(user);
     clearOtpState(user);
     user = userRepository.save(user);
     return toResponse(user);
@@ -242,7 +242,7 @@ public class AuthService {
       user.setCreatedAt(Instant.now());
       user.setUsernameChangeCount(0);
       user.setEmailChangeCount(0);
-      user.setPremiumTrialEndsAt(Instant.now().plusSeconds(60));
+      premiumAccessService.grantNewUserTrialIfEligible(user);
       user = userRepository.save(user);
       log.info("[GoogleAuth] New user created. userId={} email={}", user.getId(), user.getEmail());
       AuthResponse response = toResponse(user);
@@ -317,9 +317,10 @@ public class AuthService {
 
   private AuthResponse toResponse(User user) {
     String createdAt = user.getCreatedAt() == null ? null : user.getCreatedAt().toString();
-    String premiumUntil = user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString();
-    String premiumTrialEndsAt = user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString();
+    PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
     String token = tokenService.issueToken(user.getId());
+    boolean showPremiumTrialWelcomePopup = premiumAccessService.consumeTrialWelcomePopup(user);
+
     return new AuthResponse(
         user.getId(),
         user.getName(),
@@ -337,9 +338,15 @@ public class AuthService {
         Math.max(0, MAX_USERNAME_CHANGES - user.getUsernameChangeCount()),
         user.getEmailChangeCount(),
         Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()),
-        premiumAccessService.isPremiumActive(user),
-        premiumUntil,
-        premiumTrialEndsAt,
+        accessState.premiumActive(),
+        accessState.premiumAccessType(),
+        accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString(),
+        accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString(),
+        accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString(),
+        accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString(),
+        accessState.premiumGrantedReason(),
+        accessState.hadFreePremiumTrial(),
+        showPremiumTrialWelcomePopup,
         token);
   }
 

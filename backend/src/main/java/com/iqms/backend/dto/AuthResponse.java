@@ -18,46 +18,15 @@ public class AuthResponse {
   private Integer emailChangesUsed;
   private Integer emailChangesRemaining;
   private Boolean premiumActive;
+  private String premiumAccessType;
   private String premiumUntil;
+  private String premiumExpiresAt;
+  private String premiumTrialStartedAt;
   private String premiumTrialEndsAt;
+  private String premiumGrantedReason;
+  private Boolean hadFreePremiumTrial;
+  private Boolean showPremiumTrialWelcomePopup;
   private String token;
-
-  public AuthResponse(
-      String id,
-      String name,
-      String email,
-      String username,
-      String createdAt,
-      String profileShareId,
-      String bio,
-      String institution,
-      String company,
-      String websiteUrl,
-      String githubUrl,
-      String linkedinUrl,
-      String token) {
-    this(
-        id,
-        name,
-        email,
-        username,
-        createdAt,
-        profileShareId,
-        bio,
-        institution,
-        company,
-        websiteUrl,
-        githubUrl,
-        linkedinUrl,
-        0,
-        0,
-        0,
-        0,
-        false,
-        null,
-        null,
-        token);
-  }
 
   public AuthResponse(
       String id,
@@ -77,8 +46,14 @@ public class AuthResponse {
       Integer emailChangesUsed,
       Integer emailChangesRemaining,
       Boolean premiumActive,
+      String premiumAccessType,
       String premiumUntil,
+      String premiumExpiresAt,
+      String premiumTrialStartedAt,
       String premiumTrialEndsAt,
+      String premiumGrantedReason,
+      Boolean hadFreePremiumTrial,
+      Boolean showPremiumTrialWelcomePopup,
       String token) {
     this.id = id;
     this.name = name;
@@ -97,8 +72,14 @@ public class AuthResponse {
     this.emailChangesUsed = emailChangesUsed;
     this.emailChangesRemaining = emailChangesRemaining;
     this.premiumActive = premiumActive;
+    this.premiumAccessType = premiumAccessType;
     this.premiumUntil = premiumUntil;
+    this.premiumExpiresAt = premiumExpiresAt;
+    this.premiumTrialStartedAt = premiumTrialStartedAt;
     this.premiumTrialEndsAt = premiumTrialEndsAt;
+    this.premiumGrantedReason = premiumGrantedReason;
+    this.hadFreePremiumTrial = hadFreePremiumTrial;
+    this.showPremiumTrialWelcomePopup = showPremiumTrialWelcomePopup;
     this.token = token;
   }
 
@@ -119,7 +100,13 @@ public class AuthResponse {
   public Integer getEmailChangesUsed() { return emailChangesUsed; }
   public Integer getEmailChangesRemaining() { return emailChangesRemaining; }
   public Boolean getPremiumActive() { return premiumActive; }
+  public String getPremiumAccessType() { return premiumAccessType; }
   public String getPremiumUntil() { return premiumUntil; }
+  public String getPremiumExpiresAt() { return premiumExpiresAt; }
+  public String getPremiumTrialStartedAt() { return premiumTrialStartedAt; }
   public String getPremiumTrialEndsAt() { return premiumTrialEndsAt; }
+  public String getPremiumGrantedReason() { return premiumGrantedReason; }
+  public Boolean getHadFreePremiumTrial() { return hadFreePremiumTrial; }
+  public Boolean getShowPremiumTrialWelcomePopup() { return showPremiumTrialWelcomePopup; }
   public String getToken() { return token; }
 }

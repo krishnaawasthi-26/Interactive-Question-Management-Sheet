@@ -2,6 +2,7 @@ package com.iqms.backend.service;
 
 import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PremiumAccessService {
-  private static final boolean FORCE_PREMIUM_FOR_ALL_USERS = true;
+  public static final String PREMIUM_SOURCE_PAID = "paid";
+  public static final String PREMIUM_SOURCE_TRIAL = "trial";
+  public static final String PREMIUM_SOURCE_NONE = "none";
+  public static final String NEW_USER_TRIAL_REASON = "new_user_trial";
+  private static final Duration NEW_USER_TRIAL_DURATION = Duration.ofDays(7);
+
   public static final int FREE_TOPIC_LIMIT = 30;
   public static final int FREE_SUBTOPIC_LIMIT = 50;
   public static final int FREE_QUESTION_LIMIT = 100;
@@ -32,13 +38,68 @@ public class PremiumAccessService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
   }
 
+  public PremiumAccessState resolveAccessState(User user) {
+    Instant now = Instant.now();
+    Instant paidUntil = user.getPremiumUntil();
+    Instant trialUntil = user.getPremiumTrialEndsAt();
+
+    boolean paidActive = paidUntil != null && paidUntil.isAfter(now);
+    boolean trialActive = trialUntil != null && trialUntil.isAfter(now);
+    boolean premiumActive = paidActive || trialActive;
+
+    String source = PREMIUM_SOURCE_NONE;
+    Instant premiumExpiresAt = null;
+    if (paidActive) {
+      source = PREMIUM_SOURCE_PAID;
+      premiumExpiresAt = paidUntil;
+    } else if (trialActive) {
+      source = PREMIUM_SOURCE_TRIAL;
+      premiumExpiresAt = trialUntil;
+    }
+
+    return new PremiumAccessState(
+        premiumActive,
+        source,
+        paidActive,
+        trialActive,
+        paidUntil,
+        user.getPremiumTrialStartedAt(),
+        trialUntil,
+        premiumExpiresAt,
+        user.getPremiumGrantedReason(),
+        user.getHadFreePremiumTrial());
+  }
+
   public boolean isPremiumActive(User user) {
-    if (FORCE_PREMIUM_FOR_ALL_USERS) return true;
+    return resolveAccessState(user).premiumActive();
+  }
+
+  public boolean grantNewUserTrialIfEligible(User user) {
+    PremiumAccessState state = resolveAccessState(user);
+    if (state.hadFreePremiumTrial() || state.trialActive() || state.paidActive()) {
+      return false;
+    }
 
     Instant now = Instant.now();
-    Instant premiumUntil = user.getPremiumUntil();
-    Instant trialUntil = user.getPremiumTrialEndsAt();
-    return (premiumUntil != null && premiumUntil.isAfter(now)) || (trialUntil != null && trialUntil.isAfter(now));
+    user.setPremiumTrialStartedAt(now);
+    user.setPremiumTrialEndsAt(now.plus(NEW_USER_TRIAL_DURATION));
+    user.setPremiumGrantedReason(NEW_USER_TRIAL_REASON);
+    user.setHadFreePremiumTrial(true);
+    user.setPremiumTrialWelcomePending(true);
+    if (!state.paidActive()) {
+      user.setPlanTier("premium_trial");
+      user.setSubscriptionStatus("trialing");
+    }
+    return true;
+  }
+
+  public boolean consumeTrialWelcomePopup(User user) {
+    if (!user.getPremiumTrialWelcomePending()) {
+      return false;
+    }
+    user.setPremiumTrialWelcomePending(false);
+    userRepository.save(user);
+    return true;
   }
 
   public void assertPremiumFeatureAllowed(User user, String featureName) {
@@ -123,4 +184,16 @@ public class PremiumAccessService {
           (premiumActive ? "Premium" : "Free") + " plan supports up to " + questionLimit + " questions.");
     }
   }
+
+  public record PremiumAccessState(
+      boolean premiumActive,
+      String premiumAccessType,
+      boolean paidActive,
+      boolean trialActive,
+      Instant premiumUntil,
+      Instant premiumTrialStartedAt,
+      Instant premiumTrialEndsAt,
+      Instant premiumExpiresAt,
+      String premiumGrantedReason,
+      boolean hadFreePremiumTrial) {}
 }
