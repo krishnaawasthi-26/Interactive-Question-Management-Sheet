@@ -17,6 +17,7 @@ import AlarmsPage from "./pages/AlarmsPage";
 import SharedPage from "./pages/SharedPage";
 import SheetPage from "./pages/SheetPage";
 import SignUpPage from "./pages/SignUpPage";
+import ApplyPage from "./pages/ApplyPage";
 import { ProtectedRoute, PublicOnlyRoute } from "./components/routing/ProtectedRoute";
 import ReminderNotificationCenter from "./components/ReminderNotificationCenter";
 import { getUserProfileRoute, ROUTES } from "./services/routes";
@@ -122,6 +123,7 @@ function App() {
       <Route path={ROUTES.ABOUT} element={<AboutPage />} />
       <Route path={ROUTES.CONTACT} element={<ContactPage />} />
       <Route path={ROUTES.HOW_TO_USE} element={<HowToUsePage />} />
+      <Route path="/apply" element={<ApplyPage />} />
 
       <Route path={`${ROUTES.SHARED_PREFIX}/:shareType/:shareId`} element={<SharedRoute />} />
       <Route path={`${ROUTES.PROFILE}/:username/:sheetSlug`} element={<PublicSheetRoute />} />
