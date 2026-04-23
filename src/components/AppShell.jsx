@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import AlertBar from "./AlertBar";
@@ -17,6 +17,25 @@ function AppShell({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileSidebarId = useId();
+
+  useEffect(() => {
+    if (!isMobileNavOpen) return undefined;
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsMobileNavOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isMobileNavOpen]);
 
   return (
     <div className="app-shell text-[var(--text-primary)]">
@@ -33,9 +52,21 @@ function AppShell({
           isMobileOpen={isMobileNavOpen}
           onToggle={() => setIsSidebarOpen((prev) => !prev)}
           onCloseMobile={() => setIsMobileNavOpen(false)}
+          mobileSidebarId={mobileSidebarId}
         />
 
         <div className="app-content">
+          <button
+            type="button"
+            aria-label={isMobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMobileNavOpen}
+            aria-controls={mobileSidebarId}
+            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+            className="mobile-sidebar-toggle lg:hidden"
+          >
+            ☰
+          </button>
+
           <TopBar
             userLabel={userLabel}
             actions={(

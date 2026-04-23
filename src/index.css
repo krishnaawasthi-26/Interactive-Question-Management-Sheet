@@ -374,6 +374,34 @@ body {
   container-type: inline-size;
 }
 
+.mobile-sidebar-toggle {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 14px);
+  left: calc(env(safe-area-inset-left) + 14px);
+  z-index: 70;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 86%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 94%, black 6%);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.mobile-sidebar-toggle:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface-elevated) 98%, transparent);
+}
+
+.mobile-sidebar-toggle:active {
+  transform: translateY(1px);
+}
+
 @media (min-width: 1024px) {
   .app-shell {
     padding: 16px;
@@ -1092,6 +1120,7 @@ canvas {
   .sidebar-nav-label,
   .sidebar-section-title,
   .sidebar-mobile,
+  .mobile-sidebar-toggle,
   .inbox-row,
   .btn-base,
   .sidebar-nav-item,
