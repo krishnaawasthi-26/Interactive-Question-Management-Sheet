@@ -35,5 +35,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
             "/api/profile/public/**",
             "/api/sheets/shared/**",
             "/api/sheets/profile/shared/**");
+
+    registry
+        .addInterceptor(requestRateLimitInterceptor)
+        .addPathPatterns(
+            "/api/applications/**");
   }
 }
