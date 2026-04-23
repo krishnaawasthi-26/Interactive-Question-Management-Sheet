@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
@@ -22,6 +23,7 @@ import { ProtectedRoute, PublicOnlyRoute } from "./components/routing/ProtectedR
 import ReminderNotificationCenter from "./components/ReminderNotificationCenter";
 import { getUserProfileRoute, ROUTES } from "./services/routes";
 import { useAuthStore } from "./store/authStore";
+import { useSheetStore } from "./store/sheetStore";
 
 function LoginRoute() {
   const navigate = useNavigate();
@@ -112,6 +114,18 @@ function PublicSheetRoute() {
 }
 
 function App() {
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const resetSheetState = useSheetStore((state) => state.resetSheetState);
+  const previousUserIdRef = useRef(currentUser?.id || null);
+
+  useEffect(() => {
+    const currentUserId = currentUser?.id || null;
+    if (previousUserIdRef.current !== currentUserId) {
+      resetSheetState();
+      previousUserIdRef.current = currentUserId;
+    }
+  }, [currentUser?.id, resetSheetState]);
+
   return (
     <Routes>
       <Route element={<PublicOnlyRoute />}>
