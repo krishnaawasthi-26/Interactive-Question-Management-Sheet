@@ -118,7 +118,7 @@ function SidebarSection({ title, items, isOpen, currentRoute, onItemClick }) {
   );
 }
 
-function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile }) {
+function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile, mobileSidebarId }) {
   const currentRoute = getCurrentRoute().route;
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
@@ -141,7 +141,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
   return (
     <>
       {isMobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-[var(--overlay-backdrop)] lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
+        <div className="fixed inset-0 z-50 bg-[var(--overlay-backdrop)] lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
       ) : null}
 
       <aside className={`sidebar-desktop ${sidebarWidth}`}>
@@ -192,7 +192,11 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile 
         </div>
       </aside>
 
-      <aside className={`sidebar-mobile lg:hidden ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside
+        id={mobileSidebarId}
+        aria-hidden={!isMobileOpen}
+        className={`sidebar-mobile lg:hidden ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
         <div className="sidebar-desktop-header">
           <div className="sidebar-brand is-visible">
             <p className="eyebrow">IQMS</p>
