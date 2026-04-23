@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { createPremiumOrder, fetchPremiumPlans, fetchPremiumStatus, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
+import { getPremiumAccess } from "../services/premium";
+import { getUserProfileRoute } from "../services/routes";
 import "./PremiumPage.css";
 import { razorpayKeyId } from "../config/envConfig";
 
@@ -130,6 +133,8 @@ function PremiumPage({ theme, onThemeChange }) {
   const [currency, setCurrency] = useState("INR");
   const [billingCycle, setBillingCycle] = useState("yearly");
 
+  const premiumAccess = useMemo(() => getPremiumAccess(currentUser), [currentUser]);
+
   useEffect(() => {
     const loadPlans = async () => {
       try {
@@ -226,6 +231,41 @@ function PremiumPage({ theme, onThemeChange }) {
       setBusyPlan(null);
     }
   };
+
+  if (premiumAccess.isTrialPremium) {
+    const trialEndsAt = premiumAccess.premiumTrialEndsAt ? new Date(premiumAccess.premiumTrialEndsAt) : null;
+    const remainingMs = trialEndsAt ? trialEndsAt.getTime() - Date.now() : 0;
+    const daysRemaining = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+    return (
+      <AppShell
+        title="Premium Plans"
+        subtitle="Your premium access is already active"
+        theme={theme}
+        onThemeChange={onThemeChange}
+        userLabel={currentUser?.username || "Account"}
+        contentClassName="premium-page"
+      >
+        <section className="premium-hero panel-elevated">
+          <p className="eyebrow">Premium access active</p>
+          <h2>You already have Premium access</h2>
+          <p className="premium-hero__subtitle">
+            You’re currently on a free 7-day Premium trial as a new user.
+          </p>
+          <p className="premium-hero__trust">
+            {trialEndsAt
+              ? `Trial ends on ${trialEndsAt.toLocaleString()} (${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining).`
+              : "Your free trial is active right now."}
+          </p>
+          <div className="mt-4">
+            <Link className="btn-base btn-primary" to={getUserProfileRoute(currentUser?.username)}>
+              Go to Dashboard
+            </Link>
+          </div>
+        </section>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell

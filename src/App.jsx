@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
@@ -21,9 +21,11 @@ import SignUpPage from "./pages/SignUpPage";
 import ApplyPage from "./pages/ApplyPage";
 import { ProtectedRoute, PublicOnlyRoute } from "./components/routing/ProtectedRoute";
 import ReminderNotificationCenter from "./components/ReminderNotificationCenter";
+import ConfirmationModal from "./components/ConfirmationModal";
 import { getUserProfileRoute, ROUTES } from "./services/routes";
 import { useAuthStore } from "./store/authStore";
 import { useSheetStore } from "./store/sheetStore";
+import { getPremiumAccess } from "./services/premium";
 
 function LoginRoute() {
   const navigate = useNavigate();
@@ -118,6 +120,22 @@ function App() {
   const resetSheetState = useSheetStore((state) => state.resetSheetState);
   const previousUserIdRef = useRef(currentUser?.id || null);
 
+  const dismissPremiumTrialWelcomePopup = useAuthStore((state) => state.dismissPremiumTrialWelcomePopup);
+  const [showPremiumTrialModal, setShowPremiumTrialModal] = useState(false);
+
+  const premiumAccess = useMemo(() => getPremiumAccess(currentUser), [currentUser]);
+
+  useEffect(() => {
+    setShowPremiumTrialModal(Boolean(currentUser?.showPremiumTrialWelcomePopup));
+  }, [currentUser?.showPremiumTrialWelcomePopup]);
+
+  const premiumTrialModalMessage = useMemo(() => {
+    if (!premiumAccess.premiumTrialEndsAt) {
+      return "You’ve got 7 days of free Premium because you’re a new user.";
+    }
+    return `You’ve got 7 days of free Premium because you’re a new user. Enjoy all Premium features until ${new Date(premiumAccess.premiumTrialEndsAt).toLocaleString()}.`;
+  }, [premiumAccess.premiumTrialEndsAt]);
+
   useEffect(() => {
     const currentUserId = currentUser?.id || null;
     if (previousUserIdRef.current !== currentUserId) {
@@ -127,7 +145,28 @@ function App() {
   }, [currentUser?.id, resetSheetState]);
 
   return (
-    <Routes>
+    <>
+      <ConfirmationModal
+        isOpen={showPremiumTrialModal}
+        title="Free Premium Unlocked"
+        message={premiumTrialModalMessage}
+        onClose={() => {
+          dismissPremiumTrialWelcomePopup();
+          setShowPremiumTrialModal(false);
+        }}
+        actions={[
+          {
+            key: "awesome",
+            label: "Awesome",
+            variant: "success",
+            onClick: () => {
+              dismissPremiumTrialWelcomePopup();
+              setShowPremiumTrialModal(false);
+            },
+          },
+        ]}
+      />
+      <Routes>
       <Route element={<PublicOnlyRoute />}>
         <Route path={ROUTES.LOGIN} element={<LoginRoute />} />
         <Route path={ROUTES.SIGNUP} element={<SignupRoute />} />
@@ -158,7 +197,8 @@ function App() {
       </Route>
 
       <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

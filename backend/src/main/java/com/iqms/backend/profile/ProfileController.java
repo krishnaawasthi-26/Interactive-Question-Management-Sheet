@@ -224,9 +224,15 @@ public class ProfileController {
     payload.put("usernameChangesRemaining", Math.max(0, MAX_USERNAME_CHANGES - user.getUsernameChangeCount()));
     payload.put("emailChangesUsed", user.getEmailChangeCount());
     payload.put("emailChangesRemaining", Math.max(0, MAX_EMAIL_CHANGES - user.getEmailChangeCount()));
-    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
-    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
-    payload.put("premiumTrialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());
+    PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
+    payload.put("premiumActive", accessState.premiumActive());
+    payload.put("premiumAccessType", accessState.premiumAccessType());
+    payload.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    payload.put("premiumExpiresAt", accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString());
+    payload.put("premiumTrialStartedAt", accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString());
+    payload.put("premiumTrialEndsAt", accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString());
+    payload.put("premiumGrantedReason", accessState.premiumGrantedReason());
+    payload.put("hadFreePremiumTrial", accessState.hadFreePremiumTrial());
     payload.put("planTier", user.getPlanTier());
     payload.put("subscriptionStatus", user.getSubscriptionStatus());
     payload.put("followers", mapUsersById(user.getFollowerUserIds()));

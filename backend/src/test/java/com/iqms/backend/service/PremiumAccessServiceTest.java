@@ -92,4 +92,24 @@ class PremiumAccessServiceTest {
     assertThat(ex.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     assertThat(ex.getReason()).isEqualTo("Question text supports up to 50 words.");
   }
+
+
+  @Test
+  void newUserTrialIsGrantedForSevenDaysOnlyOnce() {
+    User user = new User();
+
+    boolean granted = premiumAccessService.grantNewUserTrialIfEligible(user);
+
+    assertThat(granted).isTrue();
+    assertThat(user.getHadFreePremiumTrial()).isTrue();
+    assertThat(user.getPremiumTrialStartedAt()).isNotNull();
+    assertThat(user.getPremiumTrialEndsAt()).isAfter(user.getPremiumTrialStartedAt());
+    assertThat(java.time.Duration.between(user.getPremiumTrialStartedAt(), user.getPremiumTrialEndsAt()).toDays())
+        .isEqualTo(7);
+    assertThat(user.getPremiumGrantedReason()).isEqualTo(PremiumAccessService.NEW_USER_TRIAL_REASON);
+
+    boolean grantedAgain = premiumAccessService.grantNewUserTrialIfEligible(user);
+    assertThat(grantedAgain).isFalse();
+  }
+
 }

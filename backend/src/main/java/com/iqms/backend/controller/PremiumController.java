@@ -61,13 +61,7 @@ public class PremiumController {
   @GetMapping("/premium/status")
   public ResponseEntity<Map<String, Object>> status(HttpServletRequest request) {
     User user = premiumAccessService.findUser(currentUser.getUserId(request));
-    Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
-    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
-    payload.put("trialEndsAt", user.getPremiumTrialEndsAt() == null ? null : user.getPremiumTrialEndsAt().toString());
-    payload.put("planTier", user.getPlanTier());
-    payload.put("subscriptionStatus", user.getSubscriptionStatus());
-    return ResponseEntity.ok(payload);
+    return ResponseEntity.ok(buildPremiumStatus(user));
   }
 
   @PostMapping("/payments/razorpay/order")
@@ -187,9 +181,16 @@ public class PremiumController {
   }
 
   private Map<String, Object> buildPremiumStatus(User user) {
+    PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
     Map<String, Object> payload = new LinkedHashMap<>();
-    payload.put("premiumActive", premiumAccessService.isPremiumActive(user));
-    payload.put("premiumUntil", user.getPremiumUntil() == null ? null : user.getPremiumUntil().toString());
+    payload.put("premiumActive", accessState.premiumActive());
+    payload.put("premiumAccessType", accessState.premiumAccessType());
+    payload.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    payload.put("premiumExpiresAt", accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString());
+    payload.put("premiumTrialStartedAt", accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString());
+    payload.put("premiumTrialEndsAt", accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString());
+    payload.put("premiumGrantedReason", accessState.premiumGrantedReason());
+    payload.put("hadFreePremiumTrial", accessState.hadFreePremiumTrial());
     payload.put("planTier", user.getPlanTier());
     payload.put("subscriptionStatus", user.getSubscriptionStatus());
     return payload;
@@ -203,7 +204,10 @@ public class PremiumController {
     Instant nextPremiumUntil = start.plus(planInfo.durationDays(), ChronoUnit.DAYS);
 
     user.setPremiumUntil(nextPremiumUntil);
+    user.setPremiumTrialStartedAt(null);
     user.setPremiumTrialEndsAt(null);
+    user.setPremiumGrantedReason(PremiumAccessService.PREMIUM_SOURCE_PAID);
+    user.setPremiumTrialWelcomePending(false);
     user.setPlanTier("premium");
     user.setSubscriptionStatus("active");
     userRepository.save(user);

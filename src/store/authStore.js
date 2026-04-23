@@ -225,6 +225,15 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+
+  dismissPremiumTrialWelcomePopup: () => {
+    const user = get().currentUser;
+    if (!user) return;
+    const updated = { ...user, showPremiumTrialWelcomePopup: false };
+    writeCurrentUser(updated);
+    set({ currentUser: updated });
+  },
+
   logout: () => {
     writeCurrentUser(null);
     set({
