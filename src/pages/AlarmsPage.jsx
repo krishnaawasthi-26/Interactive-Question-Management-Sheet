@@ -14,6 +14,15 @@ const quickPresets = [
   { label: "tomorrow evening", getDate: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(19, 0, 0, 0); return d; } },
 ];
 
+const pad2 = (value) => String(value).padStart(2, "0");
+
+const toLocalDateTimeInputValue = (dateValue) => {
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+};
+
 function AlarmsPage({ theme, onThemeChange }) {
   const token = useAuthStore((s) => s.currentUser?.token);
   const userLabel = useAuthStore((s) => s.currentUser?.username || "Account");
@@ -128,12 +137,12 @@ function AlarmsPage({ theme, onThemeChange }) {
     <div className="space-y-4">
       <SurfaceCard title="Create reminder" description="Use quick presets or custom date-time with optional recurrence.">
         <div className="mb-2 flex flex-wrap gap-2">
-          {quickPresets.map((preset) => <button key={preset.label} className="btn-base btn-neutral btn-sm" onClick={() => setScheduledFor(preset.getDate().toISOString().slice(0, 16))}>{preset.label}</button>)}
+          {quickPresets.map((preset) => <button key={preset.label} className="btn-base btn-neutral btn-sm" onClick={() => setScheduledFor(toLocalDateTimeInputValue(preset.getDate()))}>{preset.label}</button>)}
         </div>
         <div className="grid gap-2 md:grid-cols-5">
           <input className="field-base" placeholder="Title" value={title} onChange={(e) => { setTitle(e.target.value); setFormMessage(""); }} />
           <input className="field-base" placeholder="Note (optional)" value={message} onChange={(e) => { setMessage(e.target.value); setFormMessage(""); }} />
-          <input className="field-base" type="datetime-local" value={scheduledFor} onChange={(e) => { setScheduledFor(e.target.value); setFormMessage(""); }} />
+          <input className="field-base" type="datetime-local" step="1" value={scheduledFor} onChange={(e) => { setScheduledFor(e.target.value); setFormMessage(""); }} />
           <select className="field-base" value={recurrenceType} onChange={(e) => { setRecurrenceType(e.target.value); setFormMessage(""); }}>
             <option value="none">No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
           </select>

@@ -80,6 +80,7 @@ function TopicReminderAlarmPanel({
             <input
               className="field-base w-full"
               type="datetime-local"
+              step="1"
               value={scheduledFor}
               onChange={(event) => setScheduledFor(event.target.value)}
             />
