@@ -584,8 +584,14 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                 </label>
               </div>
 
-              {filteredAndSortedSheets.length === 0 ? (
-                <EmptyState title="No sheets found" description="Try another filter or create a new sheet to begin." icon="🧭" />
+              {sheets.length === 0 ? (
+                <EmptyState
+                  title="No sheets yet"
+                  description="This account has zero sheets. Create your first sheet to get started."
+                  icon="🗂️"
+                />
+              ) : filteredAndSortedSheets.length === 0 ? (
+                <EmptyState title="No sheets found" description="Try another filter to see matching sheets." icon="🧭" />
               ) : (
                 <div className="space-y-3">
                   {filteredAndSortedSheets.map((sheet) => {

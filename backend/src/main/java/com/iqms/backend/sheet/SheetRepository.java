@@ -13,9 +13,7 @@ public interface SheetRepository extends MongoRepository<Sheet, String> {
 
   @Query("{ '$or': [ "
       + "{ 'ownerId': ?0 }, "
-      + "{ 'collaborators.userId': ?0 }, "
-      + "{ 'visibility': { '$in': ['public', 'unlisted'] } }, "
-      + "{ 'isPublic': true } "
+      + "{ 'collaborators.userId': ?0 } "
       + "] }")
   List<Sheet> findCandidateAccessibleSheets(String userId);
 

@@ -33,6 +33,12 @@ export const useSheetStore = create((set, get) => {
 
   return {
     ...initialState,
+    resetSheetState: () => {
+      internals.lastPersistedSignatureBySheet.clear();
+      internals.inFlightPersistBySheet.clear();
+      internals.lastSavedSheetStateById.clear();
+      set({ ...initialState });
+    },
     ...createSheetPersistenceSlice({ set, get }, internals),
     ...createSheetCrudSlice({ set, get }, historySlice),
     ...createSheetReorderSlice({ set, get }, historySlice),
