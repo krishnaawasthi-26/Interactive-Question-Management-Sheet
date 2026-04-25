@@ -20,6 +20,7 @@ public class AuthResponse {
   private Boolean premiumActive;
   private String premiumAccessType;
   private String premiumUntil;
+  private String premiumPlan;
   private String premiumExpiresAt;
   private String premiumTrialStartedAt;
   private String premiumTrialEndsAt;
@@ -48,6 +49,7 @@ public class AuthResponse {
       Boolean premiumActive,
       String premiumAccessType,
       String premiumUntil,
+      String premiumPlan,
       String premiumExpiresAt,
       String premiumTrialStartedAt,
       String premiumTrialEndsAt,
@@ -74,6 +76,7 @@ public class AuthResponse {
     this.premiumActive = premiumActive;
     this.premiumAccessType = premiumAccessType;
     this.premiumUntil = premiumUntil;
+    this.premiumPlan = premiumPlan;
     this.premiumExpiresAt = premiumExpiresAt;
     this.premiumTrialStartedAt = premiumTrialStartedAt;
     this.premiumTrialEndsAt = premiumTrialEndsAt;
@@ -102,6 +105,7 @@ public class AuthResponse {
   public Boolean getPremiumActive() { return premiumActive; }
   public String getPremiumAccessType() { return premiumAccessType; }
   public String getPremiumUntil() { return premiumUntil; }
+  public String getPremiumPlan() { return premiumPlan; }
   public String getPremiumExpiresAt() { return premiumExpiresAt; }
   public String getPremiumTrialStartedAt() { return premiumTrialStartedAt; }
   public String getPremiumTrialEndsAt() { return premiumTrialEndsAt; }

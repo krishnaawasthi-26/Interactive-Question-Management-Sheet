@@ -341,6 +341,7 @@ public class AuthService {
         accessState.premiumActive(),
         accessState.premiumAccessType(),
         accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString(),
+        user.getPlanTier(),
         accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString(),
         accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString(),
         accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString(),

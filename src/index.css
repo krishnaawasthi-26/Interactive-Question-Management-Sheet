@@ -1044,6 +1044,55 @@ canvas {
   opacity: 0.88;
 }
 
+.lotus-premium-badge {
+  --lotus-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lotus-size);
+  height: var(--lotus-size);
+  min-width: var(--lotus-size);
+  min-height: var(--lotus-size);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.12) 36%, transparent 65%),
+    radial-gradient(circle at 72% 75%, color-mix(in srgb, var(--accent-info) 55%, #3f62ff) 0%, rgba(47, 74, 177, 0.86) 58%, rgba(22, 39, 111, 0.98) 100%),
+    linear-gradient(145deg, rgba(254, 236, 170, 0.36), rgba(101, 140, 255, 0.6));
+  box-shadow:
+    0 0 0 1px rgba(255, 224, 158, 0.24),
+    0 0 14px rgba(255, 219, 132, 0.55),
+    0 0 22px rgba(98, 164, 255, 0.35);
+  overflow: hidden;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.lotus-premium-badge--sm {
+  --lotus-size: 19px;
+}
+
+.lotus-premium-badge--avatar {
+  --lotus-size: 28px;
+}
+
+.lotus-premium-badge--lg {
+  --lotus-size: 24px;
+}
+
+.lotus-premium-badge__image {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.lotus-premium-badge__emoji {
+  font-size: calc(var(--lotus-size) * 0.58);
+  line-height: 1;
+}
+
 .question-done-toggle--open:hover {
   border-color: var(--state-success-border);
 }

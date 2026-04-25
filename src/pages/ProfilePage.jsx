@@ -7,6 +7,7 @@ import ProgressBar from "../components/ui/ProgressBar";
 import SectionHeader from "../components/ui/SectionHeader";
 import StatCard from "../components/ui/StatCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
+import PremiumLotusBadge from "../components/PremiumLotusBadge";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
@@ -162,7 +163,17 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
       />
       <div className="space-y-5">
         <SurfaceCard elevated>
-          <SectionHeader eyebrow="Profile Summary" title={currentUser?.name || currentUser?.username || "Profile"} subtitle={`@${persistedUsername}`} actions={<button className="btn-base btn-primary" onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}>Edit Profile Info</button>} />
+          <SectionHeader
+            eyebrow="Profile Summary"
+            title={(
+              <span className="inline-flex items-center gap-2">
+                <span>{currentUser?.name || currentUser?.username || "Profile"}</span>
+                <PremiumLotusBadge active={Boolean(profileDetails?.premiumActive)} size="sm" />
+              </span>
+            )}
+            subtitle={`@${persistedUsername}`}
+            actions={<button className="btn-base btn-primary" onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}>Edit Profile Info</button>}
+          />
           {profileDetails?.bio ? <p className="meta-text whitespace-pre-wrap">{profileDetails.bio}</p> : null}
           <p className="meta-text mt-2 break-all">Public profile link: {profileShareUrl}</p>
           {profileLinks.length > 0 ? <div className="mt-3 flex flex-wrap gap-2">{profileLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="btn-base btn-neutral text-xs">{link.label}</a>)}</div> : null}
@@ -270,7 +281,10 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
                 <div className="max-h-72 space-y-2 overflow-auto">
                   {engagementViewer.users.map((entry, index) => (
                     <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="surface-card surface-card-elevated p-3 text-sm">
-                      <p className="card-title">@{entry.username}</p>
+                      <p className="card-title inline-flex items-center gap-2">
+                        <span>@{entry.username}</span>
+                        <PremiumLotusBadge active={Boolean(entry?.premiumActive)} size="sm" />
+                      </p>
                       <p className="meta-text">{entry.sheetTitle ? `Sheet: ${entry.sheetTitle || "Untitled Sheet"}` : (entry.name || "Create Sheets user")}</p>
                     </div>
                   ))}
