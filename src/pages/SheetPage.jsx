@@ -61,6 +61,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
   const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
   const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
+  const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const deleteSheet = useSheetStore((state) => state.deleteSheet);
   const discardUnsavedChanges = useSheetStore((state) => state.discardUnsavedChanges);
   const isLoading = useSheetStore((state) => state.isLoading);
@@ -422,6 +423,17 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     });
   }, [closeDialog]);
 
+  const handleCreateSheet = useCallback(async () => {
+    if (!currentUser?.token) return;
+    try {
+      const created = await createNewSheet(currentUser.token, "Untitled Sheet");
+      if (!created?.id) return;
+      navigateTo(`${ROUTES.APP}/${created.id}`);
+    } catch (error) {
+      handleSheetActionError("create-sheet-error", "Could not create sheet", error);
+    }
+  }, [createNewSheet, currentUser?.token, handleSheetActionError]);
+
   const createSheetActions = useCallback(
     (sheet) => [
       {
@@ -572,6 +584,11 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           {!sheetId ? (
             <div className="space-y-4">
               <div className="panel-elevated flex flex-wrap items-end gap-3 rounded-xl p-3">
+                <div className="mr-auto">
+                  <button type="button" className="btn-base btn-success px-3 py-2" onClick={handleCreateSheet}>
+                    Create Sheet
+                  </button>
+                </div>
                 <label className="text-sm">
                   <span className="mb-1 block text-[var(--text-secondary)]">Sort by</span>
                   <select className="field-base min-w-52" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
