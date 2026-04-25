@@ -1209,6 +1209,51 @@ canvas {
   margin-bottom: 6px;
 }
 
+.profile-sheet-row {
+  width: 100%;
+  max-width: none;
+}
+
+.profile-sheet-row__layout {
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.profile-sheet-row__main {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.profile-sheet-row__actions {
+  display: flex;
+  flex: 1 1 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-sheet-row__title {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.profile-sheet-row__url {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (min-width: 768px) {
+  .profile-sheet-row__actions {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+  }
+}
+
 @media (min-width: 1024px) {
   .sidebar-desktop {
     display: flex;

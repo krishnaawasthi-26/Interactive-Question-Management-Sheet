@@ -85,22 +85,22 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
   const renderSheetRow = (sheet, options = { showManageActions: false }) => {
     const progress = calculateSheetProgress(sheet);
     return (
-      <article key={sheet.id} className="surface-card surface-card-elevated">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-2">
+      <article key={sheet.id} className="surface-card surface-card-elevated profile-sheet-row">
+        <div className="profile-sheet-row__layout">
+          <div className="profile-sheet-row__main space-y-2">
             <input
-              className="w-full field-base font-medium"
+              className="field-base w-full font-medium profile-sheet-row__title"
               value={sheetTitles[sheet.id] ?? (sheet.title || "Untitled Sheet")}
               onChange={(event) => setSheetTitles((current) => ({ ...current, [sheet.id]: event.target.value }))}
             />
             <p className="meta-text">{progress.completedQuestions}/{progress.totalQuestions} solved · {progress.percent}% · {sheet.isPublic ? "Public" : "Private"}{sheet.isArchived ? " · Archived" : ""}</p>
             <ProgressBar percent={progress.percent} tone={progress.percent > 70 ? "success" : "warning"} />
             {sheet.isPublic ? (
-              <p className="meta-text break-all">{`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}</p>
+              <p className="meta-text profile-sheet-row__url">{`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}</p>
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="profile-sheet-row__actions">
             <button className="btn-base btn-primary" type="button" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
             {options.showManageActions ? (
               <>
@@ -236,12 +236,12 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
-          <div ref={publicSheetsSectionRef}>
+          <div ref={publicSheetsSectionRef} className="min-w-0">
             <SurfaceCard title="Public Sheets" description="Visible on your public profile URL.">
               {publicSheets.length === 0 ? <EmptyState title="No public sheets" description="Change visibility on a sheet to publish it." icon="🌐" /> : <div className="space-y-3">{publicSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
             </SurfaceCard>
           </div>
-          <div ref={archivedSheetsSectionRef}>
+          <div ref={archivedSheetsSectionRef} className="min-w-0">
             <SurfaceCard title="Archived Sheets" description="Archived sheets can be restored at any time.">
               {archivedSheets.length === 0 ? <EmptyState title="No archived sheets" description="Archived sheets will appear here for quick restore." icon="🗃️" /> : <div className="space-y-3">{archivedSheets.map((sheet) => renderSheetRow(sheet, { showManageActions: true }))}</div>}
             </SurfaceCard>
@@ -256,8 +256,8 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
               <div className="space-y-2">
                 {[...sheets].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)).slice(0, 5).map((sheet) => (
                   <div key={sheet.id} className="surface-card surface-card-elevated flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="card-title">{sheet.title || "Untitled Sheet"}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="card-title profile-sheet-row__title">{sheet.title || "Untitled Sheet"}</p>
                       <p className="meta-text">{calculateSheetProgress(sheet).completedQuestions}/{calculateSheetProgress(sheet).totalQuestions} solved</p>
                     </div>
                     <button className="btn-base btn-neutral" onClick={() => navigateTo(`${ROUTES.APP}/${sheet.id}`)}>Open</button>
