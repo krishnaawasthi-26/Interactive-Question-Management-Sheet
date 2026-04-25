@@ -180,8 +180,8 @@ export const normalizeImportedSheet = (candidate) => {
       ? candidate.topicList
       : [];
 
-  if (!Array.isArray(sourceTopics) || sourceTopics.length === 0) {
-    errors.push("`topics` is required and must be a non-empty array.");
+  if (!Array.isArray(sourceTopics)) {
+    errors.push("`topics` is required and must be an array.");
   }
 
   const { groupedSubTopics } = buildLegacySubTopicLookup(candidate);

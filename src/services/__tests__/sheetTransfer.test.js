@@ -34,6 +34,19 @@ describe("sheet import/export normalization", () => {
     });
   });
 
+  it("allows roundtrip import for empty sheets", () => {
+    const exported = buildSheetExportPayload({
+      sheetTitle: "Empty Sheet",
+      topics: [],
+    });
+
+    const imported = normalizeImportedSheet(exported);
+
+    expect(imported.valid).toBe(true);
+    expect(imported.normalized.name).toBe("Empty Sheet");
+    expect(imported.normalized.topics).toEqual([]);
+  });
+
   it("imports with missing optional fields", () => {
     const imported = normalizeImportedSheet({
       name: "Missing Optional Fields",
