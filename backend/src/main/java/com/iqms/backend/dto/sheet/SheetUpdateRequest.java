@@ -12,6 +12,7 @@ public class SheetUpdateRequest {
   private List<Map<String, Object>> topics;
   private Boolean isPublic;
   private Boolean isArchived;
+  private Boolean shareProgress;
 
   public String getTitle() {
     return title;
@@ -43,5 +44,13 @@ public class SheetUpdateRequest {
 
   public void setIsArchived(Boolean isArchived) {
     this.isArchived = isArchived;
+  }
+
+  public Boolean getShareProgress() {
+    return shareProgress;
+  }
+
+  public void setShareProgress(Boolean shareProgress) {
+    this.shareProgress = shareProgress;
   }
 }

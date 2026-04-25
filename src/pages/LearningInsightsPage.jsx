@@ -87,15 +87,21 @@ function LearningInsightsPage({ theme, onThemeChange }) {
       (sheet.topics || []).forEach((topic) => {
         (topic.subTopics || []).forEach((subTopic) => {
           (subTopic.questions || []).forEach((question) => {
-            if (!question?.attemptLog) return;
-            attempts.push({
-              ...question.attemptLog,
-              topic: question.attemptLog.topic || topic.title,
-              subTopic: subTopic.title,
-              problemName: question.attemptLog.problemName || question.text,
-              platform: normalizePlatform(question.attemptLog.platform, question.link),
-              loggedAt: question.attemptLog.loggedAt || now.toISOString(),
-              revisionDate: question.attemptLog.revisionDate,
+            const attemptLogs = Array.isArray(question?.attemptLogs) && question.attemptLogs.length > 0
+              ? question.attemptLogs
+              : (question?.attemptLog ? [question.attemptLog] : []);
+            if (!attemptLogs.length) return;
+            attemptLogs.forEach((attempt) => {
+              if (attempt?.fromSharedProgress) return;
+              attempts.push({
+                ...attempt,
+                topic: attempt.topic || topic.title,
+                subTopic: subTopic.title,
+                problemName: attempt.problemName || question.text,
+                platform: normalizePlatform(attempt.platform, question.link),
+                loggedAt: attempt.loggedAt || now.toISOString(),
+                revisionDate: attempt.revisionDate,
+              });
             });
           });
         });

@@ -83,6 +83,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const renameSheet = useSheetStore((state) => state.renameSheet);
   const setSheetVisibility = useSheetStore((state) => state.setSheetVisibility);
   const setSheetArchived = useSheetStore((state) => state.setSheetArchived);
+  const setSheetShareProgress = useSheetStore((state) => state.setSheetShareProgress);
   const duplicateSheetById = useSheetStore((state) => state.duplicateSheetById);
   const createNewSheet = useSheetStore((state) => state.createNewSheet);
   const deleteSheet = useSheetStore((state) => state.deleteSheet);
@@ -538,6 +539,18 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         },
       },
       {
+        key: "share-progress",
+        label: sheet.shareProgress ? "Disable Shared Progress" : "Enable Shared Progress",
+        className: "btn-neutral",
+        onClick: async () => {
+          try {
+            await setSheetShareProgress(currentUser.token, sheet.id, !sheet.shareProgress);
+          } catch (error) {
+            handleSheetActionError("share-progress-error", "Could not update shared progress", error);
+          }
+        },
+      },
+      {
         key: "archive",
         label: sheet.isArchived ? "Restore" : "Archive",
         className: "btn-neutral",
@@ -579,6 +592,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       handleSheetActionError,
       renameSheet,
       setSheetArchived,
+      setSheetShareProgress,
       setSheetVisibility,
       sheetId,
       sheetTitles,
@@ -707,7 +721,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                           />
                           <p className="text-xs text-[var(--text-secondary)]">
                             {sheet.isPublic ? "Public" : "Private"}
-                            {sheet.isArchived ? " • Archived" : ""} • Progress {progress.percent}% ({progress.completedQuestions}/{progress.totalQuestions})
+                            {sheet.isArchived ? " • Archived" : ""}
+                            {sheet.shareProgress ? " • Shared progress on" : " • Shared progress off"} • Progress {progress.percent}% ({progress.completedQuestions}/{progress.totalQuestions})
                           </p>
                           <ProgressBar percent={progress.percent} tone={progress.percent > 70 ? "success" : "warning"} />
                           <p className="text-xs text-[var(--text-secondary)]">
@@ -717,7 +732,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                         </div>
                         <div className="space-y-2">
                           <div className="flex flex-wrap gap-2">
-                            {(groupedSheetActionsById[sheet.id] || []).filter((action) => ["open", "save-name", "visibility"].includes(action.key)).map((action) => (
+                            {(groupedSheetActionsById[sheet.id] || []).filter((action) => ["open", "save-name", "visibility", "share-progress"].includes(action.key)).map((action) => (
                               <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
                                 {action.label}
                               </button>
@@ -744,9 +759,10 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                   <p className="text-xs text-[var(--text-secondary)]">
                     {openedSheet.isPublic ? "Public" : "Private"}
                     {openedSheet.isArchived ? " • Archived" : ""}
+                    {openedSheet.shareProgress ? " • Shared progress on" : " • Shared progress off"}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {openedSheetActions.filter((action) => ["visibility", "archive", "copy", "delete"].includes(action.key)).map((action) => (
+                    {openedSheetActions.filter((action) => ["visibility", "share-progress", "archive", "copy", "delete"].includes(action.key)).map((action) => (
                       <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
                         {action.label}
                       </button>

@@ -27,8 +27,10 @@ public class SheetService {
       "progress",
       "progressPercent",
       "attemptLog",
+      "attemptLogs",
       "revisionCompleted",
       "revisionDone",
+      "revised",
       "reminderCompleted",
       "completedAt",
       "completedOn",
@@ -69,6 +71,7 @@ public class SheetService {
       sheet.setTitle(title == null || title.isBlank() ? "Untitled Sheet" : title.trim());
       sheet.setShareId("sheet_" + UUID.randomUUID().toString().replace("-", ""));
       sheet.setPublic(false);
+      sheet.setShareProgress(false);
       sheet.setVisibility("private");
       sheet.setArchived(false);
       sheet.setCommentsEnabled(true);
@@ -109,7 +112,8 @@ public class SheetService {
       String title,
       List<Map<String, Object>> topics,
       Boolean isPublic,
-      Boolean isArchived) {
+      Boolean isArchived,
+      Boolean shareProgress) {
     return actionQueueService.execute(() -> {
       Sheet sheet = getAccessibleSheet(actorUserId, sheetId);
       if (!collaborationService.canEdit(sheet, actorUserId) && !sheet.getOwnerId().equals(actorUserId)) {
@@ -132,6 +136,10 @@ public class SheetService {
       if (isArchived != null) {
         collaborationService.requireOwner(sheet, actorUserId);
         sheet.setArchived(isArchived);
+      }
+      if (shareProgress != null) {
+        collaborationService.requireOwner(sheet, actorUserId);
+        sheet.setShareProgress(shareProgress);
       }
       sheet.setUpdatedAt(Instant.now());
       Sheet saved = sheetRepository.save(sheet);
@@ -214,7 +222,7 @@ public class SheetService {
   private Sheet createCopy(Sheet source, String actorUserId, String title) {
     String copyTitle = title == null || title.isBlank() ? source.getTitle() + " (Copy)" : title.trim();
     Sheet copied = createSheet(actorUserId, copyTitle);
-    copied.setTopics(stripProgressData(source.getTopics()));
+    copied.setTopics(source.isShareProgress() ? markSharedProgressSeedData(source.getTopics()) : stripProgressData(source.getTopics()));
     copied.setParentSheetId(source.getId());
     copied.setRemixSourceOwnerId(source.getOwnerId());
     copied.setUpdatedAt(Instant.now());
@@ -249,6 +257,11 @@ public class SheetService {
   }
 
   @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> markSharedProgressSeedData(List<Map<String, Object>> topics) {
+    return (List<Map<String, Object>>) addSharedProgressSeedFlag(topics);
+  }
+
+  @SuppressWarnings("unchecked")
   private Object sanitizeProgress(Object node, Set<String> progressKeys) {
     if (node instanceof List<?> list) {
       List<Object> sanitized = new ArrayList<>();
@@ -266,6 +279,46 @@ public class SheetService {
       sanitized.put(key, (Object) sanitizeProgress(entry.getValue(), progressKeys));
     }
     return sanitized;
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object addSharedProgressSeedFlag(Object node) {
+    if (node instanceof List<?> list) {
+      List<Object> copied = new ArrayList<>();
+      for (Object item : list) {
+        copied.add(addSharedProgressSeedFlag(item));
+      }
+      return copied;
+    }
+    if (!(node instanceof Map<?, ?> map)) return node;
+
+    Map<String, Object> copied = new java.util.LinkedHashMap<>();
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      String key = String.valueOf(entry.getKey());
+      Object value = addSharedProgressSeedFlag(entry.getValue());
+      if ("attemptLog".equals(key) && value instanceof Map<?, ?> attemptMap) {
+        Map<String, Object> flaggedAttempt = new java.util.LinkedHashMap<>((Map<String, Object>) attemptMap);
+        flaggedAttempt.put("fromSharedProgress", true);
+        copied.put(key, flaggedAttempt);
+        continue;
+      }
+      if ("attemptLogs".equals(key) && value instanceof List<?> attempts) {
+        List<Object> flaggedAttempts = new ArrayList<>();
+        for (Object attempt : attempts) {
+          if (attempt instanceof Map<?, ?> attemptMap) {
+            Map<String, Object> flaggedAttempt = new java.util.LinkedHashMap<>((Map<String, Object>) attemptMap);
+            flaggedAttempt.put("fromSharedProgress", true);
+            flaggedAttempts.add(flaggedAttempt);
+          } else {
+            flaggedAttempts.add(attempt);
+          }
+        }
+        copied.put(key, flaggedAttempts);
+        continue;
+      }
+      copied.put(key, value);
+    }
+    return copied;
   }
 
   public SheetEngagementResponse trackEngagement(String actorUserId, String sheetId, String action) {

@@ -37,6 +37,9 @@ export const normalizeSheetVisibility = (sheet) => {
   if (typeof normalized.isArchived !== "boolean" && typeof normalized.archived === "boolean") {
     normalized.isArchived = normalized.archived;
   }
+  if (typeof normalized.shareProgress !== "boolean") {
+    normalized.shareProgress = false;
+  }
 
   return normalized;
 };

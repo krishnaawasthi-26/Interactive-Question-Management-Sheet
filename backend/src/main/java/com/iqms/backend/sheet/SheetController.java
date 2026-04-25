@@ -72,7 +72,8 @@ public class SheetController {
             body.getTitle(),
             body.getTopics(),
             body.getIsPublic(),
-            body.getIsArchived()));
+            body.getIsArchived(),
+            body.getShareProgress()));
   }
 
   @PutMapping("/{sheetId}/sharing")

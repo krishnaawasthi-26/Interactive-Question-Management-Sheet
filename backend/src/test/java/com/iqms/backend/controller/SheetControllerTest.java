@@ -70,7 +70,7 @@ class SheetControllerTest {
   @Test
   void updateSheetPropagatesNotFoundAsStructuredError() throws Exception {
     when(currentUser.getUserId(any())).thenReturn("owner-1");
-    when(sheetService.updateOwnedSheet(eq("owner-1"), eq("missing"), any(), any(), any(), any()))
+    when(sheetService.updateOwnedSheet(eq("owner-1"), eq("missing"), any(), any(), any(), any(), any()))
         .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Sheet not found."));
 
     mockMvc.perform(put("/api/sheets/missing")
