@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { getCurrentRoute, getUserProfileRoute, navigateTo, ROUTES } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
+import { getPremiumAccess } from "../services/premium";
+import ConfirmationModal from "./ConfirmationModal";
 
 const sections = [
   {
@@ -25,7 +27,15 @@ const sections = [
   },
 ];
 
-function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compact = false }) {
+function SidebarItem({
+  item,
+  isOpen,
+  active,
+  onClick,
+  showTooltip = true,
+  compact = false,
+  locked = false,
+}) {
   const tooltipId = useId();
   const buttonRef = useRef(null);
   const tooltipRef = useRef(null);
@@ -68,17 +78,19 @@ function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compac
     <button
       ref={buttonRef}
       type="button"
-      aria-label={item.label}
+      aria-label={locked ? `${item.label} (Premium)` : item.label}
       aria-describedby={showFloatingLabel ? tooltipId : undefined}
       onClick={onClick}
       onMouseEnter={() => setTooltipVisible(true)}
       onMouseLeave={() => setTooltipVisible(false)}
       onFocus={() => setTooltipVisible(true)}
       onBlur={() => setTooltipVisible(false)}
-      className={`sidebar-nav-item group ${isOpen ? "is-open" : "is-collapsed"} ${active ? "is-active" : ""} ${compact ? "is-compact" : ""}`.trim()}
+      className={`sidebar-nav-item group ${isOpen ? "is-open" : "is-collapsed"} ${active ? "is-active" : ""} ${compact ? "is-compact" : ""} ${locked ? "is-locked" : ""}`.trim()}
     >
       <span className="sidebar-nav-icon" aria-hidden>{item.icon}</span>
       <span className={`sidebar-nav-label ${isOpen ? "is-visible" : ""}`}>{item.label}</span>
+      {locked ? <span className="sidebar-lock-indicator" aria-hidden>🔒</span> : null}
+      {locked ? <span className="sidebar-lock-mask" aria-hidden /> : null}
 
       {shouldShowFloatingLabel ? (
         <span
@@ -96,7 +108,7 @@ function SidebarItem({ item, isOpen, active, onClick, showTooltip = true, compac
   );
 }
 
-function SidebarSection({ title, items, isOpen, currentRoute, onItemClick }) {
+function SidebarSection({ title, items, isOpen, currentRoute, onItemClick, lockedRoutes = [], onLockedItemClick }) {
   return (
     <section className="sidebar-section">
       <p className={`caption-text sidebar-section-title ${isOpen ? "is-visible" : ""}`}>{title}</p>
@@ -108,9 +120,15 @@ function SidebarSection({ title, items, isOpen, currentRoute, onItemClick }) {
             isOpen={isOpen}
             active={item.matchRoutes ? item.matchRoutes.includes(currentRoute) : currentRoute === item.route}
             onClick={() => {
+              if (lockedRoutes.includes(item.route)) {
+                onLockedItemClick?.(item);
+                onItemClick?.();
+                return;
+              }
               navigateTo(item.route);
               onItemClick?.();
             }}
+            locked={lockedRoutes.includes(item.route)}
           />
         ))}
       </div>
@@ -122,6 +140,7 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile,
   const currentRoute = getCurrentRoute().route;
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
+  const [showPremiumLockModal, setShowPremiumLockModal] = useState(false);
   const sidebarWidth = useMemo(
     () => (isSidebarOpen ? "sidebar-desktop-expanded" : "sidebar-desktop-collapsed"),
     [isSidebarOpen],
@@ -137,9 +156,39 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile,
     })),
     [currentUser?.username],
   );
+  const premiumAccess = useMemo(() => getPremiumAccess(currentUser), [currentUser]);
+  const lockedRoutes = useMemo(
+    () => (premiumAccess.premiumActive ? [] : [ROUTES.ALARMS, ROUTES.LEARNING_INSIGHTS]),
+    [premiumAccess.premiumActive],
+  );
 
   return (
     <>
+      <ConfirmationModal
+        isOpen={showPremiumLockModal}
+        title="Premium feature"
+        message="Reminders and Insights are Premium features. Upgrade to Premium to unlock faster learning tools."
+        onClose={() => setShowPremiumLockModal(false)}
+        actions={[
+          {
+            key: "continue-free",
+            label: "Continue free",
+            variant: "subtle",
+            onClick: () => setShowPremiumLockModal(false),
+            className: "sidebar-modal-action-free",
+          },
+          {
+            key: "buy-premium",
+            label: "Buy Premium",
+            variant: "success",
+            onClick: () => {
+              setShowPremiumLockModal(false);
+              navigateTo(ROUTES.PREMIUM);
+            },
+            className: "sidebar-modal-action-premium",
+          },
+        ]}
+      />
       {isMobileOpen ? (
         <div className="fixed inset-0 z-50 bg-[var(--overlay-backdrop)] lg:hidden" onClick={onCloseMobile} aria-hidden="true" />
       ) : null}
@@ -168,6 +217,8 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile,
               items={section.items}
               isOpen={isSidebarOpen}
               currentRoute={currentRoute}
+              lockedRoutes={lockedRoutes}
+              onLockedItemClick={() => setShowPremiumLockModal(true)}
             />
           ))}
         </nav>
@@ -214,6 +265,8 @@ function Sidebar({ isSidebarOpen, isMobileOpen = false, onToggle, onCloseMobile,
               isOpen
               currentRoute={currentRoute}
               onItemClick={onCloseMobile}
+              lockedRoutes={lockedRoutes}
+              onLockedItemClick={() => setShowPremiumLockModal(true)}
             />
           ))}
         </nav>
