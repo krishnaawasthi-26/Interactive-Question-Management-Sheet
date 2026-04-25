@@ -1,6 +1,7 @@
 import { useSheetStore } from "../sheetStore";
+import { useAuthStore } from "../authStore";
 import { createTopic } from "../../api/questionSheet";
-import { getSheet, listSheets, saveSheet } from "../../api/sheetApi";
+import { createSheet, getSheet, listSheets, saveSheet } from "../../api/sheetApi";
 
 vi.mock("../../api/questionSheet", () => ({
   createTopic: vi.fn(),
@@ -59,6 +60,7 @@ describe("sheetStore core flows", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetStore();
+    useAuthStore.setState({ currentUser: { id: "user-1", token: "token", premiumActive: false } });
   });
 
   it("supports CRUD updates with undo/redo history", async () => {
@@ -232,5 +234,31 @@ describe("sheetStore core flows", () => {
     await useSheetStore.getState().loadSheetById("token", "sheet-1");
 
     expect(useSheetStore.getState().sheets[0].isPublic).toBe(false);
+  });
+
+  it("prevents creating more than 5 sheets for free users", async () => {
+    useSheetStore.setState({
+      sheets: Array.from({ length: 5 }, (_, index) => ({ id: `sheet-${index + 1}`, title: `Sheet ${index + 1}` })),
+    });
+
+    const created = await useSheetStore.getState().createNewSheet("token", "Extra Sheet");
+
+    expect(created).toBeNull();
+    expect(createSheet).not.toHaveBeenCalled();
+    expect(useSheetStore.getState().limitWarning).toBe("Limit reached: sheet (5)");
+  });
+
+  it("allows premium users to create sheets beyond the free sheet limit", async () => {
+    useAuthStore.setState({ currentUser: { id: "user-1", token: "token", premiumActive: true } });
+    useSheetStore.setState({
+      sheets: Array.from({ length: 5 }, (_, index) => ({ id: `sheet-${index + 1}`, title: `Sheet ${index + 1}` })),
+    });
+    createSheet.mockResolvedValue({ id: "sheet-6", title: "Premium Sheet" });
+
+    const created = await useSheetStore.getState().createNewSheet("token", "Premium Sheet");
+
+    expect(created).toMatchObject({ id: "sheet-6" });
+    expect(createSheet).toHaveBeenCalledWith("token", "Premium Sheet");
+    expect(useSheetStore.getState().limitWarning).toBeNull();
   });
 });

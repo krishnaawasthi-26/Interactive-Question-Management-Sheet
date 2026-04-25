@@ -10,6 +10,7 @@ public interface SheetRepository extends MongoRepository<Sheet, String> {
   List<Sheet> findAllByOwnerIdOrderByUpdatedAtDesc(String ownerId);
   Optional<Sheet> findByIdAndOwnerId(String id, String ownerId);
   Optional<Sheet> findByShareId(String shareId);
+  long countByOwnerId(String ownerId);
 
   @Query("{ '$or': [ "
       + "{ 'ownerId': ?0 }, "

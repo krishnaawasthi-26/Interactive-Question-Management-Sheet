@@ -18,12 +18,13 @@ public class PremiumAccessService {
   public static final String NEW_USER_TRIAL_REASON = "new_user_trial";
   private static final Duration NEW_USER_TRIAL_DURATION = Duration.ofDays(7);
 
-  public static final int FREE_TOPIC_LIMIT = 30;
+  public static final int FREE_TOPIC_LIMIT = 50;
   public static final int FREE_SUBTOPIC_LIMIT = 50;
   public static final int FREE_QUESTION_LIMIT = 100;
-  public static final int PREMIUM_TOPIC_LIMIT = 100;
-  public static final int PREMIUM_SUBTOPIC_LIMIT = 200;
-  public static final int PREMIUM_QUESTION_LIMIT = 1000;
+  public static final int FREE_SHEET_LIMIT = 5;
+  public static final int PREMIUM_TOPIC_LIMIT = Integer.MAX_VALUE;
+  public static final int PREMIUM_SUBTOPIC_LIMIT = Integer.MAX_VALUE;
+  public static final int PREMIUM_QUESTION_LIMIT = Integer.MAX_VALUE;
   public static final int MAX_WORDS_PER_ENTRY = 50;
 
   private final UserRepository userRepository;
@@ -107,6 +108,15 @@ public class PremiumAccessService {
     throw new ResponseStatusException(
         HttpStatus.PAYMENT_REQUIRED,
         featureName + " is a premium feature. Please buy premium to continue.");
+  }
+
+  public void assertSheetLimit(User user, long sheetCount) {
+    if (isPremiumActive(user)) return;
+    if (sheetCount < FREE_SHEET_LIMIT) return;
+
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST,
+        "Free plan supports up to " + FREE_SHEET_LIMIT + " sheets. Buy premium to create more sheets.");
   }
 
   private int countWords(String value) {
