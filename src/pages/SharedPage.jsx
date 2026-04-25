@@ -36,6 +36,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   const [keepAttribution, setKeepAttribution] = useState(true);
   const [copyPending, setCopyPending] = useState(false);
   const [copyPromptOpen, setCopyPromptOpen] = useState(false);
+  const [showSharedProgress, setShowSharedProgress] = useState(false);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
@@ -74,7 +75,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         if (shareType === "public-sheet") {
           const sheet = await fetchPublicSheet(username, sheetSlug);
           setSharedSheet(sheet);
-          setReadOnlySheet(sheet);
+          setShowSharedProgress(Boolean(sheet?.shareProgress));
           try {
             const ownerProfile = await loadProfileForRoute(username);
             setProfile(ownerProfile);
@@ -86,13 +87,19 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
 
         const sheet = await getSharedSheet(shareId);
         setSharedSheet(sheet);
-        setReadOnlySheet(sheet);
+        setShowSharedProgress(Boolean(sheet?.shareProgress));
       } catch (err) {
         setError(err.message);
       }
     };
     load();
   }, [currentUser?.token, setReadOnlySheet, shareId, shareType, sheetSlug, username]);
+
+  useEffect(() => {
+    if (!sharedSheet) return;
+    const canShowProgress = Boolean(sharedSheet.shareProgress);
+    setReadOnlySheet(sharedSheet, { showProgress: canShowProgress && showSharedProgress });
+  }, [setReadOnlySheet, sharedSheet, showSharedProgress]);
 
   useEffect(() => {
     if (!showRemixModal) return;
@@ -145,6 +152,8 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       url: `${seoDefaults.siteUrl}${canonicalPath}`,
       description: activeDescription,
     };
+  const canToggleSharedProgress = Boolean(sharedSheet?.shareProgress);
+  const isProgressVisible = canToggleSharedProgress && showSharedProgress;
 
   const resolveSourceSheetId = async ({ sourceSheetId, sourceShareId } = {}) => {
     if (sourceSheetId) return sourceSheetId;
@@ -548,6 +557,15 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     <AppShell
       title={sharedSheet?.title || sheetTitle}
       subtitle={isOwnerViewingSheet ? "Owner view" : "Public read-only view"}
+      titleActions={canToggleSharedProgress ? (
+        <button
+          type="button"
+          className="btn-base btn-neutral px-3 py-1.5 text-sm"
+          onClick={() => setShowSharedProgress((value) => !value)}
+        >
+          {isProgressVisible ? "Hide Progress" : "Show Progress"}
+        </button>
+      ) : null}
       theme={theme}
       onThemeChange={onThemeChange}
       userLabel={currentUser?.username || "Guest"}
@@ -588,10 +606,15 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       <TopicList
         isEditing={isOwnerViewingSheet}
         allowReorder={isOwnerViewingSheet}
-        allowProgressToggle={isOwnerViewingSheet}
+        allowProgressToggle={isOwnerViewingSheet && isProgressVisible}
         showAttemptInsights={isOwnerViewingSheet}
         onRequireCopy={() => setCopyPromptOpen(true)}
       />
+      {canToggleSharedProgress && !isProgressVisible && (
+        <p className="meta-text mt-2 text-sm">
+          Progress is hidden in this view. Click <strong>Show Progress</strong> to view solved ticks, attempts, and progress bars.
+        </p>
+      )}
       {!isOwnerViewingSheet && username && (
         <div className="mx-auto mt-4 w-full max-w-3xl">
           <div className="surface-card surface-card-elevated flex items-center justify-between gap-3 p-3">

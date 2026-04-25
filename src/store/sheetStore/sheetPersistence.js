@@ -324,15 +324,45 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       hasPendingChanges: computeDirtyState({ ...state, sheetTitle: title }, internals.lastPersistedSignatureBySheet),
     })),
 
-  setReadOnlySheet: (sheet) =>
+  setReadOnlySheet: (sheet, options = {}) => {
+    const showProgress = Boolean(options.showProgress);
     set({
       activeSheetId: null,
-      topics: clearSharedProgress(sheet.topics || []),
+      topics: showProgress ? cloneDeep(sheet.topics || []) : clearSharedProgress(sheet.topics || []),
       sheetTitle: sheet.title || "Question Sheet",
       past: [],
       future: [],
       hasPendingChanges: false,
       saveError: null,
       lastSavedAt: null,
-    }),
+    });
+  },
+
+  setSheetShareProgress: async (token, sheetId, shareProgress) => {
+    set((state) => ({
+      sheets: updateSheetInCollection(state.sheets, sheetId, { shareProgress }),
+    }));
+
+    try {
+      const payload = await buildSafeSheetUpdatePayload({
+        token,
+        sheetId,
+        getState: get,
+        overrideFields: { shareProgress },
+        includeContent: false,
+      });
+      const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
+      if (updatedSheet) {
+        set((state) => ({
+          sheets: updateSheetInCollection(state.sheets, sheetId, updatedSheet),
+        }));
+      }
+      return true;
+    } catch (error) {
+      set((state) => ({
+        sheets: updateSheetInCollection(state.sheets, sheetId, { shareProgress: !shareProgress }),
+      }));
+      throw error;
+    }
+  },
 });

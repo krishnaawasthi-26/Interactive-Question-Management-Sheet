@@ -26,6 +26,7 @@ public class Sheet {
   private Instant updatedAt;
   private boolean isPublic;
   private boolean isArchived;
+  private boolean shareProgress;
   private String visibility = "private";
   private boolean commentsEnabled = true;
   private String parentSheetId;
@@ -56,6 +57,10 @@ public class Sheet {
   public boolean isArchived() { return isArchived; }
   @JsonProperty("isArchived")
   public void setArchived(boolean archived) { isArchived = archived; }
+  @JsonProperty("shareProgress")
+  public boolean isShareProgress() { return shareProgress; }
+  @JsonProperty("shareProgress")
+  public void setShareProgress(boolean shareProgress) { this.shareProgress = shareProgress; }
   public List<Map<String, Object>> getTopics() { return topics; }
   public void setTopics(List<Map<String, Object>> topics) { this.topics = topics; }
   public List<String> getDownloadedByUsernames() { return downloadedByUsernames; }

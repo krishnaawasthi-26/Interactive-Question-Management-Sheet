@@ -77,11 +77,13 @@ class SheetServiceTest {
         "New Title",
         List.of(Map.of("id", "t1")),
         true,
-        false);
+        false,
+        true);
 
     assertThat(updated.getTitle()).isEqualTo("New Title");
     assertThat(updated.isPublic()).isTrue();
     assertThat(updated.isArchived()).isFalse();
+    assertThat(updated.isShareProgress()).isTrue();
     assertThat(updated.getTopics()).hasSize(1);
   }
 
