@@ -124,10 +124,14 @@ export const exportSheetAsJson = ({ sheetTitle, topics }) => {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: "application/json",
   });
+  const safeFileNameBase = String(sheetTitle || "question-sheet")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
 
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${sheetTitle.toLowerCase().replace(/\s+/g, "-") || "question-sheet"}.json`;
+  link.download = `${safeFileNameBase || "question-sheet"}.json`;
   link.click();
   URL.revokeObjectURL(link.href);
 };

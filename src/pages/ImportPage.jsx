@@ -38,7 +38,7 @@ function ImportPage({ theme, onThemeChange, onBack }) {
   return (
     <AppShell title="Import Sheet JSON" subtitle="Upload validated JSON data into the current sheet" theme={theme} onThemeChange={onThemeChange}>
       <div className="panel p-6">
-        <p className="mb-3 text-sm text-[var(--text-secondary)]">Import works with JSON only. Required fields: <code>name</code>, <code>topics</code>, topic <code>title</code>, subtopic <code>title</code>, question <code>text</code>.</p>
+        <p className="mb-3 text-sm text-[var(--text-secondary)]">Import works with JSON only. Required fields: <code>name</code>, <code>topics</code> array. For non-empty content, each topic needs <code>title</code>, each subtopic needs <code>title</code>, and each question needs <code>text</code>.</p>
         <a href="/sample-import-sheet.json" download className="btn-base btn-neutral mb-4 inline-block">Download sample JSON file</a>
         <input type="file" accept="application/json,.json" onChange={onFileChange} className="field-base mb-4 block w-full" />
         {message && <p className="mb-3 text-[var(--accent-success)]">{message}</p>}
