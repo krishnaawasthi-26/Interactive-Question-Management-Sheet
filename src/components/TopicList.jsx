@@ -641,6 +641,10 @@ function TopicList({
           questionText={activeAttempt.questionText}
           questionLink={activeAttempt.questionLink}
           topicName={activeAttempt.topicName}
+          premiumActive={premiumActive}
+          onPremiumLocked={() =>
+            onPremiumLocked?.("Only result status is free. Unlock full attempt logging to learn faster with Premium.")
+          }
           onClose={() => setActiveAttempt(null)}
           onSave={(attemptLog) => {
             updateQuestionAttempt(activeAttempt.topicId, activeAttempt.subId, activeAttempt.questionId, attemptLog);

@@ -894,6 +894,30 @@ canvas {
   box-shadow: 0 10px 20px color-mix(in srgb, var(--accent-primary) 26%, transparent);
 }
 
+.iqms-attempt-premium-lock {
+  position: relative;
+}
+
+.iqms-attempt-premium-lock.is-locked > :not(.iqms-attempt-lock-overlay) {
+  opacity: 0.45;
+  filter: saturate(0.7);
+}
+
+.iqms-attempt-lock-overlay {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed color-mix(in srgb, var(--accent-primary) 42%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-elevated) 76%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 @media (hover: none), (pointer: coarse) {
   .sidebar-tooltip {
     display: none;

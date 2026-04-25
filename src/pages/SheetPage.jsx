@@ -155,8 +155,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           title: "Premium feature locked",
           message: "Reminder and alarm are premium features. Buy premium to unlock.",
           actions: [
-            { key: "cancel", label: "Maybe Later", variant: "neutral", onClick: () => setActiveDialog(null) },
-            { key: "buy", label: "Buy Premium", variant: "success", onClick: () => navigateTo(ROUTES.PREMIUM) },
+            { key: "cancel", label: "Continue Free", variant: "neutral", className: "sidebar-modal-action-free", onClick: () => setActiveDialog(null) },
+            { key: "buy", label: "Buy Premium", variant: "success", className: "sidebar-modal-action-premium", onClick: () => navigateTo(ROUTES.PREMIUM) },
           ],
         });
         return;
@@ -719,8 +719,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                   title: "Premium feature locked",
                   message,
                   actions: [
-                    { key: "cancel", label: "Close", variant: "neutral", onClick: closeDialog },
-                    { key: "buy", label: "Buy Premium", variant: "success", onClick: () => navigateTo(ROUTES.PREMIUM) },
+                    { key: "cancel", label: "Continue Free", variant: "neutral", className: "sidebar-modal-action-free", onClick: closeDialog },
+                    { key: "buy", label: "Buy Premium", variant: "success", className: "sidebar-modal-action-premium", onClick: () => navigateTo(ROUTES.PREMIUM) },
                   ],
                 })
               }

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 const RESULT_OPTIONS = [
   { key: "solved", label: "Solved" },
   { key: "partially_solved", label: "Partially Solved" },
-  { key: "failed", label: "Failed" },
+  { key: "failed", label: "Error / Attempted" },
 ];
 
 const MISTAKES = [
@@ -65,6 +65,8 @@ export function AttemptOutcomeSection({
   onPauseTimer,
   onResetTimer,
   onUseTimerForTimeSpent,
+  premiumActive = false,
+  onPremiumLocked,
 }) {
   const selectedTimeOption = TIME_SPENT_OPTIONS.includes(String(timeSpent)) ? String(timeSpent) : "custom";
 
@@ -83,36 +85,45 @@ export function AttemptOutcomeSection({
           </div>
         </div>
         <div className="space-y-2">
-          <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
-          <select
-            value={selectedTimeOption}
-            onChange={(event) => {
-              if (event.target.value === "custom") return;
-              setTimeSpent(event.target.value);
-            }}
-            className="field-base w-full"
-          >
-            {TIME_SPENT_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option} min
-              </option>
-            ))}
-            <option value="custom">Custom</option>
-          </select>
-          {selectedTimeOption === "custom" ? (
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={timeSpent}
-              onChange={(event) => setTimeSpent(event.target.value)}
+          <div className={`iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
+            <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
+            <select
+              value={selectedTimeOption}
+              onChange={(event) => {
+                if (event.target.value === "custom") return;
+                setTimeSpent(event.target.value);
+              }}
               className="field-base w-full"
-              placeholder="Enter custom minutes"
-            />
-          ) : null}
+              disabled={!premiumActive}
+            >
+              {TIME_SPENT_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option} min
+                </option>
+              ))}
+              <option value="custom">Custom</option>
+            </select>
+            {selectedTimeOption === "custom" ? (
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={timeSpent}
+                onChange={(event) => setTimeSpent(event.target.value)}
+                className="field-base w-full"
+                placeholder="Enter custom minutes"
+                disabled={!premiumActive}
+              />
+            ) : null}
+            {!premiumActive ? (
+              <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+                🔒 Premium
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
-      <div className="mt-4 rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/60 p-3">
+      <div className={`mt-4 rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/60 p-3 iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">Focus Timer</p>
@@ -120,38 +131,48 @@ export function AttemptOutcomeSection({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {isTimerRunning ? (
-              <button type="button" className="btn-base btn-neutral" onClick={onPauseTimer}>Pause</button>
+              <button type="button" className="btn-base btn-neutral" onClick={onPauseTimer} disabled={!premiumActive}>Pause</button>
             ) : (
-              <button type="button" className="btn-base btn-primary" onClick={onStartTimer}>Start</button>
+              <button type="button" className="btn-base btn-primary" onClick={onStartTimer} disabled={!premiumActive}>Start</button>
             )}
-            <button type="button" className="btn-base btn-neutral" onClick={onResetTimer}>Reset</button>
-            <button type="button" className="btn-base btn-neutral" onClick={onUseTimerForTimeSpent}>Use timer</button>
+            <button type="button" className="btn-base btn-neutral" onClick={onResetTimer} disabled={!premiumActive}>Reset</button>
+            <button type="button" className="btn-base btn-neutral" onClick={onUseTimerForTimeSpent} disabled={!premiumActive}>Use timer</button>
           </div>
         </div>
         <p className="mt-2 text-xs text-[var(--text-tertiary)]">Use timer to auto-fill time spent when you finish solving.</p>
+        {!premiumActive ? (
+          <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+            🔒 Premium
+          </button>
+        ) : null}
       </div>
 
-      <div className="mt-4">
+      <div className={`mt-4 iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
         <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
         <div className="inline-flex flex-wrap overflow-hidden rounded-md border border-[var(--border-subtle)]">
           {CONFIDENCE_LEVELS.map((level) => (
-            <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]" : "bg-transparent text-[var(--text-primary)]"}`}>
+            <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]" : "bg-transparent text-[var(--text-primary)]"}`} disabled={!premiumActive}>
               {level}
             </button>
           ))}
         </div>
+        {!premiumActive ? (
+          <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+            🔒 Premium
+          </button>
+        ) : null}
       </div>
     </section>
   );
 }
 
-export function MistakeAnalysisSection({ mistakes, setMistakes, notes, setNotes, hintUsed, setHintUsed, editorialUsed, setEditorialUsed }) {
+export function MistakeAnalysisSection({ mistakes, setMistakes, notes, setNotes, hintUsed, setHintUsed, editorialUsed, setEditorialUsed, premiumActive = false, onPremiumLocked }) {
   const toggleMistake = (mistake) => {
     setMistakes((current) => (current.includes(mistake) ? current.filter((item) => item !== mistake) : [...current, mistake]));
   };
 
   return (
-    <section className={sectionClass}>
+    <section className={`${sectionClass} iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Mistake Analysis</h3>
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         <div>
@@ -159,7 +180,7 @@ export function MistakeAnalysisSection({ mistakes, setMistakes, notes, setNotes,
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {MISTAKES.map((mistake) => (
               <label key={mistake} className="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] px-2 py-2 text-sm">
-                <input type="checkbox" checked={mistakes.includes(mistake)} onChange={() => toggleMistake(mistake)} />
+                <input type="checkbox" checked={mistakes.includes(mistake)} onChange={() => toggleMistake(mistake)} disabled={!premiumActive} />
                 <span>{mistake}</span>
               </label>
             ))}
@@ -168,33 +189,43 @@ export function MistakeAnalysisSection({ mistakes, setMistakes, notes, setNotes,
         <div className="space-y-3">
           <label className="block space-y-2">
             <span className="text-sm text-[var(--text-secondary)]">Notes</span>
-            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={5} className="field-base w-full" placeholder="What blocked you, and what will you do next time?" />
+            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={5} className="field-base w-full" placeholder="What blocked you, and what will you do next time?" disabled={!premiumActive} />
           </label>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Hint used</span><select value={hintUsed} onChange={(e) => setHintUsed(e.target.value)} className="field-base mt-1 w-full"><option>No</option><option>Yes</option></select></label>
-            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Editorial used</span><select value={editorialUsed} onChange={(e) => setEditorialUsed(e.target.value)} className="field-base mt-1 w-full"><option>No</option><option>Yes</option></select></label>
+            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Hint used</span><select value={hintUsed} onChange={(e) => setHintUsed(e.target.value)} className="field-base mt-1 w-full" disabled={!premiumActive}><option>No</option><option>Yes</option></select></label>
+            <label className="rounded-md border border-[var(--border-subtle)] p-2"><span className="block text-xs text-[var(--text-tertiary)]">Editorial used</span><select value={editorialUsed} onChange={(e) => setEditorialUsed(e.target.value)} className="field-base mt-1 w-full" disabled={!premiumActive}><option>No</option><option>Yes</option></select></label>
           </div>
         </div>
       </div>
+      {!premiumActive ? (
+        <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+          🔒 Premium
+        </button>
+      ) : null}
     </section>
   );
 }
 
-export function RevisionPlanningSection({ revisionTiming, setRevisionTiming, solvedWithHelp, setSolvedWithHelp, attemptNumber, setAttemptNumber, submissions, setSubmissions }) {
+export function RevisionPlanningSection({ revisionTiming, setRevisionTiming, solvedWithHelp, setSolvedWithHelp, attemptNumber, setAttemptNumber, submissions, setSubmissions, premiumActive = false, onPremiumLocked }) {
   return (
-    <section className={sectionClass}>
+    <section className={`${sectionClass} iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Revision Planning</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Revision timing</span><select value={revisionTiming} onChange={(event) => setRevisionTiming(event.target.value)} className="field-base w-full">{REVISION_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
-        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Solved independently</span><select value={solvedWithHelp} onChange={(event) => setSolvedWithHelp(event.target.value)} className="field-base w-full"><option value="independent">Independent</option><option value="with_help">With help</option></select></label>
-        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Attempt number</span><input type="number" min="1" step="1" value={attemptNumber} onChange={(event) => setAttemptNumber(event.target.value)} className="field-base w-full" /></label>
-        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]"># submissions</span><input type="number" min="1" step="1" value={submissions} onChange={(event) => setSubmissions(event.target.value)} className="field-base w-full" /></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Revision timing</span><select value={revisionTiming} onChange={(event) => setRevisionTiming(event.target.value)} className="field-base w-full" disabled={!premiumActive}>{REVISION_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Solved independently</span><select value={solvedWithHelp} onChange={(event) => setSolvedWithHelp(event.target.value)} className="field-base w-full" disabled={!premiumActive}><option value="independent">Independent</option><option value="with_help">With help</option></select></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Attempt number</span><input type="number" min="1" step="1" value={attemptNumber} onChange={(event) => setAttemptNumber(event.target.value)} className="field-base w-full" disabled={!premiumActive} /></label>
+        <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]"># submissions</span><input type="number" min="1" step="1" value={submissions} onChange={(event) => setSubmissions(event.target.value)} className="field-base w-full" disabled={!premiumActive} /></label>
       </div>
+      {!premiumActive ? (
+        <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+          🔒 Premium
+        </button>
+      ) : null}
     </section>
   );
 }
 
-function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSave }) {
+function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSave, premiumActive = false, onPremiumLocked }) {
   const [result, setResult] = useState("partially_solved");
   const [timeSpent, setTimeSpent] = useState("40");
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -285,14 +316,19 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
         </div>
 
         <div className="space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
-          <section className={sectionClass}>
+          <section className={`${sectionClass} iqms-attempt-premium-lock ${!premiumActive ? "is-locked" : ""}`}>
             <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Attempt Summary</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1 text-sm lg:col-span-2"><span className="text-[var(--text-secondary)]">Problem</span><input value={problemName} disabled className="field-base w-full opacity-80" /></label>
-              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Platform</span><input value={platform} onChange={(event) => setPlatform(event.target.value)} className="field-base w-full" /></label>
-              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Topic (optional)</span><input value={topic} onChange={(event) => setTopic(event.target.value)} className="field-base w-full" /></label>
-              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Difficulty (optional)</span><select value={difficulty} onChange={(event) => setDifficulty(event.target.value)} className="field-base w-full">{DIFFICULTY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Platform</span><input value={platform} onChange={(event) => setPlatform(event.target.value)} className="field-base w-full" disabled={!premiumActive} /></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Topic (optional)</span><input value={topic} onChange={(event) => setTopic(event.target.value)} className="field-base w-full" disabled={!premiumActive} /></label>
+              <label className="space-y-1 text-sm"><span className="text-[var(--text-secondary)]">Difficulty (optional)</span><select value={difficulty} onChange={(event) => setDifficulty(event.target.value)} className="field-base w-full" disabled={!premiumActive}>{DIFFICULTY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
             </div>
+            {!premiumActive ? (
+              <button type="button" className="iqms-attempt-lock-overlay" onClick={onPremiumLocked}>
+                🔒 Premium
+              </button>
+            ) : null}
           </section>
 
           <AttemptOutcomeSection
@@ -308,6 +344,8 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
             onPauseTimer={pauseTimer}
             onResetTimer={resetTimer}
             onUseTimerForTimeSpent={useTimerForTimeSpent}
+            premiumActive={premiumActive}
+            onPremiumLocked={onPremiumLocked}
           />
 
           <MistakeAnalysisSection
@@ -319,6 +357,8 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
             setHintUsed={setHintUsed}
             editorialUsed={editorialUsed}
             setEditorialUsed={setEditorialUsed}
+            premiumActive={premiumActive}
+            onPremiumLocked={onPremiumLocked}
           />
 
           <RevisionPlanningSection
@@ -330,6 +370,8 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
             setAttemptNumber={setAttemptNumber}
             submissions={submissions}
             setSubmissions={setSubmissions}
+            premiumActive={premiumActive}
+            onPremiumLocked={onPremiumLocked}
           />
         </div>
 
