@@ -75,7 +75,7 @@ function AppShell({
             aria-expanded={isMobileNavOpen}
             aria-controls={mobileSidebarId}
             onClick={() => setIsMobileNavOpen((prev) => !prev)}
-            className="mobile-sidebar-toggle lg:hidden"
+            className={`mobile-sidebar-toggle${isMobileNavOpen ? " mobile-sidebar-toggle--hidden" : ""}`}
           >
             ☰
           </button>
