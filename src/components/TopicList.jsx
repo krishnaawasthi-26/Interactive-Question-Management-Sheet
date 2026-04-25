@@ -130,10 +130,6 @@ function TopicList({
       onRequireCopy?.();
       return;
     }
-    if (!premiumActive) {
-      onPremiumLocked?.("Attempt duration and reminder features are premium.");
-      return;
-    }
     if (question.done) {
       toggleQuestionDone(topicId, subId, question.id);
       return;
@@ -641,6 +637,7 @@ function TopicList({
           questionText={activeAttempt.questionText}
           questionLink={activeAttempt.questionLink}
           topicName={activeAttempt.topicName}
+          premiumActive={premiumActive}
           onClose={() => setActiveAttempt(null)}
           onSave={(attemptLog) => {
             updateQuestionAttempt(activeAttempt.topicId, activeAttempt.subId, activeAttempt.questionId, attemptLog);

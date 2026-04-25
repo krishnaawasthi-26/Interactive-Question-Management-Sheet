@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { navigateTo, ROUTES } from "../services/routes";
 
 const RESULT_OPTIONS = [
   { key: "solved", label: "Solved" },
-  { key: "partially_solved", label: "Partially Solved" },
-  { key: "failed", label: "Failed" },
+  { key: "partially_solved", label: "Partial" },
+  { key: "failed", label: "Error / Attempted" },
+  { key: "optimized_solution", label: "Optimized Solution", premiumOnly: true },
+  { key: "expert_mastery", label: "Expert Mastery", premiumOnly: true },
 ];
 
 const MISTAKES = [
@@ -19,7 +22,6 @@ const CONFIDENCE_LEVELS = ["Low", "Medium", "High"];
 const REVISION_OPTIONS = ["Today", "Tomorrow", "In 2 Days", "In 1 Week", "In 2 Weeks", "Never"];
 const TIME_SPENT_OPTIONS = ["5", "10", "15", "20", "30", "45", "60"];
 const DIFFICULTY_OPTIONS = ["Unspecified", "Easy", "Medium", "Hard"];
-
 const getPlatformFromLink = (link) => {
   if (!link) return "LeetCode";
   if (link.includes("leetcode")) return "LeetCode";
@@ -55,6 +57,8 @@ const formatClock = (seconds) => {
 export function AttemptOutcomeSection({
   result,
   setResult,
+  premiumActive,
+  onOpenPremiumPrompt,
   timeSpent,
   setTimeSpent,
   confidence,
@@ -76,71 +80,98 @@ export function AttemptOutcomeSection({
           <p className="mb-2 text-sm text-[var(--text-secondary)]">Result</p>
           <div className="flex flex-wrap gap-2">
             {RESULT_OPTIONS.map((option) => (
-              <button key={option.key} type="button" onClick={() => setResult(option.key)} className={`rounded-md border px-3 py-2 text-sm ${result === option.key ? "border-[var(--accent-primary)]" : "border-[var(--border-subtle)]"}`} style={result === option.key ? { background: "color-mix(in srgb, var(--accent-primary) 18%, var(--surface-elevated))" } : undefined}>
-                {option.label}
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => {
+                  if (!premiumActive && option.premiumOnly) {
+                    onOpenPremiumPrompt();
+                    return;
+                  }
+                  setResult(option.key);
+                }}
+                className={`rounded-md border px-3 py-2 text-sm ${result === option.key ? "border-[var(--accent-primary)]" : "border-[var(--border-subtle)]"} ${!premiumActive && option.premiumOnly ? "premium-option-locked" : ""}`}
+                style={result === option.key ? { background: "color-mix(in srgb, var(--accent-primary) 18%, var(--surface-elevated))" } : undefined}
+              >
+                {option.label} {!premiumActive && option.premiumOnly ? "🔒" : ""}
               </button>
             ))}
           </div>
         </div>
-        <div className="space-y-2">
-          <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
-          <select
-            value={selectedTimeOption}
-            onChange={(event) => {
-              if (event.target.value === "custom") return;
-              setTimeSpent(event.target.value);
-            }}
-            className="field-base w-full"
-          >
-            {TIME_SPENT_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option} min
-              </option>
-            ))}
-            <option value="custom">Custom</option>
-          </select>
-          {selectedTimeOption === "custom" ? (
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={timeSpent}
-              onChange={(event) => setTimeSpent(event.target.value)}
+        {premiumActive ? (
+          <div className="space-y-2">
+            <span className="text-sm text-[var(--text-secondary)]">Time spent (minutes)</span>
+            <select
+              value={selectedTimeOption}
+              onChange={(event) => {
+                if (event.target.value === "custom") return;
+                setTimeSpent(event.target.value);
+              }}
               className="field-base w-full"
-              placeholder="Enter custom minutes"
-            />
-          ) : null}
-        </div>
-      </div>
-      <div className="mt-4 rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/60 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">Focus Timer</p>
-            <p className="text-lg font-semibold text-[var(--text-primary)]">{formatClock(timerSeconds)}</p>
+            >
+              {TIME_SPENT_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option} min
+                </option>
+              ))}
+              <option value="custom">Custom</option>
+            </select>
+            {selectedTimeOption === "custom" ? (
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={timeSpent}
+                onChange={(event) => setTimeSpent(event.target.value)}
+                className="field-base w-full"
+                placeholder="Enter custom minutes"
+              />
+            ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {isTimerRunning ? (
-              <button type="button" className="btn-base btn-neutral" onClick={onPauseTimer}>Pause</button>
-            ) : (
-              <button type="button" className="btn-base btn-primary" onClick={onStartTimer}>Start</button>
-            )}
-            <button type="button" className="btn-base btn-neutral" onClick={onResetTimer}>Reset</button>
-            <button type="button" className="btn-base btn-neutral" onClick={onUseTimerForTimeSpent}>Use timer</button>
+        ) : (
+          <button type="button" onClick={onOpenPremiumPrompt} className="premium-locked-card">
+            <span>🔒 Time spent tracking</span>
+            <span className="premium-locked-card__hint">Premium only</span>
+          </button>
+        )}
+      </div>
+      {premiumActive ? (
+        <>
+          <div className="mt-4 rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/60 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">Focus Timer</p>
+                <p className="text-lg font-semibold text-[var(--text-primary)]">{formatClock(timerSeconds)}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {isTimerRunning ? (
+                  <button type="button" className="btn-base btn-neutral" onClick={onPauseTimer}>Pause</button>
+                ) : (
+                  <button type="button" className="btn-base btn-primary" onClick={onStartTimer}>Start</button>
+                )}
+                <button type="button" className="btn-base btn-neutral" onClick={onResetTimer}>Reset</button>
+                <button type="button" className="btn-base btn-neutral" onClick={onUseTimerForTimeSpent}>Use timer</button>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-[var(--text-tertiary)]">Use timer to auto-fill time spent when you finish solving.</p>
           </div>
-        </div>
-        <p className="mt-2 text-xs text-[var(--text-tertiary)]">Use timer to auto-fill time spent when you finish solving.</p>
-      </div>
-
-      <div className="mt-4">
-        <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
-        <div className="inline-flex flex-wrap overflow-hidden rounded-md border border-[var(--border-subtle)]">
-          {CONFIDENCE_LEVELS.map((level) => (
-            <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]" : "bg-transparent text-[var(--text-primary)]"}`}>
-              {level}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="mt-4">
+            <p className="mb-2 text-sm text-[var(--text-secondary)]">Confidence level</p>
+            <div className="inline-flex flex-wrap overflow-hidden rounded-md border border-[var(--border-subtle)]">
+              {CONFIDENCE_LEVELS.map((level) => (
+                <button key={level} type="button" onClick={() => setConfidence(level)} className={`px-4 py-2 text-sm ${confidence === level ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]" : "bg-transparent text-[var(--text-primary)]"}`}>
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <button type="button" onClick={onOpenPremiumPrompt} className="premium-locked-card mt-4 w-full">
+          <span>🔒 Timer, confidence & deeper analytics</span>
+          <span className="premium-locked-card__hint">Tap to unlock with Premium</span>
+        </button>
+      )}
     </section>
   );
 }
@@ -194,7 +225,28 @@ export function RevisionPlanningSection({ revisionTiming, setRevisionTiming, sol
   );
 }
 
-function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSave }) {
+function PremiumUpgradePrompt({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--overlay-backdrop)] px-4 backdrop-blur-sm">
+      <div className="panel w-full max-w-md rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)]">Unlock premium attempt tracking</h3>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          Upgrade to Premium to unlock advanced attempt options and learn faster with deeper analytics.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <button type="button" className="btn-base premium-continue-free-btn" onClick={onClose}>
+            Continue free
+          </button>
+          <button type="button" className="btn-base premium-buy-btn" onClick={() => navigateTo(ROUTES.PREMIUM)}>
+            Buy Premium
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LogAttemptModal({ questionText, questionLink, topicName, premiumActive = false, onClose, onSave }) {
   const [result, setResult] = useState("partially_solved");
   const [timeSpent, setTimeSpent] = useState("40");
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -215,6 +267,7 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
 
   const [problemName] = useState(questionText);
   const [topic, setTopic] = useState(topicName || "General");
+  const [showPremiumPrompt, setShowPremiumPrompt] = useState(false);
 
   useEffect(() => {
     if (!isTimerRunning) {
@@ -298,6 +351,8 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
           <AttemptOutcomeSection
             result={result}
             setResult={setResult}
+            premiumActive={premiumActive}
+            onOpenPremiumPrompt={() => setShowPremiumPrompt(true)}
             timeSpent={timeSpent}
             setTimeSpent={setTimeSpent}
             confidence={confidence}
@@ -310,27 +365,41 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
             onUseTimerForTimeSpent={useTimerForTimeSpent}
           />
 
-          <MistakeAnalysisSection
-            mistakes={mistakes}
-            setMistakes={setMistakes}
-            notes={notes}
-            setNotes={setNotes}
-            hintUsed={hintUsed}
-            setHintUsed={setHintUsed}
-            editorialUsed={editorialUsed}
-            setEditorialUsed={setEditorialUsed}
-          />
+          {premiumActive ? (
+            <MistakeAnalysisSection
+              mistakes={mistakes}
+              setMistakes={setMistakes}
+              notes={notes}
+              setNotes={setNotes}
+              hintUsed={hintUsed}
+              setHintUsed={setHintUsed}
+              editorialUsed={editorialUsed}
+              setEditorialUsed={setEditorialUsed}
+            />
+          ) : (
+            <button type="button" onClick={() => setShowPremiumPrompt(true)} className={`${sectionClass} premium-locked-card w-full text-left`}>
+              <span>🔒 Mistake analysis is Premium</span>
+              <span className="premium-locked-card__hint">Unlock error tags, notes and hint/editorial tracking</span>
+            </button>
+          )}
 
-          <RevisionPlanningSection
-            revisionTiming={revisionTiming}
-            setRevisionTiming={setRevisionTiming}
-            solvedWithHelp={solvedWithHelp}
-            setSolvedWithHelp={setSolvedWithHelp}
-            attemptNumber={attemptNumber}
-            setAttemptNumber={setAttemptNumber}
-            submissions={submissions}
-            setSubmissions={setSubmissions}
-          />
+          {premiumActive ? (
+            <RevisionPlanningSection
+              revisionTiming={revisionTiming}
+              setRevisionTiming={setRevisionTiming}
+              solvedWithHelp={solvedWithHelp}
+              setSolvedWithHelp={setSolvedWithHelp}
+              attemptNumber={attemptNumber}
+              setAttemptNumber={setAttemptNumber}
+              submissions={submissions}
+              setSubmissions={setSubmissions}
+            />
+          ) : (
+            <button type="button" onClick={() => setShowPremiumPrompt(true)} className={`${sectionClass} premium-locked-card w-full text-left`}>
+              <span>🔒 Revision planning is Premium</span>
+              <span className="premium-locked-card__hint">Get reminders and attempt intelligence</span>
+            </button>
+          )}
         </div>
 
         <footer className="flex flex-col gap-3 border-t border-[var(--border-subtle)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -341,6 +410,7 @@ function LogAttemptModal({ questionText, questionLink, topicName, onClose, onSav
           </div>
         </footer>
       </div>
+      {showPremiumPrompt ? <PremiumUpgradePrompt onClose={() => setShowPremiumPrompt(false)} /> : null}
     </div>
   );
 }

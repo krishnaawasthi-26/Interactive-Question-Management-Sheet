@@ -1044,6 +1044,41 @@ canvas {
   opacity: 0.88;
 }
 
+.premium-option-locked {
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.premium-locked-card {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px dashed var(--state-warning-border);
+  background: color-mix(in srgb, var(--state-warning-bg) 60%, var(--surface));
+  color: var(--text-primary);
+  padding: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.premium-locked-card__hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.premium-continue-free-btn {
+  opacity: 0.66;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.premium-buy-btn {
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 75%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 88%, white 12%), color-mix(in srgb, var(--accent-success) 78%, var(--accent-primary) 22%));
+  color: white;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent-primary) 42%, transparent);
+}
+
 .question-done-toggle--open:hover {
   border-color: var(--state-success-border);
 }
