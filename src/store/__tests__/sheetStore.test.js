@@ -37,6 +37,12 @@ const baseTopics = [
   },
 ];
 
+const makeTopic = (index) => ({
+  id: `topic-${index}`,
+  title: `Topic ${index}`,
+  subTopics: [],
+});
+
 const resetStore = () => {
   useSheetStore.setState({
     sheets: [],
@@ -260,5 +266,41 @@ describe("sheetStore core flows", () => {
     expect(created).toMatchObject({ id: "sheet-6" });
     expect(createSheet).toHaveBeenCalledWith("token", "Premium Sheet");
     expect(useSheetStore.getState().limitWarning).toBeNull();
+  });
+
+  it("blocks free users from copying oversized sheets unless source id is exempt", async () => {
+    const oversizedTopics = Array.from({ length: 51 }, (_, index) => makeTopic(index + 1));
+    createSheet.mockResolvedValue({ id: "copied-1", title: "Copied" });
+
+    const blocked = await useSheetStore.getState().duplicateSheet("token", {
+      id: "random-source",
+      title: "Blind 75",
+      topics: oversizedTopics,
+    });
+
+    expect(blocked).toBeNull();
+    expect(createSheet).not.toHaveBeenCalled();
+    expect(useSheetStore.getState().limitWarning).toBe("Limit reached: copy (topics)");
+
+    const allowed = await useSheetStore.getState().duplicateSheet("token", {
+      id: "famous-blind-75",
+      title: "Anything",
+      topics: oversizedTopics,
+    });
+
+    expect(allowed).toMatchObject({ id: "copied-1" });
+    expect(createSheet).toHaveBeenCalled();
+  });
+
+  it("locks editing for free users when a sheet already exceeds free limits", async () => {
+    useSheetStore.setState({
+      topics: Array.from({ length: 51 }, (_, index) => makeTopic(index + 1)),
+    });
+
+    const created = await useSheetStore.getState().addTopic("One more");
+
+    expect(created).toBeNull();
+    expect(createTopic).not.toHaveBeenCalled();
+    expect(useSheetStore.getState().limitWarning).toBe("Limit reached: edit-lock (topics)");
   });
 });
