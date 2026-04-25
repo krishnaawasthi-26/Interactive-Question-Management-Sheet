@@ -434,6 +434,21 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     }
   }, [createNewSheet, currentUser?.token, handleSheetActionError]);
 
+  const handleRenameOpenedSheet = useCallback(async () => {
+    if (!currentUser?.token || !sheetId) return;
+
+    const defaultTitle = (sheetTitle || "Untitled Sheet").trim();
+    const nextTitle = window.prompt("Enter a new sheet name", defaultTitle)?.trim();
+
+    if (!nextTitle || nextTitle === defaultTitle) return;
+
+    try {
+      await renameSheet(currentUser.token, sheetId, nextTitle);
+    } catch (error) {
+      handleSheetActionError("rename-sheet-error", "Could not rename sheet", error);
+    }
+  }, [currentUser?.token, handleSheetActionError, renameSheet, sheetId, sheetTitle]);
+
   const createSheetActions = useCallback(
     (sheet) => [
       {
@@ -573,6 +588,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
       <AppShell
         title={isEditing ? sheetTitle || "Untitled Sheet" : null}
         subtitle={isEditing ? `${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}` : null}
+        titleActions={isEditing && sheetId ? <button type="button" className="btn-base btn-neutral px-3 py-1.5" onClick={handleRenameOpenedSheet}>Rename</button> : null}
         theme={theme}
         onThemeChange={onThemeChange}
         userLabel={currentUser?.fullName || currentUser?.email || "Account"}

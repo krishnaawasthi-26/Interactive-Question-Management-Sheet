@@ -19,6 +19,7 @@ const footerLinks = [
 function AppShell({
   title,
   subtitle,
+  titleActions,
   userLabel,
   headerActions,
   rightPanel,
@@ -95,7 +96,10 @@ function AppShell({
 
             {title ? (
               <header className="panel-elevated mb-5 px-4 py-4 sm:px-5">
-                <h1 className="page-title">{title}</h1>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <h1 className="page-title">{title}</h1>
+                  {titleActions ? <div className="flex flex-wrap gap-2">{titleActions}</div> : null}
+                </div>
                 {subtitle ? <p className="meta-text mt-1">{subtitle}</p> : null}
               </header>
             ) : null}
