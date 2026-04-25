@@ -402,7 +402,15 @@ body {
   transform: translateY(1px);
 }
 
+.mobile-sidebar-toggle--hidden {
+  display: none;
+}
+
 @media (min-width: 1024px) {
+  .mobile-sidebar-toggle {
+    display: none;
+  }
+
   .app-shell {
     padding: 16px;
   }
