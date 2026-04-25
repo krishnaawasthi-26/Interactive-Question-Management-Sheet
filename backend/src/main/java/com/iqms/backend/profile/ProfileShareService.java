@@ -4,6 +4,7 @@ import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
 import com.iqms.backend.model.Sheet;
 import com.iqms.backend.service.SheetService;
+import com.iqms.backend.service.PremiumAccessService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,10 +20,15 @@ public class ProfileShareService {
 
   private final UserRepository userRepository;
   private final SheetService sheetService;
+  private final PremiumAccessService premiumAccessService;
 
-  public ProfileShareService(UserRepository userRepository, SheetService sheetService) {
+  public ProfileShareService(
+      UserRepository userRepository,
+      SheetService sheetService,
+      PremiumAccessService premiumAccessService) {
     this.userRepository = userRepository;
     this.sheetService = sheetService;
+    this.premiumAccessService = premiumAccessService;
   }
 
   public Map<String, Object> getSharedProfile(String profileShareId) {
@@ -138,6 +144,10 @@ public class ProfileShareService {
     profile.put("copiedSheetsCount", user.getCopiedSheetIds() == null ? 0 : user.getCopiedSheetIds().size());
     profile.put("creatorTotalViews", totalViews);
     profile.put("creatorTotalCopies", totalCopies);
+    PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
+    profile.put("premiumActive", accessState.premiumActive());
+    profile.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    profile.put("premiumPlan", user.getPlanTier());
     return profile;
   }
 
@@ -158,6 +168,10 @@ public class ProfileShareService {
       entry.put("id", user.getId());
       entry.put("name", user.getName());
       entry.put("username", user.getUsername());
+      PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
+      entry.put("premiumActive", accessState.premiumActive());
+      entry.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+      entry.put("premiumPlan", user.getPlanTier());
       mapped.add(entry);
     }
     return mapped;

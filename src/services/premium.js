@@ -25,7 +25,9 @@ export const getPremiumAccess = (user) => {
 
   const isPaidPremium = premiumUntilMs > now;
   const isTrialPremium = premiumTrialEndsMs > now && !isPaidPremium;
-  const premiumActive = isPaidPremium || isTrialPremium || Boolean(user.premiumActive);
+  const premiumActive = typeof user.premiumActive === "boolean"
+    ? user.premiumActive
+    : (isPaidPremium || isTrialPremium);
   const premiumAccessType = isPaidPremium
     ? "paid"
     : isTrialPremium

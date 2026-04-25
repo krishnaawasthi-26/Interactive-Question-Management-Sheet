@@ -228,6 +228,7 @@ public class ProfileController {
     payload.put("premiumActive", accessState.premiumActive());
     payload.put("premiumAccessType", accessState.premiumAccessType());
     payload.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    payload.put("premiumPlan", user.getPlanTier());
     payload.put("premiumExpiresAt", accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString());
     payload.put("premiumTrialStartedAt", accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString());
     payload.put("premiumTrialEndsAt", accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString());
@@ -269,6 +270,10 @@ public class ProfileController {
       entry.put("id", user.getId());
       entry.put("name", user.getName());
       entry.put("username", user.getUsername());
+      PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
+      entry.put("premiumActive", accessState.premiumActive());
+      entry.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+      entry.put("premiumPlan", user.getPlanTier());
       mapped.add(entry);
     }
     return mapped;
