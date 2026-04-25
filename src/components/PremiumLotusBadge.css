@@ -1,0 +1,43 @@
+.premium-lotus-badge {
+  --lotus-size: 18px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lotus-size);
+  height: var(--lotus-size);
+  min-width: var(--lotus-size);
+  min-height: var(--lotus-size);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(245, 231, 176, 0.94), rgba(245, 231, 176, 0) 56%),
+    radial-gradient(circle at 64% 70%, color-mix(in srgb, var(--accent-info) 64%, #6f88ff), color-mix(in srgb, var(--accent-primary) 48%, #2340bb));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 0 12px rgba(255, 206, 89, 0.45),
+    0 0 20px color-mix(in srgb, var(--accent-info) 35%, transparent);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.premium-lotus-badge--sm {
+  --lotus-size: 19px;
+}
+
+.premium-lotus-badge--avatar {
+  --lotus-size: 28px;
+}
+
+.premium-lotus-badge__image {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
+}
+
+.premium-lotus-badge__emoji {
+  font-size: calc(var(--lotus-size) * 0.64);
+  line-height: 1;
+}

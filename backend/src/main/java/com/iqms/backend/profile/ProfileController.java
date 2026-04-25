@@ -228,6 +228,7 @@ public class ProfileController {
     payload.put("premiumActive", accessState.premiumActive());
     payload.put("premiumAccessType", accessState.premiumAccessType());
     payload.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    payload.put("premiumPlan", accessState.premiumActive() ? user.getPlanTier() : null);
     payload.put("premiumExpiresAt", accessState.premiumExpiresAt() == null ? null : accessState.premiumExpiresAt().toString());
     payload.put("premiumTrialStartedAt", accessState.premiumTrialStartedAt() == null ? null : accessState.premiumTrialStartedAt().toString());
     payload.put("premiumTrialEndsAt", accessState.premiumTrialEndsAt() == null ? null : accessState.premiumTrialEndsAt().toString());
@@ -266,9 +267,13 @@ public class ProfileController {
       User user = usersById.get(id);
       if (user == null) continue;
       Map<String, Object> entry = new LinkedHashMap<>();
+      PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
       entry.put("id", user.getId());
       entry.put("name", user.getName());
       entry.put("username", user.getUsername());
+      entry.put("premiumActive", accessState.premiumActive());
+      entry.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+      entry.put("premiumPlan", accessState.premiumActive() ? user.getPlanTier() : null);
       mapped.add(entry);
     }
     return mapped;

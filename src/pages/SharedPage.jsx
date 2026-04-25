@@ -15,6 +15,7 @@ import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
 import AppShell from "../components/AppShell";
+import PremiumLotusBadge from "../components/PremiumLotusBadge";
 
 function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
@@ -183,15 +184,19 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
           <section className={cardClassName}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-info)_16%,var(--surface-elevated))] text-xl font-semibold text-[color-mix(in_srgb,var(--accent-info)_62%,white)]">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-info)_16%,var(--surface-elevated))] text-xl font-semibold text-[color-mix(in_srgb,var(--accent-info)_62%,white)]">
                   {profileName
                     .split(" ")
                     .slice(0, 2)
                     .map((part) => part[0])
                     .join("")}
+                  <PremiumLotusBadge active={Boolean(profile?.premiumActive)} size="avatar" className="absolute -bottom-1 -right-1" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{profileName}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{profileName}</h1>
+                    <PremiumLotusBadge active={Boolean(profile?.premiumActive)} size="sm" />
+                  </div>
                   <p className="meta-text mt-1">@{profile?.username || "unknown"}</p>
                   {(profile?.institution || profile?.company) && (
                     <p className="meta-text mt-1">{[profile?.institution, profile?.company].filter(Boolean).join(" · ")}</p>
@@ -450,7 +455,10 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                       key={`${entry.username}-${entry.sheetTitle}-${index}`}
                       className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/55 p-2 text-sm"
                     >
-                      <p className="font-medium">@{entry.username}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">@{entry.username}</p>
+                        <PremiumLotusBadge active={Boolean(entry?.premiumActive)} size="sm" showTooltip={false} />
+                      </div>
                       {entry.sheetTitle ? (
                         <p className="meta-text text-xs">Sheet: {entry.sheetTitle || "Untitled Sheet"}</p>
                       ) : (

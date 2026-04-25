@@ -3,9 +3,9 @@ import { fetchProfile } from "../api/profileApi";
 import AppShell from "../components/AppShell";
 import EmptyState from "../components/ui/EmptyState";
 import ProgressBar from "../components/ui/ProgressBar";
-import SectionHeader from "../components/ui/SectionHeader";
 import StatCard from "../components/ui/StatCard";
 import SurfaceCard from "../components/ui/SurfaceCard";
+import PremiumLotusBadge from "../components/PremiumLotusBadge";
 import { calculateOverallProgress, calculateSheetProgress } from "../services/progress";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
@@ -154,7 +154,24 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
     >
       <div className="space-y-5">
         <SurfaceCard elevated>
-          <SectionHeader eyebrow="Profile Summary" title={currentUser?.name || currentUser?.username || "Profile"} subtitle={`@${persistedUsername}`} actions={<button className="btn-base btn-primary" onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}>Edit Profile Info</button>} />
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[color-mix(in_srgb,var(--accent-info)_14%,var(--surface-elevated))] text-lg font-semibold text-[var(--text-primary)]">
+                {(profileDetails?.name || profileDetails?.username || "PR")
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")}
+                <PremiumLotusBadge active={Boolean(profileDetails?.premiumActive)} size="avatar" className="absolute -bottom-1 -right-1" />
+              </div>
+              <div className="flex items-center gap-2">
+                <h2 className="section-title">{currentUser?.name || currentUser?.username || "Profile"}</h2>
+                <PremiumLotusBadge active={Boolean(profileDetails?.premiumActive)} size="sm" />
+              </div>
+            </div>
+            <button className="btn-base btn-primary" onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}>Edit Profile Info</button>
+          </div>
+          <p className="meta-text">@{persistedUsername}</p>
           {profileDetails?.bio ? <p className="meta-text whitespace-pre-wrap">{profileDetails.bio}</p> : null}
           <p className="meta-text mt-2 break-all">Public profile link: {profileShareUrl}</p>
           {profileLinks.length > 0 ? <div className="mt-3 flex flex-wrap gap-2">{profileLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="btn-base btn-neutral text-xs">{link.label}</a>)}</div> : null}
@@ -262,7 +279,10 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
                 <div className="max-h-72 space-y-2 overflow-auto">
                   {engagementViewer.users.map((entry, index) => (
                     <div key={`${entry.username}-${entry.sheetTitle}-${index}`} className="surface-card surface-card-elevated p-3 text-sm">
+                      <div className="flex items-center gap-2">
                       <p className="card-title">@{entry.username}</p>
+                      <PremiumLotusBadge active={Boolean(entry?.premiumActive)} size="sm" showTooltip={false} />
+                    </div>
                       <p className="meta-text">{entry.sheetTitle ? `Sheet: ${entry.sheetTitle || "Untitled Sheet"}` : (entry.name || "Create Sheets user")}</p>
                     </div>
                   ))}

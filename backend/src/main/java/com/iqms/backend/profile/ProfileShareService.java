@@ -3,6 +3,7 @@ package com.iqms.backend.profile;
 import com.iqms.backend.model.User;
 import com.iqms.backend.repository.UserRepository;
 import com.iqms.backend.model.Sheet;
+import com.iqms.backend.service.PremiumAccessService;
 import com.iqms.backend.service.SheetService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,10 +20,12 @@ public class ProfileShareService {
 
   private final UserRepository userRepository;
   private final SheetService sheetService;
+  private final PremiumAccessService premiumAccessService;
 
-  public ProfileShareService(UserRepository userRepository, SheetService sheetService) {
+  public ProfileShareService(UserRepository userRepository, SheetService sheetService, PremiumAccessService premiumAccessService) {
     this.userRepository = userRepository;
     this.sheetService = sheetService;
+    this.premiumAccessService = premiumAccessService;
   }
 
   public Map<String, Object> getSharedProfile(String profileShareId) {
@@ -130,6 +133,10 @@ public class ProfileShareService {
     profile.put("websiteUrl", user.getWebsiteUrl());
     profile.put("githubUrl", user.getGithubUrl());
     profile.put("linkedinUrl", user.getLinkedinUrl());
+    PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
+    profile.put("premiumActive", accessState.premiumActive());
+    profile.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+    profile.put("premiumPlan", accessState.premiumActive() ? user.getPlanTier() : null);
     profile.put("totalSheets", totalSheets);
     profile.put("followers", mapUsersById(user.getFollowerUserIds()));
     profile.put("following", mapUsersById(user.getFollowingUserIds()));
@@ -155,9 +162,13 @@ public class ProfileShareService {
       User user = usersById.get(id);
       if (user == null) continue;
       Map<String, Object> entry = new LinkedHashMap<>();
+      PremiumAccessService.PremiumAccessState accessState = premiumAccessService.resolveAccessState(user);
       entry.put("id", user.getId());
       entry.put("name", user.getName());
       entry.put("username", user.getUsername());
+      entry.put("premiumActive", accessState.premiumActive());
+      entry.put("premiumUntil", accessState.premiumUntil() == null ? null : accessState.premiumUntil().toString());
+      entry.put("premiumPlan", accessState.premiumActive() ? user.getPlanTier() : null);
       mapped.add(entry);
     }
     return mapped;
