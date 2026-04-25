@@ -10,6 +10,7 @@ function ConfirmationModal({
 
   const toneClassByVariant = {
     neutral: "btn-neutral",
+    subtle: "btn-neutral",
     primary: "btn-primary",
     danger: "btn-danger",
     success: "btn-success",
@@ -30,7 +31,7 @@ function ConfirmationModal({
               type="button"
               onClick={action.onClick}
               disabled={isBusy || action.disabled}
-              className={`btn-base px-3 py-2 text-sm ${toneClassByVariant[action.variant || "neutral"]}`}
+              className={`btn-base px-3 py-2 text-sm ${toneClassByVariant[action.variant || "neutral"]} ${action.className || ""}`.trim()}
             >
               {action.label}
             </button>

@@ -34,4 +34,22 @@ describe("Sidebar inbox navigation", () => {
     expect(navigateTo).toHaveBeenCalledWith(ROUTES.NOTIFICATIONS);
     expect(logoutSpy).not.toHaveBeenCalled();
   });
+
+  it("shows premium popup instead of navigating when reminders is locked", () => {
+    render(<Sidebar isSidebarOpen onToggle={() => {}} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Reminders (Premium)" }));
+
+    expect(screen.getByText("Premium feature")).toBeInTheDocument();
+    expect(navigateTo).not.toHaveBeenCalledWith(ROUTES.ALARMS);
+  });
+
+  it("navigates to premium page when buy premium is clicked", () => {
+    render(<Sidebar isSidebarOpen onToggle={() => {}} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Insights (Premium)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Buy Premium" }));
+
+    expect(navigateTo).toHaveBeenCalledWith(ROUTES.PREMIUM);
+  });
 });
