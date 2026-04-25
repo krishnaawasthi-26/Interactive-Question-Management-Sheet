@@ -47,6 +47,21 @@ const getFreeLimitOverflowType = (topics = []) => {
   return null;
 };
 
+const clearSharedProgress = (topics = []) =>
+  topics.map((topic) => ({
+    ...topic,
+    subTopics: (topic.subTopics || []).map((subTopic) => ({
+      ...subTopic,
+      questions: (subTopic.questions || []).map((question) => ({
+        ...question,
+        done: false,
+        attemptLog: null,
+        attemptLogs: [],
+        revised: false,
+      })),
+    })),
+  }));
+
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
 export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   getSheetLimit: () => {
@@ -312,7 +327,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   setReadOnlySheet: (sheet) =>
     set({
       activeSheetId: null,
-      topics: sheet.topics || [],
+      topics: clearSharedProgress(sheet.topics || []),
       sheetTitle: sheet.title || "Question Sheet",
       past: [],
       future: [],
