@@ -11,7 +11,7 @@ function TopBar({ userLabel = "Account", actions }) {
       <div className="theme-topbar__accent" aria-hidden="true" />
       <div className="flex flex-wrap items-center justify-between gap-3 md:flex-nowrap">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_16%,transparent),var(--surface))] text-sm">📘</div>
+          <div className="ml-10 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_16%,transparent),var(--surface))] text-sm sm:ml-11 md:ml-0">📘</div>
           <div className="min-w-0">
             <p className="eyebrow">Create Sheets Workspace</p>
             <p className="truncate text-sm text-[var(--text-secondary)]">Focused interview-prep operating system</p>

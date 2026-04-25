@@ -408,13 +408,15 @@ body {
   }
 
   .app-shell-grid {
-    display: block;
+    display: grid;
+    grid-template-columns: var(--sidebar-width, var(--sidebar-collapsed-width, 88px)) minmax(0, 1fr);
     border: 1px solid var(--border-subtle);
     border-radius: 22px;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     overflow: hidden;
     padding-left: 0;
     box-shadow: var(--shadow-sm);
+    transition: grid-template-columns 260ms ease;
   }
 
   .app-content {
@@ -1203,13 +1205,12 @@ canvas {
   .sidebar-desktop {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: calc(100dvh - 34px);
     border-right: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
     padding: 22px 10px 18px;
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    z-index: 45;
+    z-index: 1;
     transition: width 260ms ease;
   }
 
@@ -1226,9 +1227,9 @@ canvas {
   }
 
   .app-content {
-    width: calc(100% - var(--sidebar-width, var(--sidebar-collapsed-width, 88px)));
-    margin-left: var(--sidebar-width, var(--sidebar-collapsed-width, 88px));
-    transition: margin-left 260ms ease, width 260ms ease;
+    width: 100%;
+    margin-left: 0;
+    transition: width 260ms ease;
   }
 }
 
