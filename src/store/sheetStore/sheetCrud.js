@@ -246,6 +246,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
         ...question,
         done: true,
         attemptLog,
+        attemptLogs: [...(Array.isArray(question.attemptLogs) ? question.attemptLogs : (question.attemptLog ? [question.attemptLog] : [])), attemptLog],
       }));
       return applyTopicsWithHistoryAndDirty(state, topics);
     }),

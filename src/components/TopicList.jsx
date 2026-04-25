@@ -6,6 +6,41 @@ import AttemptLogModal from "./AttemptLogModal";
 const normalizeText = (value) =>
   `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
 
+const ATTEMPT_RESULT_META = {
+  failed: {
+    tickClasses: "border-[var(--accent-danger)] bg-[color-mix(in_srgb,var(--accent-danger)_24%,var(--surface))] text-[var(--accent-danger)]",
+    label: "Error / Attempted",
+    color: "var(--accent-danger)",
+  },
+  partially_solved: {
+    tickClasses: "border-[color-mix(in_srgb,var(--accent-warning)_78%,var(--accent-info))] bg-[color-mix(in_srgb,var(--accent-warning)_30%,var(--surface))] text-[color-mix(in_srgb,var(--accent-warning)_88%,black)]",
+    label: "Partially Solved",
+    color: "color-mix(in srgb, var(--accent-warning) 80%, var(--accent-info))",
+  },
+  solved: {
+    tickClasses: "border-[var(--accent-success)] bg-[color-mix(in_srgb,var(--accent-success)_24%,var(--surface))] text-[var(--accent-success)]",
+    label: "Solved",
+    color: "var(--accent-success)",
+  },
+  unresolved: {
+    tickClasses: "border-[var(--border-strong)] bg-transparent text-transparent",
+    label: "Unsolved",
+    color: "var(--border-strong)",
+  },
+};
+
+const getAttemptLogs = (question) => {
+  if (Array.isArray(question.attemptLogs) && question.attemptLogs.length > 0) return question.attemptLogs;
+  if (question.attemptLog) return [question.attemptLog];
+  return [];
+};
+
+const getLatestAttempt = (question) => {
+  const attempts = getAttemptLogs(question);
+  if (!attempts.length) return null;
+  return attempts[attempts.length - 1];
+};
+
 function TopicList({
   isEditing = true,
   searchQuery = "",
@@ -13,6 +48,7 @@ function TopicList({
   allowProgressToggle = true,
   allowReorder = true,
   focusProblemId = null,
+  showAttemptInsights = true,
   premiumActive = false,
   onPremiumLocked,
   onRequireCopy,
@@ -30,7 +66,6 @@ function TopicList({
   const reorderTopics = useSheetStore((state) => state.reorderTopics);
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
   const moveQuestion = useSheetStore((state) => state.moveQuestion);
-  const toggleQuestionDone = useSheetStore((state) => state.toggleQuestionDone);
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
@@ -128,10 +163,6 @@ function TopicList({
   const handleToggleProgress = (topicId, subId, question, topicTitle, subTopicTitle) => {
     if (!allowProgressToggle) {
       onRequireCopy?.();
-      return;
-    }
-    if (question.done) {
-      toggleQuestionDone(topicId, subId, question.id);
       return;
     }
     setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text, questionLink: question.link, topicName: topicTitle, subTopicName: subTopicTitle });
@@ -397,15 +428,35 @@ function TopicList({
                                                 className="space-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-soft)] px-2 py-2"
                                               >
                                                 {sub.questions.map((q, qIndex) => (
+                                                  
                                                   <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled={!isEditing || !allowReorder}>
                                                     {(provided) => (
-                                                      <li
-                                                        data-problem-id={String(q.id)}
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60`}
-                                                      >
+                                                      (() => {
+                                                        const attemptLogs = getAttemptLogs(q);
+                                                        const totalAttempts = attemptLogs.length;
+                                                        const latestAttempt = getLatestAttempt(q);
+                                                        const latestResult = latestAttempt?.result || (q.done ? "solved" : "unresolved");
+                                                        const tickMeta = ATTEMPT_RESULT_META[latestResult] || ATTEMPT_RESULT_META.unresolved;
+                                                        const resultCounts = attemptLogs.reduce((acc, attempt) => {
+                                                          if (!attempt?.result) return acc;
+                                                          acc[attempt.result] = (acc[attempt.result] || 0) + 1;
+                                                          return acc;
+                                                        }, { failed: 0, partially_solved: 0, solved: 0 });
+                                                        const barSegments = [
+                                                          { key: "failed", count: resultCounts.failed, color: ATTEMPT_RESULT_META.failed.color },
+                                                          { key: "partially_solved", count: resultCounts.partially_solved, color: ATTEMPT_RESULT_META.partially_solved.color },
+                                                          { key: "solved", count: resultCounts.solved, color: ATTEMPT_RESULT_META.solved.color },
+                                                        ].filter((segment) => segment.count > 0);
+                                                        const hasRevisionMarker = totalAttempts > 1;
+
+                                                        return (
+                                                          <li
+                                                            data-problem-id={String(q.id)}
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60`}
+                                                          >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
                                                             <input
@@ -430,17 +481,29 @@ function TopicList({
                                                                 <button
                                                                   type="button"
                                                                   onClick={() => handleToggleProgress(topic.id, sub.id, q, topic.title, sub.title)}
-                                                                  className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${
-                                                                    q.done
-                                                                      ? "border-[color-mix(in_srgb,var(--accent-success)_80%,black)] bg-[var(--accent-success)] text-[var(--btn-on-success)]"
-                                                                      : "border-[var(--border-strong)] bg-transparent text-transparent"
+                                                                  className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${showAttemptInsights
+                                                                      ? tickMeta.tickClasses
+                                                                      : (
+                                                                        q.done
+                                                                          ? "border-[color-mix(in_srgb,var(--accent-success)_80%,black)] bg-[var(--accent-success)] text-[var(--btn-on-success)]"
+                                                                          : "border-[var(--border-strong)] bg-transparent text-transparent"
+                                                                      )
                                                                   } ${allowProgressToggle ? "question-done-toggle--open" : "cursor-pointer opacity-85"}`}
-                                                                  aria-label={q.done ? "Mark as not done" : "Mark as done"}
-                                                                  title={q.done ? "Solved" : "Unsolved"}
+                                                                  aria-label={q.done ? "Log another attempt" : "Log attempt"}
+                                                                  title={showAttemptInsights ? tickMeta.label : (q.done ? "Solved" : "Unsolved")}
                                                                 >
                                                                   ✓
                                                                 </button>
                                                               <span className="text-sm leading-5 text-[var(--text-primary)] break-words">{q.text}</span>
+                                                              {showAttemptInsights && hasRevisionMarker ? (
+                                                                <span
+                                                                  className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-xs text-[var(--accent-warning)]"
+                                                                  title="Revised"
+                                                                  aria-label="Revised"
+                                                                >
+                                                                  ★
+                                                                </span>
+                                                              ) : null}
                                                               </span>
                                                               {isEditing && (
                                                                 <>
@@ -496,6 +559,25 @@ function TopicList({
                                                                 )}
                                                               </div>
                                                             )}
+
+                                                            {showAttemptInsights && totalAttempts > 0 ? (
+                                                              <div className="mt-2 pl-3 sm:pl-7">
+                                                                <p className="text-[11px] text-[var(--text-tertiary)]">
+                                                                  Attempts: {totalAttempts}
+                                                                </p>
+                                                                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full border border-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+                                                                  <div className="flex h-full w-full">
+                                                                    {barSegments.map((segment) => (
+                                                                      <span
+                                                                        key={segment.key}
+                                                                        style={{ width: `${(segment.count / totalAttempts) * 100}%`, background: segment.color }}
+                                                                        title={`${ATTEMPT_RESULT_META[segment.key].label}: ${segment.count}/${totalAttempts}`}
+                                                                      />
+                                                                    ))}
+                                                                  </div>
+                                                                </div>
+                                                              </div>
+                                                            ) : null}
 
                                                             {isEditing && mobileActionQuestionId === q.id && (
                                                               <div className="mt-2 flex flex-wrap gap-1 pl-3 sm:hidden">
@@ -595,6 +677,8 @@ function TopicList({
                                                           </div>
                                                         )}
                                                       </li>
+                                                        );
+                                                      })()
                                                     )}
                                                   </Draggable>
                                                 ))}
