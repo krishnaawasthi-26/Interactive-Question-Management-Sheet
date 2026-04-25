@@ -576,6 +576,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         isEditing={isOwnerViewingSheet}
         allowReorder={isOwnerViewingSheet}
         allowProgressToggle={isOwnerViewingSheet}
+        showAttemptInsights={isOwnerViewingSheet}
         onRequireCopy={() => setCopyPromptOpen(true)}
       />
       {!isOwnerViewingSheet && username && (
