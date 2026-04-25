@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchProfile } from "../api/profileApi";
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import EmptyState from "../components/ui/EmptyState";
 import ProgressBar from "../components/ui/ProgressBar";
 import SectionHeader from "../components/ui/SectionHeader";
@@ -152,6 +153,13 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
       userLabel={currentUser?.username || "Account"}
       headerActions={<button onClick={onLogout} className="btn-base btn-danger text-sm">Logout</button>}
     >
+      <SeoMeta
+        title="Dashboard | Create Sheets Sheet Tracker"
+        description="Manage your custom sheets, coding practice tracker progress, and public sharing settings from your Create Sheets dashboard."
+        path="/profile"
+        noIndex
+        keywords={["dashboard", "sheet tracker", "coding practice tracker"]}
+      />
       <div className="space-y-5">
         <SurfaceCard elevated>
           <SectionHeader eyebrow="Profile Summary" title={currentUser?.name || currentUser?.username || "Profile"} subtitle={`@${persistedUsername}`} actions={<button className="btn-base btn-primary" onClick={() => navigateTo(ROUTES.EDIT_PROFILE)}>Edit Profile Info</button>} />

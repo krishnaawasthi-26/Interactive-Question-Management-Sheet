@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /app
+Allow: /profile/
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /notifications
+Disallow: /alerts
+Disallow: /alarms
+Disallow: /import
+Disallow: /export
+Disallow: /api
+Disallow: /shared
+
+Sitemap: https://createsheets.app/sitemap.xml

@@ -1,4 +1,5 @@
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import SurfaceCard from "../components/ui/SurfaceCard";
 
 const steps = [
@@ -12,6 +13,11 @@ const steps = [
 function HowToUsePage({ theme, onThemeChange }) {
   return (
     <AppShell title="How To Use" subtitle="Guided onboarding for your question-sheet workflow" theme={theme} onThemeChange={onThemeChange}>
+      <SeoMeta
+        title="How to Use Create Sheets | Build a DSA Practice Sheet"
+        description="Follow a step-by-step guide to create sheets, organize coding questions, track progress, and share public study sheets on Create Sheets."
+        path="/how-to-use"
+      />
       <SurfaceCard title="Get started in five steps" description="Follow this flow to set up and maintain an effective prep system.">
         <div className="space-y-3">
           {steps.map((step, index) => (

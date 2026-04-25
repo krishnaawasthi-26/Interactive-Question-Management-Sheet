@@ -37,9 +37,11 @@ export default function ThemeCinematicToggle() {
           <span key={theme} className="theme-cinematic-toggle__icon-enter">
             <img
               src={current.icon}
-              alt=""
-              loading="eager"
+              alt={`Create Sheets ${current.label} theme icon`}
+              loading="lazy"
               decoding="async"
+              width="28"
+              height="28"
               onError={(event) => {
                 event.currentTarget.style.display = "none";
                 const fallback = event.currentTarget.nextElementSibling;

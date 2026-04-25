@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import { createPremiumOrder, fetchPremiumPlans, fetchPremiumStatus, verifyPremiumPayment } from "../api/premiumApi";
 import { useAuthStore } from "../store/authStore";
 import { getPremiumAccess } from "../services/premium";
@@ -246,6 +247,12 @@ function PremiumPage({ theme, onThemeChange }) {
         userLabel={currentUser?.username || "Account"}
         contentClassName="premium-page"
       >
+        <SeoMeta
+          title="Premium Plans | Create Sheets"
+          description="Upgrade Create Sheets to unlock advanced reminder workflows, deeper learning insights, and higher limits for coding and DSA sheet management."
+          path="/premium"
+          keywords={["premium sheet tracker", "advanced coding practice tracker"]}
+        />
         <section className="premium-hero panel-elevated">
           <p className="eyebrow">Premium access active</p>
           <h2>You already have Premium access</h2>
@@ -276,6 +283,12 @@ function PremiumPage({ theme, onThemeChange }) {
       userLabel={currentUser?.username || "Account"}
       contentClassName="premium-page"
     >
+      <SeoMeta
+        title="Premium Plans | Create Sheets"
+        description="Upgrade Create Sheets to unlock advanced reminder workflows, deeper learning insights, and higher limits for coding and DSA sheet management."
+        path="/premium"
+        keywords={["premium sheet tracker", "advanced coding practice tracker"]}
+      />
       <section className="premium-hero panel-elevated">
         <div className="premium-hero__glow" aria-hidden="true" />
         <p className="eyebrow">Premium access</p>

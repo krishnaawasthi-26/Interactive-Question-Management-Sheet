@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 import GoogleAuthButton from "../components/GoogleAuthButton";
+import SeoMeta from "../components/SeoMeta";
 
 function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
   const login = useAuthStore((state) => state.login);
@@ -44,6 +45,13 @@ function LoginPage({ theme, onThemeChange, onLoginSuccess, onGoToSignUp }) {
 
   return (
     <AppShell title="Login" subtitle="Access your question sheets" theme={theme} onThemeChange={onThemeChange}>
+      <SeoMeta
+        title="Login | Create Sheets"
+        description="Login to Create Sheets to manage your DSA sheets, coding practice tracker, and private revision workflow."
+        path="/login"
+        noIndex
+        keywords={["login create sheets", "sheet tracker account"]}
+      />
       <div className="panel mx-auto mt-6 w-full max-w-xl p-6">
         <form className="stack-form" onSubmit={submit}>
           <label>

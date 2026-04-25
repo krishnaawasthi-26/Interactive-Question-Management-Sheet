@@ -5,6 +5,7 @@ import TopicList from "../components/TopicList";
 import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import EditorActionPanel from "../components/EditorActionPanel";
 import ConfirmationModal from "../components/ConfirmationModal";
 import TopicReminderAlarmPanel from "../components/TopicReminderAlarmPanel";
@@ -548,6 +549,15 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
 
   return (
     <>
+      <SeoMeta
+        title={sheetId ? `${sheetTitle || "Sheet"} | Create Sheets Workspace` : "Sheets Dashboard | Create Sheets"}
+        description={sheetId
+          ? `Manage ${sheetTitle || "your sheet"} with question tracking, progress analytics, and revision planning in Create Sheets.`
+          : "Manage all your custom sheets from one dashboard. Organize coding, DSA, and interview preparation trackers."}
+        path={sheetId ? `/app/${sheetId}` : "/app"}
+        noIndex
+        keywords={["sheet dashboard", "question tracker", "coding practice tracker"]}
+      />
       <AppShell
         title={isEditing ? sheetTitle || "Untitled Sheet" : null}
         subtitle={isEditing ? `${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}` : null}

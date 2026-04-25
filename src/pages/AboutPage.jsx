@@ -1,4 +1,5 @@
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import SurfaceCard from "../components/ui/SurfaceCard";
 
 const featureBlocks = [
@@ -19,6 +20,11 @@ const featureBlocks = [
 function AboutPage({ theme, onThemeChange }) {
   return (
     <AppShell title="About Us" subtitle="Why Create Sheets exists and how it supports interview prep" theme={theme} onThemeChange={onThemeChange}>
+      <SeoMeta
+        title="About Create Sheets | DSA & Coding Sheet Management"
+        description="Learn how Create Sheets helps learners build custom DSA sheets, coding practice trackers, and revision workflows for interview preparation."
+        path="/about"
+      />
       <div className="space-y-4">
         <SurfaceCard elevated title="Our Mission" description="Build a calm, reliable workspace for consistent interview preparation.">
           <p className="meta-text">

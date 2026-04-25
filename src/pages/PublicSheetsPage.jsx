@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import EmptyState from "../components/ui/EmptyState";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
@@ -27,6 +28,12 @@ function PublicSheetsPage({ theme, onThemeChange }) {
       onThemeChange={onThemeChange}
       userLabel={currentUser?.username || "Account"}
     >
+      <SeoMeta
+        title="Public DSA Sheets | Explore Coding & Study Sheets"
+        description="Explore and manage public DSA sheets, coding sheets, and study sheets on Create Sheets. Share links that others can copy into their own tracker."
+        path="/public-sheets"
+        keywords={["public sheets", "share sheets", "coding sheets"]}
+      />
       <SurfaceCard title="Published Sheets" description="These sheets can be viewed by others using your profile URL.">
         {publicSheets.length === 0 ? (
           <EmptyState title="No public sheets yet" description="Set a sheet to public from My Sheets or Profile to publish it." icon="🌍" />

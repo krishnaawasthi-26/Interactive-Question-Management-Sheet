@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createApplicationOrder, fetchApplicationMeta, verifyApplicationPayment } from "../api/applicationApi";
 import { razorpayKeyId } from "../config/envConfig";
+import SeoMeta from "../components/SeoMeta";
 import "./ApplyPage.css";
 
 const DEFAULT_FIELDS = ["DSA", "Web Development", "App Development", "AI / ML", "Data Science", "Other"];
@@ -64,10 +65,6 @@ function ApplyPage() {
   const [statusType, setStatusType] = useState("idle");
   const [processingStage, setProcessingStage] = useState("");
   const [result, setResult] = useState(null);
-
-  useEffect(() => {
-    document.title = "Application Form";
-  }, []);
 
   useEffect(() => {
     const loadMeta = async () => {
@@ -192,6 +189,12 @@ function ApplyPage() {
   if (result) {
     return (
       <div className="apply-page">
+        <SeoMeta
+          title="Application Submitted | Create Sheets"
+          description="Your Create Sheets application was submitted successfully."
+          path="/apply"
+          noIndex
+        />
         <div className="apply-page__container">
           <section className="apply-page__success">
             <h1 className="text-2xl font-semibold">Application submitted successfully</h1>
@@ -211,6 +214,12 @@ function ApplyPage() {
 
   return (
     <div className="apply-page">
+      <SeoMeta
+        title="Apply | Create Sheets"
+        description="Submit your Create Sheets application and registration details."
+        path="/apply"
+        keywords={["apply create sheets", "coding sheet platform application"]}
+      />
       <div className="apply-page__container">
         <header className="apply-page__header">
           <h1 className="text-2xl font-semibold">Application Form</h1>
