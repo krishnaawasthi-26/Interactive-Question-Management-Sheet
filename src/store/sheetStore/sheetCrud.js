@@ -250,4 +250,13 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
       }));
       return applyTopicsWithHistoryAndDirty(state, topics);
     }),
+
+  toggleQuestionRevised: (topicId, subId, questionId) =>
+    set((state) => {
+      const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({
+        ...question,
+        revised: !question.revised,
+      }));
+      return applyTopicsWithHistoryAndDirty(state, topics);
+    }),
 });

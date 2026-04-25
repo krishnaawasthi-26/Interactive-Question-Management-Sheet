@@ -63,10 +63,9 @@ function TopicList({
   const editQuestion = useSheetStore((state) => state.editQuestion);
   const deleteQuestion = useSheetStore((state) => state.deleteQuestion);
   const updateQuestionResources = useSheetStore((state) => state.updateQuestionResources);
-  const reorderTopics = useSheetStore((state) => state.reorderTopics);
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
-  const moveQuestion = useSheetStore((state) => state.moveQuestion);
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
+  const toggleQuestionRevised = useSheetStore((state) => state.toggleQuestionRevised);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -122,23 +121,10 @@ function TopicList({
     const { source, destination, type } = result;
     if (!destination) return;
 
-    if (type === "topic") {
-      reorderTopics(source.index, destination.index);
-    } else if (type === "subtopic") {
+    if (type === "subtopic") {
       const fromTopicId = parseInt(source.droppableId.split("-")[1]);
       const toTopicId = parseInt(destination.droppableId.split("-")[1]);
       moveSubTopic(fromTopicId, toTopicId, source.index, destination.index);
-    } else if (type === "question") {
-      const [_, fromTopicId, fromSubId] = source.droppableId.split("-");
-      const [__, toTopicId, toSubId] = destination.droppableId.split("-");
-      moveQuestion(
-        parseInt(fromTopicId),
-        parseInt(fromSubId),
-        parseInt(toTopicId),
-        parseInt(toSubId),
-        source.index,
-        destination.index
-      );
     }
   };
 
@@ -216,14 +202,14 @@ function TopicList({
                 key={topic.id}
                 draggableId={topic.id.toString()}
                 index={tIndex}
-                isDragDisabled={!isEditing || !allowReorder}
+                isDragDisabled
               >
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55`}
+                    className="cursor-default rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55"
                   >
                     {/* Topic */}
                     <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
@@ -429,7 +415,7 @@ function TopicList({
                                               >
                                                 {sub.questions.map((q, qIndex) => (
                                                   
-                                                  <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled={!isEditing || !allowReorder}>
+                                                  <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled>
                                                     {(provided) => (
                                                       (() => {
                                                         const attemptLogs = getAttemptLogs(q);
@@ -437,6 +423,7 @@ function TopicList({
                                                         const latestAttempt = getLatestAttempt(q);
                                                         const latestResult = latestAttempt?.result || (q.done ? "solved" : "unresolved");
                                                         const tickMeta = ATTEMPT_RESULT_META[latestResult] || ATTEMPT_RESULT_META.unresolved;
+                                                        const isQuestionRevised = Boolean(q.revised);
                                                         const resultCounts = attemptLogs.reduce((acc, attempt) => {
                                                           if (!attempt?.result) return acc;
                                                           acc[attempt.result] = (acc[attempt.result] || 0) + 1;
@@ -447,15 +434,13 @@ function TopicList({
                                                           { key: "partially_solved", count: resultCounts.partially_solved, color: ATTEMPT_RESULT_META.partially_solved.color },
                                                           { key: "solved", count: resultCounts.solved, color: ATTEMPT_RESULT_META.solved.color },
                                                         ].filter((segment) => segment.count > 0);
-                                                        const hasRevisionMarker = totalAttempts > 1;
-
                                                         return (
                                                           <li
                                                             data-problem-id={String(q.id)}
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
-                                                            className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60`}
+                                                            className="cursor-default rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60"
                                                           >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
@@ -495,14 +480,20 @@ function TopicList({
                                                                   ✓
                                                                 </button>
                                                               <span className="text-sm leading-5 text-[var(--text-primary)] break-words">{q.text}</span>
-                                                              {showAttemptInsights && hasRevisionMarker ? (
-                                                                <span
-                                                                  className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-xs text-[var(--accent-warning)]"
+                                                              {showAttemptInsights && isEditing ? (
+                                                                <button
+                                                                  type="button"
+                                                                  className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs transition ${
+                                                                    isQuestionRevised
+                                                                      ? "border-[var(--accent-warning)] bg-[color-mix(in_srgb,var(--accent-warning)_18%,var(--surface-elevated))] text-[var(--accent-warning)]"
+                                                                      : "border-[var(--border-subtle)] bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--accent-warning)]"
+                                                                  }`}
                                                                   title="Revised"
-                                                                  aria-label="Revised"
+                                                                  aria-label={isQuestionRevised ? "Marked as revised" : "Mark as revised"}
+                                                                  onClick={() => toggleQuestionRevised(topic.id, sub.id, q.id)}
                                                                 >
-                                                                  ★
-                                                                </span>
+                                                                  {isQuestionRevised ? "★" : "☆"}
+                                                                </button>
                                                               ) : null}
                                                               </span>
                                                               {isEditing && (
