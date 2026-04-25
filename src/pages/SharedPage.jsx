@@ -146,9 +146,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       description: activeDescription,
     };
 
-  const handleCopySheet = async ({ sourceSheetId, customTitle = null } = {}) => {
-    const effectiveSourceSheetId = sourceSheetId || sharedSheet?.id;
-    if (!currentUser?.token || !effectiveSourceSheetId) return;
+  const resolveSourceSheetId = async ({ sourceSheetId, sourceShareId } = {}) => {
+    if (sourceSheetId) return sourceSheetId;
+    if (sharedSheet?.id) return sharedSheet.id;
+    if (!sourceShareId) return null;
+
+    const resolvedSharedSheet = await getSharedSheet(sourceShareId);
+    return resolvedSharedSheet?.id || null;
+  };
+
+  const handleCopySheet = async ({ sourceSheetId, sourceShareId, customTitle = null } = {}) => {
+    if (!currentUser?.token) return;
+
+    const effectiveSourceSheetId = await resolveSourceSheetId({ sourceSheetId, sourceShareId });
+    if (!effectiveSourceSheetId) return;
+
     setCopyPending(true);
     try {
       const copied = await copyPublicSheet(currentUser.token, effectiveSourceSheetId, customTitle || undefined);
@@ -394,6 +406,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                               onClick={async () => {
                                 await handleCopySheet({
                                   sourceSheetId: sheet.id,
+                                  sourceShareId: sheet.shareId,
                                   customTitle: `${sheet.title || "Untitled Sheet"} (Copy)`,
                                 });
                               }}
