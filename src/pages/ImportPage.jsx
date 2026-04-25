@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { validateSheetJson } from "../services/importValidation";
+import { parseSheetJsonText } from "../services/importValidation";
 import { useSheetStore } from "../store/sheetStore";
 import AppShell from "../components/AppShell";
 
@@ -17,22 +17,20 @@ function ImportPage({ theme, onThemeChange, onBack }) {
       return;
     }
     const content = await file.text();
-    try {
-      const parsed = JSON.parse(content);
-      const validation = validateSheetJson(parsed);
-      if (!validation.valid) {
-        setErrors(validation.errors);
-        setMessage("");
-        return;
-      }
-      await setFullSheet(validation.normalized);
-      setErrors([]);
-      setMessage("Sheet imported successfully.");
-    } catch (error) {
-      console.error("[Import] Unable to parse JSON file", error);
-      setErrors(["Invalid JSON file. Please ensure the file contains valid JSON text."]);
+    const validation = parseSheetJsonText(content);
+    if (!validation.valid) {
+      setErrors(validation.errors);
       setMessage("");
+      return;
     }
+
+    await setFullSheet(validation.normalized);
+    setErrors([]);
+    setMessage(
+      validation.recoveredSyntax
+        ? "Sheet imported successfully. We auto-fixed minor JSON syntax issues."
+        : "Sheet imported successfully."
+    );
   };
 
   return (
