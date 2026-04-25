@@ -15,6 +15,11 @@ import { useSheetStore } from "../store/sheetStore";
 import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
+import {
+  buildRemixCopyTitle,
+  resolveCopySourceSheetId,
+  toCopyErrorMessage,
+} from "../services/publicSheetCopy";
 import AppShell from "../components/AppShell";
 import { seoDefaults } from "../config/seo";
 import PremiumLotusBadge from "../components/PremiumLotusBadge";
@@ -37,6 +42,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   const [copyPending, setCopyPending] = useState(false);
   const [copyPromptOpen, setCopyPromptOpen] = useState(false);
   const [showSharedProgress, setShowSharedProgress] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
@@ -155,28 +161,33 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
   const canToggleSharedProgress = Boolean(sharedSheet?.shareProgress);
   const isProgressVisible = canToggleSharedProgress && showSharedProgress;
 
-  const resolveSourceSheetId = async ({ sourceSheetId, sourceShareId } = {}) => {
-    if (sourceSheetId) return sourceSheetId;
-    if (sharedSheet?.id) return sharedSheet.id;
-    if (!sourceShareId) return null;
-
-    const resolvedSharedSheet = await getSharedSheet(sourceShareId);
-    return resolvedSharedSheet?.id || null;
-  };
-
   const handleCopySheet = async ({ sourceSheetId, sourceShareId, customTitle = null } = {}) => {
     if (!currentUser?.token) return;
 
-    const effectiveSourceSheetId = await resolveSourceSheetId({ sourceSheetId, sourceShareId });
-    if (!effectiveSourceSheetId) return;
-
     setCopyPending(true);
+    setCopyError("");
     try {
+      const effectiveSourceSheetId = await resolveCopySourceSheetId({
+        sourceSheetId,
+        sourceShareId,
+        currentSharedSheetId: sharedSheet?.id,
+        getSharedSheet,
+      });
+      if (!effectiveSourceSheetId) {
+        setCopyError("Could not identify the source sheet to copy. Please refresh and try again.");
+        return;
+      }
       const copied = await copyPublicSheet(currentUser.token, effectiveSourceSheetId, customTitle || undefined);
-      if (!copied?.id) return;
+      if (!copied?.id) {
+        setCopyError("Copy succeeded, but we could not open it automatically. Please check My Sheets.");
+        return;
+      }
       setShowRemixModal(false);
       setCopyPromptOpen(false);
+      setCopyError("");
       navigateTo(`${ROUTES.APP}/${copied.id}`);
+    } catch (copyError) {
+      setCopyError(toCopyErrorMessage(copyError));
     } finally {
       setCopyPending(false);
     }
@@ -639,7 +650,10 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
               <button
                 type="button"
                 className="btn-base btn-neutral btn-sm rounded-md px-2 py-1"
-                onClick={() => setShowRemixModal(false)}
+                onClick={() => {
+                  setShowRemixModal(false);
+                  setCopyError("");
+                }}
               >
                 ✕
               </button>
@@ -674,15 +688,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                 disabled={copyPending}
                 onClick={async () => {
                   if (!currentUser?.token || !sharedSheet) return;
-                  const computedTitle = remixTitle.trim() || `${sharedSheet.title || "Untitled Sheet"} (Copy)`;
+                  const computedTitle = buildRemixCopyTitle({
+                    sharedSheetTitle: sharedSheet.title,
+                    remixTitle,
+                    keepAttribution,
+                    ownerUsername: username,
+                  });
                   await handleCopySheet({
-                    customTitle: `${computedTitle}${keepAttribution && username ? ` (Remix of @${username})` : ""}`,
+                    customTitle: computedTitle,
                   });
                 }}
               >
                 {copyPending ? "Creating..." : "Create Remix"}
               </button>
             </div>
+            {copyError ? <p className="px-6 pb-4 text-sm text-[var(--accent-danger)]">{copyError}</p> : null}
           </div>
         </div>
       )}
@@ -692,13 +712,21 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
             <h3 className="section-title text-lg">Copy this sheet to track your own progress.</h3>
             <p className="meta-text mt-2 text-sm">This public sheet is read-only. Create your own copy to mark questions complete.</p>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="btn-base btn-neutral px-3 py-2 text-sm" onClick={() => setCopyPromptOpen(false)}>
+              <button
+                type="button"
+                className="btn-base btn-neutral px-3 py-2 text-sm"
+                onClick={() => {
+                  setCopyPromptOpen(false);
+                  setCopyError("");
+                }}
+              >
                 Cancel
               </button>
               <button type="button" className="btn-base btn-primary px-3 py-2 text-sm" disabled={copyPending} onClick={() => handleCopySheet()}>
                 {copyPending ? "Copying..." : "Copy Sheet"}
               </button>
             </div>
+            {copyError ? <p className="mt-3 text-sm text-[var(--accent-danger)]">{copyError}</p> : null}
           </div>
         </div>
       )}
