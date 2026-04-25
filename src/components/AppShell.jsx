@@ -8,12 +8,9 @@ import { ROUTES } from "../services/routes";
 const footerLinks = [
   { label: "Home", href: ROUTES.HOME },
   { label: "Public Sheets", href: ROUTES.PUBLIC_SHEETS },
-  { label: "Create DSA Sheet", href: ROUTES.APP },
+  { label: "Create Sheet", href: ROUTES.APP },
   { label: "Premium", href: ROUTES.PREMIUM },
-  { label: "Login", href: ROUTES.LOGIN },
-  { label: "Signup", href: ROUTES.SIGNUP },
   { label: "Contact", href: ROUTES.CONTACT },
-  { label: "Apply", href: "/apply" },
 ];
 
 function AppShell({
@@ -31,6 +28,7 @@ function AppShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const mobileSidebarId = useId();
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     if (!isMobileNavOpen) return undefined;
@@ -108,14 +106,23 @@ function AppShell({
               <main className={contentClassName}>{children}</main>
               {rightPanel ? <aside className="xl:sticky xl:top-6 xl:h-fit">{rightPanel}</aside> : null}
             </div>
-            <footer className="mt-8 border-t border-[var(--border-subtle)] py-5">
-              <nav aria-label="SEO footer links" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                {footerLinks.map((link) => (
-                  <a key={link.href} href={link.href} className="link-base">
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
+            <footer className="mt-10 border-t border-[var(--border-subtle)] py-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs tracking-wide text-[var(--text-tertiary)]">
+                  © {currentYear} IQMS · Interactive Question Management Sheet
+                </p>
+                <nav aria-label="Footer links" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  {footerLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              </div>
             </footer>
           </div>
         </div>
