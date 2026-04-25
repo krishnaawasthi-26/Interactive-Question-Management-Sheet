@@ -40,6 +40,12 @@ const formatRelativeTime = (isoValue) => {
 
 const getLimitExhaustMessage = (limitWarning) => {
   if (!limitWarning || !limitWarning.startsWith("Limit reached:")) return null;
+  if (limitWarning.includes("copy")) {
+    return "This sheet exceeds the free plan limits, so it can’t be copied on free. Buy premium to copy this sheet.";
+  }
+  if (limitWarning.includes("edit-lock")) {
+    return "This sheet exceeds the free plan limits. Free users can’t edit it until you buy premium.";
+  }
   if (limitWarning.includes("question")) {
     return "Your free plan question limit is exhausted for this sheet. Buy premium to add more questions.";
   }

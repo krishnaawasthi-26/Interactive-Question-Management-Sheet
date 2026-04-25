@@ -28,12 +28,25 @@ const countWords = (value) =>
 
 const exceedsWordLimit = (value) => countWords(value) > MAX_WORDS_PER_ENTRY;
 
+const getFreeEditLockOverflowType = (topics = []) => {
+  if (topics.length > FREE_LIMITS.topics) return "topics";
+  if (countSubTopics(topics) > FREE_LIMITS.subTopics) return "subtopics";
+  if (countQuestions(topics) > FREE_LIMITS.questions) return "questions";
+  return null;
+};
+
 // CRUD slice owns topic/subtopic/question changes and applies history + dirty tracking.
 export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDirty }) => ({
   clearLimitWarning: () => set({ limitWarning: null }),
 
   addTopic: async (title) => {
     const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const limits = getPlanLimits();
     if (currentTopics.length >= limits.topics) {
       set({ limitWarning: `Limit reached: topic (${limits.topics})` });
@@ -52,6 +65,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editTopic: async (id, newTitle) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
+
     if (exceedsWordLimit(newTitle)) {
       set({ limitWarning: `Topic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
@@ -64,6 +85,13 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   deleteTopic: async (id) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const updatedSheet = await deleteTopic({ topics: get().topics }, id);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
     return updatedSheet;
@@ -71,6 +99,12 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
 
   addSubTopic: async (topicId, subTitle) => {
     const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const limits = getPlanLimits();
     if (countSubTopics(currentTopics) >= limits.subTopics) {
       set({ limitWarning: `Limit reached: subtopic (${limits.subTopics})` });
@@ -89,6 +123,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editSubTopic: async (topicId, subId, newTitle) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
+
     if (exceedsWordLimit(newTitle)) {
       set({ limitWarning: `Subtopic title can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
@@ -101,6 +143,13 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   deleteSubTopic: async (topicId, subId) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const updatedSheet = await deleteSubTopic({ topics: get().topics }, topicId, subId);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
     return updatedSheet;
@@ -108,6 +157,12 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
 
   addQuestion: async (topicId, subId, questionText) => {
     const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const limits = getPlanLimits();
     if (countQuestions(currentTopics) >= limits.questions) {
       set({ limitWarning: `Limit reached: question (${limits.questions})` });
@@ -126,6 +181,14 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   editQuestion: async (topicId, subId, questionId, newText) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
+
     if (exceedsWordLimit(newText)) {
       set({ limitWarning: `Question text can have at most ${MAX_WORDS_PER_ENTRY} words.` });
       return null;
@@ -138,6 +201,13 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
   },
 
   deleteQuestion: async (topicId, subId, questionId) => {
+    const currentTopics = get().topics;
+    const currentUser = useAuthStore.getState().currentUser;
+    const editOverflowType = isPremiumActive(currentUser) ? null : getFreeEditLockOverflowType(currentTopics);
+    if (editOverflowType) {
+      set({ limitWarning: `Limit reached: edit-lock (${editOverflowType})` });
+      return null;
+    }
     const updatedSheet = await deleteQuestion({ topics: get().topics }, topicId, subId, questionId);
     set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
     return updatedSheet;

@@ -1,10 +1,12 @@
 import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../../api/sheetApi";
 import { useAuthStore } from "../authStore";
 import { isPremiumActive } from "../../services/premium";
-import { FREE_LIMITS, PREMIUM_LIMITS } from "./constants";
+import { FREE_COPY_EXEMPT_SOURCE_SHEET_IDS, FREE_LIMITS, PREMIUM_LIMITS } from "./constants";
 import {
   buildSheetSignature,
   cloneDeep,
+  countQuestions,
+  countSubTopics,
   computeDirtyState,
   normalizeSheetVisibility,
   updateSheetInCollection,
@@ -35,6 +37,14 @@ const buildSafeSheetUpdatePayload = async ({
   }
 
   return payload;
+};
+
+const getFreeLimitOverflowType = (topics = []) => {
+  const topicCount = Array.isArray(topics) ? topics.length : 0;
+  if (topicCount > FREE_LIMITS.topics) return "topics";
+  if (countSubTopics(topics) > FREE_LIMITS.subTopics) return "subtopics";
+  if (countQuestions(topics) > FREE_LIMITS.questions) return "questions";
+  return null;
 };
 
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
@@ -71,6 +81,17 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
     const sheetLimit = get().getSheetLimit();
     if (get().sheets.length >= sheetLimit) {
       set({ limitWarning: `Limit reached: sheet (${sheetLimit})` });
+      return null;
+    }
+
+    const currentUser = useAuthStore.getState().currentUser;
+    const hasPremium = isPremiumActive(currentUser);
+    const sourceSheetId = sourceSheet?.id;
+    const isCuratedExemptSource = FREE_COPY_EXEMPT_SOURCE_SHEET_IDS.has(sourceSheetId);
+    const overflowType = getFreeLimitOverflowType(sourceSheet?.topics || []);
+
+    if (!hasPremium && overflowType && !isCuratedExemptSource) {
+      set({ limitWarning: `Limit reached: copy (${overflowType})` });
       return null;
     }
 
@@ -237,6 +258,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         sheetId,
         getState: get,
         overrideFields: { isPublic },
+        includeContent: false,
       });
       const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
       if (updatedSheet) {
@@ -264,6 +286,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         sheetId,
         getState: get,
         overrideFields: { isArchived },
+        includeContent: false,
       });
       const updatedSheet = normalizeSheetVisibility(await saveSheet(token, sheetId, payload));
       if (updatedSheet) {
