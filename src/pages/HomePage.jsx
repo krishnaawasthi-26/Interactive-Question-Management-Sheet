@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
+import SeoMeta from "../components/SeoMeta";
 import EmptyState from "../components/ui/EmptyState";
 import ProgressBar from "../components/ui/ProgressBar";
 import SectionHeader from "../components/ui/SectionHeader";
@@ -10,6 +11,7 @@ import { navigateTo, ROUTES } from "../services/routes";
 import { calculateSheetProgress } from "../services/progress";
 import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
+import { buildCanonicalUrl, seoDefaults } from "../config/seo";
 
 function HomePage({ theme, onThemeChange }) {
   const [copyingSheetId, setCopyingSheetId] = useState(null);
@@ -18,6 +20,37 @@ function HomePage({ theme, onThemeChange }) {
   const sheets = useSheetStore((state) => state.sheets);
   const loadSheets = useSheetStore((state) => state.loadSheets);
   const duplicateSheet = useSheetStore((state) => state.duplicateSheet);
+  const homepageSchemas = useMemo(() => ([
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: seoDefaults.siteName,
+      url: seoDefaults.siteUrl,
+      description: seoDefaults.defaultDescription,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${seoDefaults.siteUrl}/public-sheets`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "Create Sheets",
+      applicationCategory: "EducationalApplication",
+      operatingSystem: "Web",
+      url: seoDefaults.siteUrl,
+      description:
+        "Create Sheets is a full-stack web app to create DSA sheets, coding practice trackers, revision plans, and interview preparation workflows.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Create Sheets",
+      url: seoDefaults.siteUrl,
+      logo: `${seoDefaults.siteUrl}/vite.svg`,
+    },
+  ]), []);
 
   useEffect(() => {
     if (!currentUser?.token) return;
@@ -56,12 +89,19 @@ function HomePage({ theme, onThemeChange }) {
 
   return (
     <AppShell
-      title="Home"
-      subtitle="Your interview-prep workspace with curated sheets and quick resume actions"
+      title="Create and Track DSA Sheets Online"
+      subtitle="Build custom sheets for coding practice, revision, interview preparation, and collaborative learning."
       theme={theme}
       onThemeChange={onThemeChange}
       userLabel={currentUser?.username || "Guest"}
     >
+      <SeoMeta
+        title="Create Sheets | Create, Share & Track DSA Sheets"
+        description="Create custom DSA sheets, coding practice trackers, and study lists. Share public sheets, copy curated templates, and track interview preparation progress in one place."
+        path="/home"
+        keywords={["create DSA sheet", "coding practice tracker", "interview preparation sheets", "public sheets"]}
+        structuredData={homepageSchemas}
+      />
       <div className="space-y-5">
         <SurfaceCard elevated className="bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_8%,transparent),transparent_45%)]">
           <SectionHeader
@@ -130,6 +170,32 @@ function HomePage({ theme, onThemeChange }) {
             ))}
           </div>
         </SurfaceCard>
+
+        <section className="surface-card space-y-4 p-5">
+          <h2 className="section-title">Build custom coding, study, and revision sheets in minutes</h2>
+          <p className="meta-text">
+            Create Sheets is a sheet management website where you can create DSA sheets, programming sheets, and topic-based trackers for interviews, classes, and daily problem solving.
+            Use your own structure, mix platforms like LeetCode and GFG, and manage everything from one dashboard.
+          </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <article>
+              <h3 className="card-title">Create DSA practice sheets</h3>
+              <p className="meta-text">Group topics by arrays, graphs, dynamic programming, and company-focused interview sets.</p>
+            </article>
+            <article>
+              <h3 className="card-title">Share and copy public sheets</h3>
+              <p className="meta-text">Publish useful lists, discover curated public sheets, and copy them into your own workspace for personalized practice.</p>
+            </article>
+            <article>
+              <h3 className="card-title">Track progress and revisions</h3>
+              <p className="meta-text">Measure completion with progress bars, revision reminders, and quick resume actions that keep your prep consistent.</p>
+            </article>
+          </div>
+          <p className="meta-text">
+            Whether you are preparing for coding interviews, competitive programming contests, or semester exams, Create Sheets helps you stay organized and accountable.
+            Explore more at <a className="link-base" href={buildCanonicalUrl("/public-sheets")}>Public Sheets</a>.
+          </p>
+        </section>
       </div>
     </AppShell>
   );

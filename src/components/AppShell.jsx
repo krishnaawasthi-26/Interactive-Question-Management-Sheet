@@ -3,6 +3,18 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import AlertBar from "./AlertBar";
 import NotificationBell from "./NotificationBell";
+import { ROUTES } from "../services/routes";
+
+const footerLinks = [
+  { label: "Home", href: ROUTES.HOME },
+  { label: "Public Sheets", href: ROUTES.PUBLIC_SHEETS },
+  { label: "Create DSA Sheet", href: ROUTES.APP },
+  { label: "Premium", href: ROUTES.PREMIUM },
+  { label: "Login", href: ROUTES.LOGIN },
+  { label: "Signup", href: ROUTES.SIGNUP },
+  { label: "Contact", href: ROUTES.CONTACT },
+  { label: "Apply", href: "/apply" },
+];
 
 function AppShell({
   title,
@@ -92,6 +104,15 @@ function AppShell({
               <main className={contentClassName}>{children}</main>
               {rightPanel ? <aside className="xl:sticky xl:top-6 xl:h-fit">{rightPanel}</aside> : null}
             </div>
+            <footer className="mt-8 border-t border-[var(--border-subtle)] py-5">
+              <nav aria-label="SEO footer links" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                {footerLinks.map((link) => (
+                  <a key={link.href} href={link.href} className="link-base">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            </footer>
           </div>
         </div>
       </div>

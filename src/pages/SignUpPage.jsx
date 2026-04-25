@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import AppShell from "../components/AppShell";
 import GoogleAuthButton from "../components/GoogleAuthButton";
+import SeoMeta from "../components/SeoMeta";
 
 function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
   const signUp = useAuthStore((state) => state.signUp);
@@ -54,6 +55,13 @@ function SignUpPage({ theme, onThemeChange, onSignUpSuccess, onGoToLogin }) {
 
   return (
     <AppShell title="Create account" subtitle="Start building your sheet workspace" theme={theme} onThemeChange={onThemeChange}>
+      <SeoMeta
+        title="Signup | Create DSA Sheets Online"
+        description="Sign up on Create Sheets to build custom coding sheets, DSA practice trackers, and interview preparation lists."
+        path="/signup"
+        noIndex
+        keywords={["signup create sheets", "create dsa sheet online"]}
+      />
       <div className="panel mx-auto mt-6 w-full max-w-xl p-6">
         {!isOtpStep ? (
           <>

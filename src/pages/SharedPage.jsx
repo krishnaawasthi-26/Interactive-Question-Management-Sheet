@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TopicList from "../components/TopicList";
+import SeoMeta from "../components/SeoMeta";
 import {
   fetchPublicProfile,
   fetchViewerPublicProfile,
@@ -15,6 +16,7 @@ import { useAuthStore } from "../store/authStore";
 import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { exportSheetAsJson } from "../services/sheetExport";
 import AppShell from "../components/AppShell";
+import { seoDefaults } from "../config/seo";
 
 function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
@@ -103,6 +105,40 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
       || `${currentUser.username || ""}`.toLowerCase() === `${username || ""}`.toLowerCase())
   );
 
+  const profileTitle = `${profile?.username || username || "User"}'s Public Sheets | Create Sheets`;
+  const profileDescription = `Explore public DSA, coding, study, and revision sheets created by ${profile?.username || username || "this user"} on Create Sheets.`;
+  const publicSheetTitle = `${sharedSheet?.title || sheetSlug || "Public Sheet"} | Public DSA Sheet on Create Sheets`;
+  const publicSheetDescription = `Practice problems from ${sharedSheet?.title || "this sheet"}, a public coding and DSA sheet created on Create Sheets. Copy, track, and manage your own progress.`;
+  const canonicalPath = shareType === "public-sheet"
+    ? `/profile/${username || sharedSheet?.ownerUsername || "user"}/${sheetSlug || slugifySegment(sharedSheet?.title || "sheet")}`
+    : `/profile/${username || profile?.username || "user"}`;
+  const activeTitle = shareType === "public-sheet" ? publicSheetTitle : profileTitle;
+  const activeDescription = shareType === "public-sheet" ? publicSheetDescription : profileDescription;
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${seoDefaults.siteUrl}/home` },
+      { "@type": "ListItem", position: 2, name: "Public Sheets", item: `${seoDefaults.siteUrl}/public-sheets` },
+      { "@type": "ListItem", position: 3, name: shareType === "public-sheet" ? (sharedSheet?.title || "Sheet") : (profile?.username || username || "Profile"), item: `${seoDefaults.siteUrl}${canonicalPath}` },
+    ],
+  };
+  const pageSchema = shareType === "public-sheet"
+    ? {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: sharedSheet?.title || "Public Sheet",
+      description: activeDescription,
+      url: `${seoDefaults.siteUrl}${canonicalPath}`,
+    }
+    : {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      name: profile?.name || profile?.username || username || "Create Sheets User",
+      url: `${seoDefaults.siteUrl}${canonicalPath}`,
+      description: activeDescription,
+    };
+
   const handleCopySheet = async ({ sourceSheetId, customTitle = null } = {}) => {
     const effectiveSourceSheetId = sourceSheetId || sharedSheet?.id;
     if (!currentUser?.token || !effectiveSourceSheetId) return;
@@ -179,6 +215,14 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
 
     return (
       <AppShell title={`@${profile?.username || "profile"}`} subtitle="Public profile view" theme={theme} onThemeChange={onThemeChange} userLabel={currentUser?.username || "Guest"}>
+        <SeoMeta
+          title={activeTitle}
+          description={activeDescription}
+          path={canonicalPath}
+          type="profile"
+          keywords={["public sheets", "DSA sheets", "coding sheets", "revision sheets"]}
+          structuredData={[breadcrumbSchema, pageSchema]}
+        />
         <div className="mx-auto max-w-6xl space-y-5 text-[var(--text-primary)]">
           <section className={cardClassName}>
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -191,7 +235,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
                     .join("")}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{profileName}</h1>
+                  <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{profileName}</h2>
                   <p className="meta-text mt-1">@{profile?.username || "unknown"}</p>
                   {(profile?.institution || profile?.company) && (
                     <p className="meta-text mt-1">{[profile?.institution, profile?.company].filter(Boolean).join(" · ")}</p>
@@ -501,6 +545,13 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         </div>
       )}
     >
+      <SeoMeta
+        title={activeTitle}
+        description={activeDescription}
+        path={canonicalPath}
+        keywords={["public dsa sheet", "coding practice sheet", "interview preparation sheet"]}
+        structuredData={[breadcrumbSchema, pageSchema]}
+      />
       <TopicList
         isEditing={isOwnerViewingSheet}
         allowReorder={isOwnerViewingSheet}
