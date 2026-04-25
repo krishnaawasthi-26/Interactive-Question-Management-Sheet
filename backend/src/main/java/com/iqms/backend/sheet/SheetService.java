@@ -60,6 +60,10 @@ public class SheetService {
 
   public Sheet createSheet(String ownerId, String title) {
     return actionQueueService.execute(() -> {
+      User owner = premiumAccessService.findUser(ownerId);
+      long existingSheetCount = sheetRepository.countByOwnerId(ownerId);
+      premiumAccessService.assertSheetLimit(owner, existingSheetCount);
+
       Sheet sheet = new Sheet();
       sheet.setOwnerId(ownerId);
       sheet.setTitle(title == null || title.isBlank() ? "Untitled Sheet" : title.trim());

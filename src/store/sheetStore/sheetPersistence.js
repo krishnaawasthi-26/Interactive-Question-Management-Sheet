@@ -1,5 +1,7 @@
 import { createSheet, getSheet, listSheets, removeSheet, saveSheet } from "../../api/sheetApi";
-import { MAX_SHEETS } from "./constants";
+import { useAuthStore } from "../authStore";
+import { isPremiumActive } from "../../services/premium";
+import { FREE_LIMITS, PREMIUM_LIMITS } from "./constants";
 import {
   buildSheetSignature,
   cloneDeep,
@@ -37,6 +39,12 @@ const buildSafeSheetUpdatePayload = async ({
 
 // Persistence slice handles server IO, sheet metadata list updates, and save/discard semantics.
 export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
+  getSheetLimit: () => {
+    const currentUser = useAuthStore.getState().currentUser;
+    const limits = isPremiumActive(currentUser) ? PREMIUM_LIMITS : FREE_LIMITS;
+    return limits.sheets;
+  },
+
   loadSheets: async (token) => {
     const sheets = (await listSheets(token)).map(normalizeSheetVisibility);
     set({ sheets });
@@ -44,8 +52,9 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   createNewSheet: async (token, title) => {
-    if (get().sheets.length >= MAX_SHEETS) {
-      set({ limitWarning: `Limit reached: sheet (${MAX_SHEETS})` });
+    const sheetLimit = get().getSheetLimit();
+    if (get().sheets.length >= sheetLimit) {
+      set({ limitWarning: `Limit reached: sheet (${sheetLimit})` });
       return null;
     }
     const created = await createSheet(token, title);
@@ -59,8 +68,9 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   duplicateSheet: async (token, sourceSheet, customTitle) => {
-    if (get().sheets.length >= MAX_SHEETS) {
-      set({ limitWarning: `Limit reached: sheet (${MAX_SHEETS})` });
+    const sheetLimit = get().getSheetLimit();
+    if (get().sheets.length >= sheetLimit) {
+      set({ limitWarning: `Limit reached: sheet (${sheetLimit})` });
       return null;
     }
 

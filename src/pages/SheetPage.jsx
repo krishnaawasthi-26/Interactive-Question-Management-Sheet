@@ -38,6 +38,23 @@ const formatRelativeTime = (isoValue) => {
   return `${elapsedDays}d ago`;
 };
 
+const getLimitExhaustMessage = (limitWarning) => {
+  if (!limitWarning || !limitWarning.startsWith("Limit reached:")) return null;
+  if (limitWarning.includes("question")) {
+    return "Your free plan question limit is exhausted for this sheet. Buy premium to add more questions.";
+  }
+  if (limitWarning.includes("topic")) {
+    return "Your free plan topic limit is exhausted for this sheet. Buy premium to add more topics.";
+  }
+  if (limitWarning.includes("subtopic")) {
+    return "Your free plan subtopic limit is exhausted for this sheet. Buy premium to add more subtopics.";
+  }
+  if (limitWarning.includes("sheet")) {
+    return "Your free plan sheet limit is exhausted. Buy premium to create more sheets.";
+  }
+  return "Your free plan limit is exhausted. Buy premium to continue.";
+};
+
 function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }) {
   const [title, setTitle] = useState("");
   const [isEditing, setIsEditing] = useState(true);
@@ -209,6 +226,41 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     const interval = window.setInterval(tick, 30_000);
     return () => window.clearInterval(interval);
   }, [scheduledTopicAlerts]);
+
+  useEffect(() => {
+    const limitMessage = getLimitExhaustMessage(limitWarning);
+    if (!limitMessage) return;
+    if (activeDialog?.key === "plan-limit-exhausted") return;
+
+    setActiveDialog({
+      key: "plan-limit-exhausted",
+      title: "Free plan limit reached",
+      message: limitMessage,
+      actions: [
+        {
+          key: "continue-free",
+          label: "Continue Free",
+          variant: "neutral",
+          className: "sidebar-modal-action-free",
+          onClick: () => {
+            clearLimitWarning();
+            setActiveDialog(null);
+          },
+        },
+        {
+          key: "buy-premium",
+          label: "Buy Premium",
+          variant: "success",
+          className: "sidebar-modal-action-premium",
+          onClick: () => {
+            clearLimitWarning();
+            setActiveDialog(null);
+            navigateTo(ROUTES.PREMIUM);
+          },
+        },
+      ],
+    });
+  }, [activeDialog?.key, clearLimitWarning, limitWarning]);
 
   const closeDialog = useCallback(() => setActiveDialog(null), []);
 
