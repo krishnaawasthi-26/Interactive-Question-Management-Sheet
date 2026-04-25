@@ -713,17 +713,39 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
               allowProgressToggle={isEditing}
               focusProblemId={focusProblemId}
               premiumActive={premiumActive}
-              onPremiumLocked={(message) =>
+              onPremiumLocked={(premiumConfig) => {
+                const config = typeof premiumConfig === "string" ? { message: premiumConfig } : (premiumConfig || {});
+                const configuredActions = Array.isArray(config.actions) && config.actions.length > 0
+                  ? config.actions
+                  : [
+                      { key: "cancel", label: "Continue Free", variant: "neutral", className: "sidebar-modal-action-free", onClick: closeDialog },
+                      { key: "buy", label: "Buy Premium", variant: "success", className: "sidebar-modal-action-premium", onClick: () => navigateTo(ROUTES.PREMIUM) },
+                    ];
+
                 setActiveDialog({
-                  key: "premium-required",
-                  title: "Premium feature locked",
-                  message,
-                  actions: [
-                    { key: "cancel", label: "Continue Free", variant: "neutral", className: "sidebar-modal-action-free", onClick: closeDialog },
-                    { key: "buy", label: "Buy Premium", variant: "success", className: "sidebar-modal-action-premium", onClick: () => navigateTo(ROUTES.PREMIUM) },
-                  ],
-                })
-              }
+                  key: config.key || "premium-required",
+                  title: config.title || "Premium feature locked",
+                  message: config.message || "This workflow requires Premium.",
+                  actions: configuredActions.map((action) => ({
+                    ...action,
+                    onClick: () => {
+                      action.onClick?.();
+                      closeDialog();
+                    },
+                  })),
+                });
+              }}
+              onNavigatePremiumRoute={(target) => {
+                if (target === "insights") {
+                  navigateTo(ROUTES.LEARNING_INSIGHTS);
+                  return;
+                }
+                if (target === "reminders") {
+                  navigateTo(ROUTES.ALARMS);
+                  return;
+                }
+                navigateTo(ROUTES.PREMIUM);
+              }}
             />
           </main>
             </>

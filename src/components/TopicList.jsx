@@ -16,6 +16,7 @@ function TopicList({
   premiumActive = false,
   onPremiumLocked,
   onRequireCopy,
+  onNavigatePremiumRoute,
 }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
@@ -131,7 +132,37 @@ function TopicList({
       return;
     }
     if (!premiumActive) {
-      onPremiumLocked?.("Attempt duration and reminder features are premium.");
+      onPremiumLocked?.({
+        message: "Advanced logging and productivity shortcuts are premium. You can still mark this question as solved for free.",
+        actions: [
+          {
+            key: "mark-solved-free",
+            label: "Mark solved (Free)",
+            variant: "success",
+            className: "sidebar-modal-action-free",
+            onClick: () => toggleQuestionDone(topicId, subId, question.id),
+          },
+          {
+            key: "insights",
+            label: "Insights (Premium)",
+            variant: "neutral",
+            onClick: () => onNavigatePremiumRoute?.("insights"),
+          },
+          {
+            key: "reminders",
+            label: "Reminders (Premium)",
+            variant: "neutral",
+            onClick: () => onNavigatePremiumRoute?.("reminders"),
+          },
+          {
+            key: "buy-premium",
+            label: "Buy Premium",
+            variant: "success",
+            className: "sidebar-modal-action-premium",
+            onClick: () => onNavigatePremiumRoute?.("premium"),
+          },
+        ],
+      });
       return;
     }
     if (question.done) {
