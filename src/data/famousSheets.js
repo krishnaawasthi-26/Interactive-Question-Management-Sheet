@@ -1,22 +1,20 @@
 export const famousDsaSheets = [
   {
-    id: "famous-sample-sheet",
-    title: "Sample Interview Prep Sheet",
-    description: "Free sample sheet you can copy and start editing immediately.",
-    topics: [
-      {
-        id: "sample-topic-1",
-        title: "Sample Topic",
-        subTopics: [
-          {
-            id: "sample-subtopic-1",
-            title: "Sample Subtopic",
-            questions: [
-              { id: "sample-question-1", text: "How would you design a random password generator?", done: false },
-            ],
-          },
-        ],
-      },
-    ],
+    id: "famous-striver-a2z-sheet",
+    title: "Striver's A2Z Sheet",
+    description: "Striver's A2Z Sheet",
+    topics: [],
+  },
+  {
+    id: "famous-blind-75",
+    title: "Blind 75",
+    description: "Blind 75",
+    topics: [],
+  },
+  {
+    id: "famous-neetcode-150",
+    title: "NeetCode 150",
+    description: "NeetCode 150",
+    topics: [],
   },
 ];
