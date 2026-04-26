@@ -4,9 +4,12 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
 import DifficultyCategorySelector from "./DifficultyCategorySelector";
 import CustomDifficultyModal from "./CustomDifficultyModal";
-import { buildCategoryLabelAndColor, buildCategoryValue, DEFAULT_DIFFICULTY_CATEGORIES, resolveQuestionDifficulty } from "../services/difficultyCategories";
+import { buildCategoryValue, DEFAULT_DIFFICULTY_CATEGORIES, resolveQuestionDifficulty } from "../services/difficultyCategories";
 import TopicTagSelector from "./TopicTagSelector";
 import CustomTopicModal from "./CustomTopicModal";
+import DifficultyBadge from "./DifficultyBadge";
+import TopicChipsPreview from "./TopicChipsPreview";
+import QuestionDetailsDrawer from "./QuestionDetailsDrawer";
 
 const normalizeText = (value) =>
   `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
@@ -90,10 +93,8 @@ function TopicList({
   const [expandedTopics, setExpandedTopics] = useState({});
   const [expandedSubtopics, setExpandedSubtopics] = useState({});
   const [activeAttempt, setActiveAttempt] = useState(null);
-  const [resourceEditorByQuestion, setResourceEditorByQuestion] = useState({});
-  const [resourceDraftByQuestion, setResourceDraftByQuestion] = useState({});
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
-  const [activeNotesPreview, setActiveNotesPreview] = useState(null);
+  const [activeQuestionDrawer, setActiveQuestionDrawer] = useState(null);
   const [customModalQuestion, setCustomModalQuestion] = useState(null);
   const [customTopicModal, setCustomTopicModal] = useState({ open: false, editingTag: null, questionContext: null });
   const [customSaveError, setCustomSaveError] = useState("");
@@ -175,17 +176,8 @@ function TopicList({
     setActiveAttempt({ topicId, subId, questionId: question.id, questionText: question.text, questionLink: question.link, topicName: topicTitle, subTopicName: subTopicTitle });
   };
 
-  const startResourceEdit = (question) => {
-    setResourceEditorByQuestion((current) => ({ ...current, [question.id]: true }));
-    setResourceDraftByQuestion((current) => ({
-      ...current,
-      [question.id]: {
-        link: question.link || "",
-        articleLink: question.articleLink || "",
-        videoLink: question.videoLink || "",
-        notes: question.notes || "",
-      },
-    }));
+  const startResourceEdit = (question, topicId, subId) => {
+    setActiveQuestionDrawer({ question, topicId, subId });
   };
 
 
@@ -199,14 +191,6 @@ function TopicList({
     const timer = window.setTimeout(() => target.classList.remove("ring-2", "ring-[var(--accent-primary)]"), 1800);
     return () => window.clearTimeout(timer);
   }, [focusProblemId, topics]);
-
-  const saveResourceEdit = (topicId, subId, questionId) => {
-    const draft = resourceDraftByQuestion[questionId];
-    if (!draft) return;
-    updateQuestionResources(topicId, subId, questionId, draft);
-    setResourceEditorByQuestion((current) => ({ ...current, [questionId]: false }));
-    setMobileActionQuestionId(null);
-  };
 
   const handleDifficultyChange = async ({ topicId, subId, questionId, value }) => {
     if (value === "custom:new") {
@@ -531,12 +515,7 @@ function TopicList({
                                                                   ✓
                                                                 </button>
                                                               <span className="text-sm leading-5 text-[var(--text-primary)] break-words">{q.text}</span>
-                                                              <span
-                                                                className="rounded-full border border-black/40 px-2 py-0.5 text-[10px] font-medium"
-                                                                style={{ color: buildCategoryLabelAndColor(q, difficultyCategories).color }}
-                                                              >
-                                                                {buildCategoryLabelAndColor(q, difficultyCategories).label}
-                                                              </span>
+                                                              <DifficultyBadge question={q} difficultyCategories={difficultyCategories} />
                                                               {showAttemptInsights && isEditing ? (
                                                                 <button
                                                                   type="button"
@@ -580,7 +559,7 @@ function TopicList({
                                                                     </button>
                                                                     <button
                                                                       className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                      onClick={() => startResourceEdit(q)}
+                                                                      onClick={() => startResourceEdit(q, topic.id, sub.id)}
                                                                     >
                                                                       Resources
                                                                     </button>
@@ -598,23 +577,17 @@ function TopicList({
                                                               )}
                                                             </div>
 
-                                                            {(q.link || q.articleLink || q.videoLink || q.notes) && (
-                                                              <div className="mt-2 flex flex-wrap items-center gap-2 pl-3 text-[11px] sm:pl-7">
-                                                                {q.link && <a href={q.link} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Link</a>}
-                                                                {q.articleLink && <a href={q.articleLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Article</a>}
-                                                                {q.videoLink && <a href={q.videoLink} target="_blank" rel="noreferrer" className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)]">Video</a>}
-                                                                {q.notes && (
-                                                                  <button
-                                                                    type="button"
-                                                                    onClick={() => setActiveNotesPreview({ questionText: q.text, notes: q.notes })}
-                                                                    className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
-                                                                  >
-                                                                    Notes
-                                                                  </button>
-                                                                )}
-                                                              </div>
-                                                            )}
-                                                            <TopicTagSelector
+                                                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-3 sm:pl-7">
+                                                              <TopicChipsPreview tags={topicTags.filter((tag) => (q.topicTagIds || []).includes(tag.id))} />
+                                                              <button
+                                                                type="button"
+                                                                onClick={() => startResourceEdit(q, topic.id, sub.id)}
+                                                                className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
+                                                              >
+                                                                Resources
+                                                              </button>
+                                                            </div>
+                                                            {isEditing ? <TopicTagSelector
                                                               question={q}
                                                               topicTags={topicTags}
                                                               readOnly={!isEditing}
@@ -627,7 +600,7 @@ function TopicList({
                                                                   deleteCustomTopicTag(tag.id);
                                                                 }
                                                               }}
-                                                            />
+                                                            /> : null}
 
                                                             {showAttemptInsights && totalAttempts > 0 ? (
                                                               <div className="mt-2 pl-3 sm:pl-7">
@@ -671,78 +644,13 @@ function TopicList({
                                                                 </button>
                                                                 <button
                                                                   className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                  onClick={() => startResourceEdit(q)}
+                                                                  onClick={() => startResourceEdit(q, topic.id, sub.id)}
                                                                 >
                                                                   Resources
                                                                 </button>
                                                               </div>
                                                             )}
 
-                                                            {isEditing && resourceEditorByQuestion[q.id] && (
-                                                              <div className="mt-3 space-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-soft)] p-3 pl-3 sm:pl-7">
-                                                                <input
-                                                                  value={resourceDraftByQuestion[q.id]?.link || ""}
-                                                                  onChange={(event) =>
-                                                                    setResourceDraftByQuestion((current) => ({
-                                                                      ...current,
-                                                                      [q.id]: { ...current[q.id], link: event.target.value },
-                                                                    }))
-                                                                  }
-                                                                  placeholder="Problem link"
-                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
-                                                                />
-                                                                <input
-                                                                  value={resourceDraftByQuestion[q.id]?.articleLink || ""}
-                                                                  onChange={(event) =>
-                                                                    setResourceDraftByQuestion((current) => ({
-                                                                      ...current,
-                                                                      [q.id]: { ...current[q.id], articleLink: event.target.value },
-                                                                    }))
-                                                                  }
-                                                                  placeholder="Article link"
-                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
-                                                                />
-                                                                <input
-                                                                  value={resourceDraftByQuestion[q.id]?.videoLink || ""}
-                                                                  onChange={(event) =>
-                                                                    setResourceDraftByQuestion((current) => ({
-                                                                      ...current,
-                                                                      [q.id]: { ...current[q.id], videoLink: event.target.value },
-                                                                    }))
-                                                                  }
-                                                                  placeholder="Video link"
-                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
-                                                                />
-                                                                <textarea
-                                                                  value={resourceDraftByQuestion[q.id]?.notes || ""}
-                                                                  onChange={(event) =>
-                                                                    setResourceDraftByQuestion((current) => ({
-                                                                      ...current,
-                                                                      [q.id]: { ...current[q.id], notes: event.target.value },
-                                                                    }))
-                                                                  }
-                                                                  placeholder="Notes"
-                                                                  className="field-base w-full rounded-md px-2 py-1 text-sm"
-                                                                  rows={3}
-                                                                />
-                                                                <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 p-1">
-                                                                  <button
-                                                                    className="btn-base btn-success btn-sm rounded-md px-2 py-1 text-xs"
-                                                                    onClick={() => saveResourceEdit(topic.id, sub.id, q.id)}
-                                                                  >
-                                                                    Save resources
-                                                                  </button>
-                                                                  <button
-                                                                    className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                    onClick={() =>
-                                                                      setResourceEditorByQuestion((current) => ({ ...current, [q.id]: false }))
-                                                                    }
-                                                                  >
-                                                                    Cancel
-                                                                  </button>
-                                                                </div>
-                                                              </div>
-                                                            )}
                                                           </div>
                                                         )}
                                                       </li>
@@ -838,28 +746,18 @@ function TopicList({
           setCustomTopicModal({ open: false, editingTag: null, questionContext: null });
         }}
       />
-      {activeNotesPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] px-4 backdrop-blur-sm">
-          <div className="panel w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Problem Notes</h2>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">{activeNotesPreview.questionText}</p>
-            </div>
-            <div className="max-h-[55vh] overflow-y-auto whitespace-pre-wrap rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-3 text-sm text-[var(--text-primary)]">
-              {activeNotesPreview.notes}
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setActiveNotesPreview(null)}
-                className="btn-base btn-neutral px-3 py-2 text-sm"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <QuestionDetailsDrawer
+        open={Boolean(activeQuestionDrawer)}
+        question={activeQuestionDrawer?.question || null}
+        questionContext={activeQuestionDrawer || null}
+        onClose={() => setActiveQuestionDrawer(null)}
+        readOnly={!isEditing}
+        difficultyCategories={difficultyCategories}
+        topicTags={topicTags}
+        onSave={async ({ topicId, subId, questionId, payload }) => {
+          updateQuestionResources(topicId, subId, questionId, payload);
+        }}
+      />
     </>
   );
 }
