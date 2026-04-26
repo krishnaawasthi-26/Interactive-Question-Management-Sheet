@@ -45,6 +45,7 @@ public class User {
   private Set<String> followerUserIds = new LinkedHashSet<>();
   private Set<String> followingUserIds = new LinkedHashSet<>();
   private Set<String> copiedSheetIds = new LinkedHashSet<>();
+  private java.util.List<DifficultyCategory> difficultyCategories = new java.util.ArrayList<>();
   private Instant premiumUntil;
   private Instant premiumTrialStartedAt;
   private Instant premiumTrialEndsAt;
@@ -115,6 +116,10 @@ public class User {
   public Set<String> getCopiedSheetIds() { return copiedSheetIds; }
   public void setCopiedSheetIds(Set<String> copiedSheetIds) {
     this.copiedSheetIds = copiedSheetIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(copiedSheetIds);
+  }
+  public java.util.List<DifficultyCategory> getDifficultyCategories() { return difficultyCategories; }
+  public void setDifficultyCategories(java.util.List<DifficultyCategory> difficultyCategories) {
+    this.difficultyCategories = difficultyCategories == null ? new java.util.ArrayList<>() : new java.util.ArrayList<>(difficultyCategories);
   }
   public Instant getPremiumUntil() { return premiumUntil; }
   public void setPremiumUntil(Instant premiumUntil) { this.premiumUntil = premiumUntil; }

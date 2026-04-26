@@ -17,6 +17,9 @@ import { isPremiumActive } from "../services/premium";
 import ProgressBar from "../components/ui/ProgressBar";
 import EmptyState from "../components/ui/EmptyState";
 import SurfaceCard from "../components/ui/SurfaceCard";
+import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
+import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
+import { createDifficultyCategory, listDifficultyCategories } from "../api/difficultyCategoryApi";
 
 const formatRelativeTime = (isoValue) => {
   if (!isoValue) return "Not saved yet";
@@ -72,6 +75,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const [, setNowTick] = useState(0);
   const [topicSchedulerState, setTopicSchedulerState] = useState({ open: false, mode: "reminder" });
   const [scheduledTopicAlerts, setScheduledTopicAlerts] = useState([]);
+  const [difficultyCategories, setDifficultyCategories] = useState(DEFAULT_DIFFICULTY_CATEGORIES);
 
   const currentUser = useAuthStore((state) => state.currentUser);
   const logout = useAuthStore((state) => state.logout);
@@ -114,6 +118,19 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     if (!sheetId || !currentUser?.token) return;
     loadSheetById(currentUser.token, sheetId);
   }, [sheetId, loadSheetById, currentUser?.token]);
+
+  useEffect(() => {
+    if (!currentUser?.token || !sheetId) return;
+    listDifficultyCategories(currentUser.token)
+      .then((response) => {
+        if (Array.isArray(response?.categories) && response.categories.length > 0) {
+          setDifficultyCategories(response.categories);
+        }
+      })
+      .catch(() => {
+        setDifficultyCategories(DEFAULT_DIFFICULTY_CATEGORIES);
+      });
+  }, [currentUser?.token, sheetId]);
 
   useEffect(() => {
     if (sheetId || !currentUser?.token) return;
@@ -611,6 +628,14 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   );
   const openedSheet = useMemo(() => sheets.find((sheet) => sheet.id === sheetId) || null, [sheetId, sheets]);
   const openedSheetActions = useMemo(() => (openedSheet ? createSheetActions(openedSheet) : []), [createSheetActions, openedSheet]);
+  const handleCreateCustomDifficulty = useCallback(async ({ name, color }) => {
+    if (!currentUser?.token) return null;
+    const created = await createDifficultyCategory(currentUser.token, { name, color });
+    if (created) {
+      setDifficultyCategories((current) => [...current.filter((entry) => entry.type !== "custom" || entry.id !== created.id), created]);
+    }
+    return created;
+  }, [currentUser?.token]);
 
   const sheetActionButtons = [
     { key: "undo", label: "Undo", onClick: undo, disabled: !canUndo },
@@ -778,6 +803,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           )}
 
           <main>
+            <DifficultyDistributionWidget topics={topics} categories={difficultyCategories} />
             {(isLoading || loadError || saveError) && (
               <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
             )}
@@ -809,6 +835,8 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                   })),
                 });
               }}
+              difficultyCategories={difficultyCategories}
+              onCreateCustomDifficulty={handleCreateCustomDifficulty}
               onNavigatePremiumRoute={(target) => {
                 if (target === "insights") {
                   navigateTo(ROUTES.LEARNING_INSIGHTS);

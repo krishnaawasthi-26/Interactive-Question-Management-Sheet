@@ -222,6 +222,15 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
       return applyTopicsWithHistoryAndDirty(state, topics);
     }),
 
+
+  setQuestionDifficulty: (topicId, subId, questionId, difficultyPayload) =>
+    set((state) => {
+      const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({
+        ...question,
+        ...difficultyPayload,
+      }));
+      return applyTopicsWithHistoryAndDirty(state, topics);
+    }),
   updateQuestionResources: (topicId, subId, questionId, resources) =>
     set((state) => {
       const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({

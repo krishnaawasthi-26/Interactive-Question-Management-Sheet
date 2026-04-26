@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
+import DifficultyCategorySelector from "./DifficultyCategorySelector";
+import CustomDifficultyModal from "./CustomDifficultyModal";
+import { buildCategoryLabelAndColor, buildCategoryValue, DEFAULT_DIFFICULTY_CATEGORIES, resolveQuestionDifficulty } from "../services/difficultyCategories";
 
 const normalizeText = (value) =>
   `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
@@ -52,6 +55,8 @@ function TopicList({
   premiumActive = false,
   onPremiumLocked,
   onRequireCopy,
+  difficultyCategories = [],
+  onCreateCustomDifficulty,
 }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
@@ -66,6 +71,7 @@ function TopicList({
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
   const toggleQuestionRevised = useSheetStore((state) => state.toggleQuestionRevised);
+  const setQuestionDifficulty = useSheetStore((state) => state.setQuestionDifficulty);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -80,6 +86,12 @@ function TopicList({
   const [resourceDraftByQuestion, setResourceDraftByQuestion] = useState({});
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
   const [activeNotesPreview, setActiveNotesPreview] = useState(null);
+  const [customModalQuestion, setCustomModalQuestion] = useState(null);
+  const [customSaveError, setCustomSaveError] = useState("");
+  const [isSavingCustom, setIsSavingCustom] = useState(false);
+  const defaultDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "default" && entry.tier === "default"), [difficultyCategories]);
+  const extraDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "default" && entry.tier === "extra"), [difficultyCategories]);
+  const customDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "custom"), [difficultyCategories]);
   const normalizedQuery = normalizeText(searchQuery);
   const shouldExpandAll = Boolean(normalizedQuery);
   const visibleTopics = useMemo(() => (
@@ -185,6 +197,36 @@ function TopicList({
     updateQuestionResources(topicId, subId, questionId, draft);
     setResourceEditorByQuestion((current) => ({ ...current, [questionId]: false }));
     setMobileActionQuestionId(null);
+  };
+
+  const handleDifficultyChange = async ({ topicId, subId, questionId, value }) => {
+    if (value === "custom:new") {
+      setCustomModalQuestion({ topicId, subId, questionId });
+      setCustomSaveError("");
+      return;
+    }
+    if (value.startsWith("default:")) {
+      const key = value.replace("default:", "");
+      const entry = difficultyCategories.find((category) => category.type === "default" && category.key === key) || DEFAULT_DIFFICULTY_CATEGORIES.find((category) => category.key === key);
+      setQuestionDifficulty(topicId, subId, questionId, {
+        difficultyKey: key,
+        difficultyCategoryId: null,
+        difficultyLabel: entry?.label || "Medium",
+        difficultyColor: entry?.color || "#f59e0b",
+      });
+      return;
+    }
+    if (value.startsWith("custom:")) {
+      const id = value.replace("custom:", "");
+      const entry = difficultyCategories.find((category) => category.type === "custom" && category.id === id);
+      if (!entry) return;
+      setQuestionDifficulty(topicId, subId, questionId, {
+        difficultyKey: null,
+        difficultyCategoryId: id,
+        difficultyLabel: entry.label,
+        difficultyColor: entry.color,
+      });
+    }
   };
 
   return (
@@ -480,6 +522,12 @@ function TopicList({
                                                                   ✓
                                                                 </button>
                                                               <span className="text-sm leading-5 text-[var(--text-primary)] break-words">{q.text}</span>
+                                                              <span
+                                                                className="rounded-full border border-black/40 px-2 py-0.5 text-[10px] font-medium"
+                                                                style={{ color: buildCategoryLabelAndColor(q, difficultyCategories).color }}
+                                                              >
+                                                                {buildCategoryLabelAndColor(q, difficultyCategories).label}
+                                                              </span>
                                                               {showAttemptInsights && isEditing ? (
                                                                 <button
                                                                   type="button"
@@ -498,6 +546,13 @@ function TopicList({
                                                               </span>
                                                               {isEditing && (
                                                                 <>
+                                                                  <DifficultyCategorySelector
+                                                                    value={buildCategoryValue(resolveQuestionDifficulty(q, difficultyCategories))}
+                                                                    defaultCategories={defaultDifficultyCategories}
+                                                                    extraCategories={extraDifficultyCategories}
+                                                                    customCategories={customDifficultyCategories}
+                                                                    onChange={(value) => handleDifficultyChange({ topicId: topic.id, subId: sub.id, questionId: q.id, value })}
+                                                                  />
                                                                   <div className="hidden items-center gap-1 sm:flex">
                                                                     <button
                                                                       className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
@@ -714,6 +769,32 @@ function TopicList({
           }}
         />
       )}
+      <CustomDifficultyModal
+        open={Boolean(customModalQuestion)}
+        isSaving={isSavingCustom}
+        error={customSaveError}
+        onClose={() => setCustomModalQuestion(null)}
+        onSave={async ({ name, color }) => {
+          if (!customModalQuestion || !onCreateCustomDifficulty) return;
+          setIsSavingCustom(true);
+          setCustomSaveError("");
+          try {
+            const created = await onCreateCustomDifficulty({ name, color });
+            if (!created) return;
+            setQuestionDifficulty(customModalQuestion.topicId, customModalQuestion.subId, customModalQuestion.questionId, {
+              difficultyKey: null,
+              difficultyCategoryId: created.id,
+              difficultyLabel: created.label,
+              difficultyColor: created.color,
+            });
+            setCustomModalQuestion(null);
+          } catch (error) {
+            setCustomSaveError(error?.message || "Unable to create custom category.");
+          } finally {
+            setIsSavingCustom(false);
+          }
+        }}
+      />
       {activeNotesPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] px-4 backdrop-blur-sm">
           <div className="panel w-full max-w-lg rounded-2xl border border-[var(--border-subtle)] p-5 shadow-xl">

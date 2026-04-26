@@ -25,6 +25,7 @@ const createQuestionEntry = (text) => ({
   videoLink: "",
   notes: "",
   done: false,
+  difficultyKey: "medium",
 });
 
 const updateTopicById = (topics, topicId, updater) =>
