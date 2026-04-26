@@ -1,7 +1,8 @@
 // Generic helpers reused across slices to keep behavior consistent.
 export const cloneDeep = (value) => JSON.parse(JSON.stringify(value));
 
-export const buildSheetSignature = (title, topics) => JSON.stringify({ title, topics });
+export const buildSheetSignature = (title, topics, topicTags = [], userCustomTopics = []) =>
+  JSON.stringify({ title, topics, topicTags, userCustomTopics });
 
 export const reorderArray = (items, startIndex, endIndex) => {
   const nextItems = Array.from(items);
@@ -45,7 +46,7 @@ export const normalizeSheetVisibility = (sheet) => {
 };
 
 export const computeDirtyState = (state, signatureBySheet) =>
-  buildSheetSignature(state.sheetTitle, state.topics) !== signatureBySheet.get(state.activeSheetId);
+  buildSheetSignature(state.sheetTitle, state.topics, state.topicTags, state.userCustomTopics) !== signatureBySheet.get(state.activeSheetId);
 
 export const applyTopicsWithHistoryAndDirty = (state, nextTopics, withHistory, signatureBySheet) => {
   const nextState = withHistory(state, nextTopics);

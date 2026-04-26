@@ -23,6 +23,8 @@ export const normalizeSheet = (payload, slug) => {
     createdAt: payload?.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     topics,
+    topicTags: payload?.topicTags ?? [],
+    userCustomTopics: payload?.userCustomTopics ?? [],
   };
 };
 
@@ -34,6 +36,8 @@ export const resolveSheet = (sheet) => {
       ...(localSheet ?? {}),
       ...sheet,
       topics: sheet.topics ?? localSheet?.topics ?? [],
+      topicTags: sheet.topicTags ?? localSheet?.topicTags ?? [],
+      userCustomTopics: sheet.userCustomTopics ?? localSheet?.userCustomTopics ?? [],
       updatedAt: new Date().toISOString(),
     };
   }

@@ -71,6 +71,8 @@ public class SheetController {
             sheetId,
             body.getTitle(),
             body.getTopics(),
+            body.getTopicTags(),
+            body.getUserCustomTopics(),
             body.getIsPublic(),
             body.getIsArchived(),
             body.getShareProgress()));

@@ -11,6 +11,7 @@ import {
   normalizeSheetVisibility,
   updateSheetInCollection,
 } from "./helpers";
+import { hydrateTopicTags } from "../../services/topicTags";
 
 const buildSafeSheetUpdatePayload = async ({
   token,
@@ -22,7 +23,7 @@ const buildSafeSheetUpdatePayload = async ({
   const state = getState();
   const listedSheet = state.sheets.find((sheet) => sheet.id === sheetId);
   const activeSheetData = state.activeSheetId === sheetId
-    ? { title: state.sheetTitle, topics: state.topics }
+    ? { title: state.sheetTitle, topics: state.topics, topicTags: state.topicTags, userCustomTopics: state.userCustomTopics }
     : null;
 
   const fallbackSheet = listedSheet || (await getSheet(token, sheetId));
@@ -34,6 +35,8 @@ const buildSafeSheetUpdatePayload = async ({
   if (includeContent) {
     payload.title = activeSheetData?.title ?? fallbackTitle;
     payload.topics = activeSheetData?.topics ?? fallbackTopics;
+    payload.topicTags = activeSheetData?.topicTags ?? fallbackSheet?.topicTags ?? [];
+    payload.userCustomTopics = activeSheetData?.userCustomTopics ?? fallbackSheet?.userCustomTopics ?? [];
   }
 
   return payload;
@@ -115,10 +118,12 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
     await saveSheet(token, created.id, {
       title,
       topics: sourceSheet.topics || [],
+      topicTags: sourceSheet.topicTags || [],
+      userCustomTopics: sourceSheet.userCustomTopics || [],
     });
 
     set((state) => ({
-      sheets: [...state.sheets, { ...created, title, topics: sourceSheet.topics || [] }],
+      sheets: [...state.sheets, { ...created, title, topics: sourceSheet.topics || [], topicTags: sourceSheet.topicTags || [], userCustomTopics: sourceSheet.userCustomTopics || [] }],
       limitWarning: null,
     }));
 
@@ -131,11 +136,14 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   setFullSheet: async (sheet) => {
+    const hydrated = hydrateTopicTags({ topics: sheet.topics || [], topicTags: sheet.topicTags || [], userCustomTopics: sheet.userCustomTopics || [] });
     const normalized = {
       title: sheet.name || sheet.title || "Question Sheet",
-      topics: sheet.topics || [],
+      topics: hydrated.topics,
+      topicTags: hydrated.topicTags,
+      userCustomTopics: hydrated.userCustomTopics,
     };
-    set((state) => ({ ...state, sheetTitle: normalized.title, topics: normalized.topics, past: [], future: [] }));
+    set((state) => ({ ...state, sheetTitle: normalized.title, topics: normalized.topics, topicTags: normalized.topicTags, userCustomTopics: normalized.userCustomTopics, past: [], future: [] }));
     return normalized;
   },
 
@@ -144,11 +152,14 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
     try {
       const sheet = normalizeSheetVisibility(await getSheet(token, sheetId));
       const title = sheet.title || "Question Sheet";
-      const topics = sheet.topics || [];
+      const hydrated = hydrateTopicTags({ topics: sheet.topics || [], topicTags: sheet.topicTags || [], userCustomTopics: sheet.userCustomTopics || [] });
+      const topics = hydrated.topics;
 
       set({
         activeSheetId: sheet.id,
         topics,
+        topicTags: hydrated.topicTags,
+        userCustomTopics: hydrated.userCustomTopics,
         sheetTitle: title,
         lastSavedAt: sheet.updatedAt || new Date().toISOString(),
         isLoading: false,
@@ -159,8 +170,8 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         sheets: updateSheetInCollection(get().sheets, sheet.id, sheet),
       });
 
-      internals.lastPersistedSignatureBySheet.set(sheet.id, buildSheetSignature(title, topics));
-      internals.lastSavedSheetStateById.set(sheet.id, { title, topics });
+      internals.lastPersistedSignatureBySheet.set(sheet.id, buildSheetSignature(title, topics, hydrated.topicTags, hydrated.userCustomTopics));
+      internals.lastSavedSheetStateById.set(sheet.id, { title, topics, topicTags: hydrated.topicTags, userCustomTopics: hydrated.userCustomTopics });
       return sheet;
     } catch (error) {
       set({ isLoading: false, loadError: error.message });
@@ -169,10 +180,10 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   persistCurrentSheet: async (token) => {
-    const { activeSheetId, topics, sheetTitle } = get();
+    const { activeSheetId, topics, sheetTitle, topicTags, userCustomTopics } = get();
     if (!activeSheetId) return;
 
-    const signature = buildSheetSignature(sheetTitle, topics);
+    const signature = buildSheetSignature(sheetTitle, topics, topicTags, userCustomTopics);
     if (internals.lastPersistedSignatureBySheet.get(activeSheetId) === signature) return;
 
     const inFlight = internals.inFlightPersistBySheet.get(activeSheetId);
@@ -185,7 +196,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
       token,
       sheetId: activeSheetId,
       getState: get,
-      overrideFields: { title: sheetTitle, topics },
+      overrideFields: { title: sheetTitle, topics, topicTags, userCustomTopics },
     });
 
     const persistPromise = saveSheet(token, activeSheetId, payload)
@@ -204,7 +215,7 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
   },
 
   saveCurrentSheetDraft: async (token) => {
-    const { activeSheetId, topics, sheetTitle } = get();
+    const { activeSheetId, topics, sheetTitle, topicTags, userCustomTopics } = get();
     if (!activeSheetId) return false;
 
     set({ isSaving: true, saveError: null });
@@ -213,12 +224,12 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
         token,
         sheetId: activeSheetId,
         getState: get,
-        overrideFields: { title: sheetTitle, topics },
+        overrideFields: { title: sheetTitle, topics, topicTags, userCustomTopics },
       });
       await saveSheet(token, activeSheetId, payload);
-      const signature = buildSheetSignature(sheetTitle, topics);
+      const signature = buildSheetSignature(sheetTitle, topics, topicTags, userCustomTopics);
       internals.lastPersistedSignatureBySheet.set(activeSheetId, signature);
-      internals.lastSavedSheetStateById.set(activeSheetId, { title: sheetTitle, topics: cloneDeep(topics) });
+      internals.lastSavedSheetStateById.set(activeSheetId, { title: sheetTitle, topics: cloneDeep(topics), topicTags: cloneDeep(topicTags), userCustomTopics: cloneDeep(userCustomTopics) });
       set({ hasPendingChanges: false, isSaving: false, lastSavedAt: new Date().toISOString() });
       return true;
     } catch (error) {
@@ -237,6 +248,8 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
     set({
       sheetTitle: savedState.title,
       topics: cloneDeep(savedState.topics),
+      topicTags: cloneDeep(savedState.topicTags || []),
+      userCustomTopics: cloneDeep(savedState.userCustomTopics || []),
       past: [],
       future: [],
       hasPendingChanges: false,
@@ -329,6 +342,8 @@ export const createSheetPersistenceSlice = ({ set, get }, internals) => ({
     set({
       activeSheetId: null,
       topics: showProgress ? cloneDeep(sheet.topics || []) : clearSharedProgress(sheet.topics || []),
+      topicTags: cloneDeep(sheet.topicTags || []),
+      userCustomTopics: cloneDeep(sheet.userCustomTopics || []),
       sheetTitle: sheet.title || "Question Sheet",
       past: [],
       future: [],

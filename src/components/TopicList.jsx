@@ -5,6 +5,8 @@ import AttemptLogModal from "./AttemptLogModal";
 import DifficultyCategorySelector from "./DifficultyCategorySelector";
 import CustomDifficultyModal from "./CustomDifficultyModal";
 import { buildCategoryLabelAndColor, buildCategoryValue, DEFAULT_DIFFICULTY_CATEGORIES, resolveQuestionDifficulty } from "../services/difficultyCategories";
+import TopicTagSelector from "./TopicTagSelector";
+import CustomTopicModal from "./CustomTopicModal";
 
 const normalizeText = (value) =>
   `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
@@ -57,6 +59,7 @@ function TopicList({
   onRequireCopy,
   difficultyCategories = [],
   onCreateCustomDifficulty,
+  topicTags = [],
 }) {
   const topics = useSheetStore((state) => state.topics);
   const addSubTopic = useSheetStore((state) => state.addSubTopic);
@@ -72,6 +75,11 @@ function TopicList({
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
   const toggleQuestionRevised = useSheetStore((state) => state.toggleQuestionRevised);
   const setQuestionDifficulty = useSheetStore((state) => state.setQuestionDifficulty);
+  const assignTopicTagToQuestion = useSheetStore((state) => state.assignTopicTagToQuestion);
+  const removeTopicTagFromQuestion = useSheetStore((state) => state.removeTopicTagFromQuestion);
+  const createCustomTopicTag = useSheetStore((state) => state.createCustomTopicTag);
+  const updateCustomTopicTag = useSheetStore((state) => state.updateCustomTopicTag);
+  const deleteCustomTopicTag = useSheetStore((state) => state.deleteCustomTopicTag);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -87,6 +95,7 @@ function TopicList({
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
   const [activeNotesPreview, setActiveNotesPreview] = useState(null);
   const [customModalQuestion, setCustomModalQuestion] = useState(null);
+  const [customTopicModal, setCustomTopicModal] = useState({ open: false, editingTag: null, questionContext: null });
   const [customSaveError, setCustomSaveError] = useState("");
   const [isSavingCustom, setIsSavingCustom] = useState(false);
   const defaultDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "default" && entry.tier === "default"), [difficultyCategories]);
@@ -605,6 +614,20 @@ function TopicList({
                                                                 )}
                                                               </div>
                                                             )}
+                                                            <TopicTagSelector
+                                                              question={q}
+                                                              topicTags={topicTags}
+                                                              readOnly={!isEditing}
+                                                              onAssign={(tagId) => assignTopicTagToQuestion(topic.id, sub.id, q.id, tagId)}
+                                                              onRemove={(tagId) => removeTopicTagFromQuestion(topic.id, sub.id, q.id, tagId)}
+                                                              onAddCustom={() => setCustomTopicModal({ open: true, editingTag: null, questionContext: { topicId: topic.id, subId: sub.id, questionId: q.id } })}
+                                                              onEditCustom={(tag) => setCustomTopicModal({ open: true, editingTag: tag, questionContext: { topicId: topic.id, subId: sub.id, questionId: q.id } })}
+                                                              onDeleteCustom={(tag) => {
+                                                                if (window.confirm(`Delete custom topic "${tag.name}"? It will be removed from all questions.`)) {
+                                                                  deleteCustomTopicTag(tag.id);
+                                                                }
+                                                              }}
+                                                            />
 
                                                             {showAttemptInsights && totalAttempts > 0 ? (
                                                               <div className="mt-2 pl-3 sm:pl-7">
@@ -793,6 +816,26 @@ function TopicList({
           } finally {
             setIsSavingCustom(false);
           }
+        }}
+      />
+      <CustomTopicModal
+        open={customTopicModal.open}
+        initialValue={customTopicModal.editingTag}
+        existingColors={topicTags.map((entry) => entry.color)}
+        onClose={() => setCustomTopicModal({ open: false, editingTag: null, questionContext: null })}
+        onSave={({ name, color }) => {
+          if (customTopicModal.editingTag) {
+            updateCustomTopicTag(customTopicModal.editingTag.id, { name, color });
+            setCustomTopicModal({ open: false, editingTag: null, questionContext: null });
+            return;
+          }
+          createCustomTopicTag(name, color);
+          const created = useSheetStore.getState().topicTags.at(-1);
+          if (created?.id && customTopicModal.questionContext) {
+            const { topicId, subId, questionId } = customTopicModal.questionContext;
+            assignTopicTagToQuestion(topicId, subId, questionId, created.id);
+          }
+          setCustomTopicModal({ open: false, editingTag: null, questionContext: null });
         }}
       />
       {activeNotesPreview && (

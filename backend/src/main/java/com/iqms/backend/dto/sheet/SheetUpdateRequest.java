@@ -10,6 +10,8 @@ public class SheetUpdateRequest {
   private String title;
 
   private List<Map<String, Object>> topics;
+  private List<Map<String, Object>> topicTags;
+  private List<Map<String, Object>> userCustomTopics;
   private Boolean isPublic;
   private Boolean isArchived;
   private Boolean shareProgress;
@@ -52,5 +54,21 @@ public class SheetUpdateRequest {
 
   public void setShareProgress(Boolean shareProgress) {
     this.shareProgress = shareProgress;
+  }
+
+  public List<Map<String, Object>> getTopicTags() {
+    return topicTags;
+  }
+
+  public void setTopicTags(List<Map<String, Object>> topicTags) {
+    this.topicTags = topicTags;
+  }
+
+  public List<Map<String, Object>> getUserCustomTopics() {
+    return userCustomTopics;
+  }
+
+  public void setUserCustomTopics(List<Map<String, Object>> userCustomTopics) {
+    this.userCustomTopics = userCustomTopics;
   }
 }
