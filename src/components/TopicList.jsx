@@ -2,11 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSheetStore } from "../store/sheetStore";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import AttemptLogModal from "./AttemptLogModal";
-import DifficultyCategorySelector from "./DifficultyCategorySelector";
-import CustomDifficultyModal from "./CustomDifficultyModal";
-import { buildCategoryValue, DEFAULT_DIFFICULTY_CATEGORIES, resolveQuestionDifficulty } from "../services/difficultyCategories";
-import TopicTagSelector from "./TopicTagSelector";
-import CustomTopicModal from "./CustomTopicModal";
 import DifficultyBadge from "./DifficultyBadge";
 import TopicChipsPreview from "./TopicChipsPreview";
 import QuestionDetailsDrawer from "./QuestionDetailsDrawer";
@@ -56,7 +51,6 @@ function TopicList({
   onPremiumLocked,
   onRequireCopy,
   difficultyCategories = [],
-  onCreateCustomDifficulty,
   topicTags = [],
 }) {
   const topics = useSheetStore((state) => state.topics);
@@ -74,12 +68,6 @@ function TopicList({
   const moveQuestion = useSheetStore((state) => state.moveQuestion);
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
   const toggleQuestionRevised = useSheetStore((state) => state.toggleQuestionRevised);
-  const setQuestionDifficulty = useSheetStore((state) => state.setQuestionDifficulty);
-  const assignTopicTagToQuestion = useSheetStore((state) => state.assignTopicTagToQuestion);
-  const removeTopicTagFromQuestion = useSheetStore((state) => state.removeTopicTagFromQuestion);
-  const createCustomTopicTag = useSheetStore((state) => state.createCustomTopicTag);
-  const updateCustomTopicTag = useSheetStore((state) => state.updateCustomTopicTag);
-  const deleteCustomTopicTag = useSheetStore((state) => state.deleteCustomTopicTag);
 
   const [editingTopicId, setEditingTopicId] = useState(null);
   const [editingSubId, setEditingSubId] = useState(null);
@@ -92,13 +80,6 @@ function TopicList({
   const [activeAttempt, setActiveAttempt] = useState(null);
   const [mobileActionQuestionId, setMobileActionQuestionId] = useState(null);
   const [activeQuestionDrawer, setActiveQuestionDrawer] = useState(null);
-  const [customModalQuestion, setCustomModalQuestion] = useState(null);
-  const [customTopicModal, setCustomTopicModal] = useState({ open: false, editingTag: null, questionContext: null });
-  const [customSaveError, setCustomSaveError] = useState("");
-  const [isSavingCustom, setIsSavingCustom] = useState(false);
-  const defaultDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "default" && entry.tier === "default"), [difficultyCategories]);
-  const extraDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "default" && entry.tier === "extra"), [difficultyCategories]);
-  const customDifficultyCategories = useMemo(() => difficultyCategories.filter((entry) => entry.type === "custom"), [difficultyCategories]);
   const normalizedQuery = normalizeText(searchQuery);
   const shouldExpandAll = Boolean(normalizedQuery);
   const visibleTopics = useMemo(() => (
@@ -193,10 +174,29 @@ function TopicList({
   };
 
   const startResourceEdit = (question, topicId, subId) => {
-    setActiveQuestionDrawer({ question, topicId, subId });
+    openQuestionDrawer(question, topicId, subId);
   };
 
 
+
+
+  const openQuestionDrawer = (question, topicId, subId) => {
+    setActiveQuestionDrawer({ question, topicId, subId });
+  };
+
+  const handleAddQuestion = (topicId, subId, questionText) => {
+    if (!questionText) return;
+    addQuestion(topicId, subId, questionText).then((updatedSheet) => {
+      if (!updatedSheet) return;
+      setQuestionInput((current) => ({ ...current, [subId]: "" }));
+      const createdQuestion = updatedSheet.topics
+        .find((topic) => topic.id === topicId)?.subTopics
+        .find((subTopic) => subTopic.id === subId)?.questions?.at(-1);
+      if (createdQuestion) {
+        openQuestionDrawer(createdQuestion, topicId, subId);
+      }
+    });
+  };
 
   useEffect(() => {
     if (!focusProblemId) return;
@@ -207,36 +207,6 @@ function TopicList({
     const timer = window.setTimeout(() => target.classList.remove("ring-2", "ring-[var(--accent-primary)]"), 1800);
     return () => window.clearTimeout(timer);
   }, [focusProblemId, topics]);
-
-  const handleDifficultyChange = async ({ topicId, subId, questionId, value }) => {
-    if (value === "custom:new") {
-      setCustomModalQuestion({ topicId, subId, questionId });
-      setCustomSaveError("");
-      return;
-    }
-    if (value.startsWith("default:")) {
-      const key = value.replace("default:", "");
-      const entry = difficultyCategories.find((category) => category.type === "default" && category.key === key) || DEFAULT_DIFFICULTY_CATEGORIES.find((category) => category.key === key);
-      setQuestionDifficulty(topicId, subId, questionId, {
-        difficultyKey: key,
-        difficultyCategoryId: null,
-        difficultyLabel: entry?.label || "Medium",
-        difficultyColor: entry?.color || "#f59e0b",
-      });
-      return;
-    }
-    if (value.startsWith("custom:")) {
-      const id = value.replace("custom:", "");
-      const entry = difficultyCategories.find((category) => category.type === "custom" && category.id === id);
-      if (!entry) return;
-      setQuestionDifficulty(topicId, subId, questionId, {
-        difficultyKey: null,
-        difficultyCategoryId: id,
-        difficultyLabel: entry.label,
-        difficultyColor: entry.color,
-      });
-    }
-  };
 
   return (
     <>
@@ -496,10 +466,7 @@ function TopicList({
                                                 }
                                                 onKeyDown={(e) => {
                                                   if (e.key === "Enter" && questionInput[sub.id]) {
-                                                    addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
-                                                      if (!created) return;
-                                                      setQuestionInput((current) => ({ ...current, [sub.id]: "" }));
-                                                    });
+                                                    handleAddQuestion(topic.id, sub.id, questionInput[sub.id]);
                                                   }
                                                 }}
                                               />
@@ -507,10 +474,7 @@ function TopicList({
                                                 className="btn-base btn-success rounded-md px-2 py-2 text-xs"
                                                 onClick={() => {
                                                   if (!questionInput[sub.id]) return;
-                                                  addQuestion(topic.id, sub.id, questionInput[sub.id]).then((created) => {
-                                                    if (!created) return;
-                                                    setQuestionInput((current) => ({ ...current, [sub.id]: "" }));
-                                                  });
+                                                  handleAddQuestion(topic.id, sub.id, questionInput[sub.id]);
                                                 }}
                                               >
                                                 Add Question
@@ -616,20 +580,10 @@ function TopicList({
                                                               </span>
                                                               {isEditing && (
                                                                 <>
-                                                                  <DifficultyCategorySelector
-                                                                    value={buildCategoryValue(resolveQuestionDifficulty(q, difficultyCategories))}
-                                                                    defaultCategories={defaultDifficultyCategories}
-                                                                    extraCategories={extraDifficultyCategories}
-                                                                    customCategories={customDifficultyCategories}
-                                                                    onChange={(value) => handleDifficultyChange({ topicId: topic.id, subId: sub.id, questionId: q.id, value })}
-                                                                  />
                                                                   <div className="hidden items-center gap-1 sm:flex">
                                                                     <button
                                                                       className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                      onClick={() => {
-                                                                        setEditingQuestionId(q.id);
-                                                                        setEditValue(q.text);
-                                                                      }}
+                                                                      onClick={() => startResourceEdit(q, topic.id, sub.id)}
                                                                     >
                                                                       Edit
                                                                     </button>
@@ -638,12 +592,6 @@ function TopicList({
                                                                       onClick={() => deleteQuestion(topic.id, sub.id, q.id)}
                                                                     >
                                                                       Delete
-                                                                    </button>
-                                                                    <button
-                                                                      className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                      onClick={() => startResourceEdit(q, topic.id, sub.id)}
-                                                                    >
-                                                                      Resources
                                                                     </button>
                                                                   </div>
                                                                   <button
@@ -659,30 +607,14 @@ function TopicList({
                                                               )}
                                                             </div>
 
-                                                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-3 sm:pl-7">
+                                                            <button
+                                                              type="button"
+                                                              onClick={() => startResourceEdit(q, topic.id, sub.id)}
+                                                              className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/70 px-2 py-1.5 pl-3 text-left transition hover:bg-[var(--surface-elevated)] sm:pl-7"
+                                                            >
                                                               <TopicChipsPreview tags={topicTags.filter((tag) => (q.topicTagIds || []).includes(tag.id))} />
-                                                              <button
-                                                                type="button"
-                                                                onClick={() => startResourceEdit(q, topic.id, sub.id)}
-                                                                className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)] px-2 py-1 text-[11px] text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
-                                                              >
-                                                                Resources
-                                                              </button>
-                                                            </div>
-                                                            {isEditing ? <TopicTagSelector
-                                                              question={q}
-                                                              topicTags={topicTags}
-                                                              readOnly={!isEditing}
-                                                              onAssign={(tagId) => assignTopicTagToQuestion(topic.id, sub.id, q.id, tagId)}
-                                                              onRemove={(tagId) => removeTopicTagFromQuestion(topic.id, sub.id, q.id, tagId)}
-                                                              onAddCustom={() => setCustomTopicModal({ open: true, editingTag: null, questionContext: { topicId: topic.id, subId: sub.id, questionId: q.id } })}
-                                                              onEditCustom={(tag) => setCustomTopicModal({ open: true, editingTag: tag, questionContext: { topicId: topic.id, subId: sub.id, questionId: q.id } })}
-                                                              onDeleteCustom={(tag) => {
-                                                                if (window.confirm(`Delete custom topic "${tag.name}"? It will be removed from all questions.`)) {
-                                                                  deleteCustomTopicTag(tag.id);
-                                                                }
-                                                              }}
-                                                            /> : null}
+                                                              <span className="text-[11px] text-[var(--text-muted)]">Tags & resources</span>
+                                                            </button>
 
                                                             {showAttemptInsights && totalAttempts > 0 ? (
                                                               <div className="mt-2 pl-3 sm:pl-7">
@@ -708,8 +640,7 @@ function TopicList({
                                                                 <button
                                                                   className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
                                                                   onClick={() => {
-                                                                    setEditingQuestionId(q.id);
-                                                                    setEditValue(q.text);
+                                                                    startResourceEdit(q, topic.id, sub.id);
                                                                     setMobileActionQuestionId(null);
                                                                   }}
                                                                 >
@@ -723,12 +654,6 @@ function TopicList({
                                                                   }}
                                                                 >
                                                                   Delete
-                                                                </button>
-                                                                <button
-                                                                  className="btn-base btn-neutral btn-sm rounded-md px-2 py-1 text-xs"
-                                                                  onClick={() => startResourceEdit(q, topic.id, sub.id)}
-                                                                >
-                                                                  Resources
                                                                 </button>
                                                               </div>
                                                             )}
@@ -786,52 +711,6 @@ function TopicList({
           }}
         />
       )}
-      <CustomDifficultyModal
-        open={Boolean(customModalQuestion)}
-        isSaving={isSavingCustom}
-        error={customSaveError}
-        onClose={() => setCustomModalQuestion(null)}
-        onSave={async ({ name, color }) => {
-          if (!customModalQuestion || !onCreateCustomDifficulty) return;
-          setIsSavingCustom(true);
-          setCustomSaveError("");
-          try {
-            const created = await onCreateCustomDifficulty({ name, color });
-            if (!created) return;
-            setQuestionDifficulty(customModalQuestion.topicId, customModalQuestion.subId, customModalQuestion.questionId, {
-              difficultyKey: null,
-              difficultyCategoryId: created.id,
-              difficultyLabel: created.label,
-              difficultyColor: created.color,
-            });
-            setCustomModalQuestion(null);
-          } catch (error) {
-            setCustomSaveError(error?.message || "Unable to create custom category.");
-          } finally {
-            setIsSavingCustom(false);
-          }
-        }}
-      />
-      <CustomTopicModal
-        open={customTopicModal.open}
-        initialValue={customTopicModal.editingTag}
-        existingColors={topicTags.map((entry) => entry.color)}
-        onClose={() => setCustomTopicModal({ open: false, editingTag: null, questionContext: null })}
-        onSave={({ name, color }) => {
-          if (customTopicModal.editingTag) {
-            updateCustomTopicTag(customTopicModal.editingTag.id, { name, color });
-            setCustomTopicModal({ open: false, editingTag: null, questionContext: null });
-            return;
-          }
-          createCustomTopicTag(name, color);
-          const created = useSheetStore.getState().topicTags.at(-1);
-          if (created?.id && customTopicModal.questionContext) {
-            const { topicId, subId, questionId } = customTopicModal.questionContext;
-            assignTopicTagToQuestion(topicId, subId, questionId, created.id);
-          }
-          setCustomTopicModal({ open: false, editingTag: null, questionContext: null });
-        }}
-      />
       <QuestionDetailsDrawer
         open={Boolean(activeQuestionDrawer)}
         question={activeQuestionDrawer?.question || null}
