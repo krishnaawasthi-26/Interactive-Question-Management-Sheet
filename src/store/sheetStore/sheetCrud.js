@@ -14,6 +14,7 @@ import { isPremiumActive } from "../../services/premium";
 import { FREE_LIMITS, MAX_WORDS_PER_ENTRY, PREMIUM_LIMITS } from "./constants";
 import { countQuestions, countSubTopics } from "./helpers";
 import { updateQuestionById } from "./sheetSelectors";
+import { generateTopicTagId, hydrateTopicTags, normalizeTagName, pickDistinctColor, tagNameExists } from "../../services/topicTags";
 
 const getPlanLimits = () => {
   const currentUser = useAuthStore.getState().currentUser;
@@ -37,6 +38,16 @@ const getFreeEditLockOverflowType = (topics = []) => {
 
 // CRUD slice owns topic/subtopic/question changes and applies history + dirty tracking.
 export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDirty }) => ({
+  applyTopicStructure: (nextTopics) =>
+    set((state) => {
+      const hydrated = hydrateTopicTags({
+        topics: nextTopics,
+        topicTags: state.topicTags,
+        userCustomTopics: state.userCustomTopics,
+      });
+      const nextState = applyTopicsWithHistoryAndDirty(state, hydrated.topics);
+      return { ...nextState, topicTags: hydrated.topicTags, userCustomTopics: hydrated.userCustomTopics };
+    }),
   clearLimitWarning: () => set({ limitWarning: null }),
 
   addTopic: async (title) => {
@@ -59,7 +70,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await createTopic({ topics: currentTopics }, title);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -79,7 +90,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await updateTopic({ topics: get().topics }, id, newTitle);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -93,7 +104,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
       return null;
     }
     const updatedSheet = await deleteTopic({ topics: get().topics }, id);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     return updatedSheet;
   },
 
@@ -117,7 +128,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await createSubTopic({ topics: currentTopics }, topicId, subTitle);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -137,7 +148,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await updateSubTopic({ topics: get().topics }, topicId, subId, newTitle);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -151,7 +162,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
       return null;
     }
     const updatedSheet = await deleteSubTopic({ topics: get().topics }, topicId, subId);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     return updatedSheet;
   },
 
@@ -175,7 +186,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await createQuestion({ topics: currentTopics }, topicId, subId, questionText);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -195,7 +206,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     }
 
     const updatedSheet = await updateQuestion({ topics: get().topics }, topicId, subId, questionId, newText);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     set({ limitWarning: null });
     return updatedSheet;
   },
@@ -209,7 +220,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
       return null;
     }
     const updatedSheet = await deleteQuestion({ topics: get().topics }, topicId, subId, questionId);
-    set((state) => applyTopicsWithHistoryAndDirty(state, updatedSheet.topics));
+    get().applyTopicStructure(updatedSheet.topics);
     return updatedSheet;
   },
 
@@ -267,5 +278,73 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
         revised: !question.revised,
       }));
       return applyTopicsWithHistoryAndDirty(state, topics);
+    }),
+
+  assignTopicTagToQuestion: (topicId, subId, questionId, tagId) =>
+    set((state) => {
+      const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({
+        ...question,
+        topicTagIds: [...new Set([...(question.topicTagIds || []), tagId])],
+      }));
+      return applyTopicsWithHistoryAndDirty(state, topics);
+    }),
+
+  removeTopicTagFromQuestion: (topicId, subId, questionId, tagId) =>
+    set((state) => {
+      const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({
+        ...question,
+        topicTagIds: (question.topicTagIds || []).filter((id) => id !== tagId),
+      }));
+      return applyTopicsWithHistoryAndDirty(state, topics);
+    }),
+
+  createCustomTopicTag: (name, color) =>
+    set((state) => {
+      const normalized = normalizeTagName(name).slice(0, 48);
+      if (!normalized || tagNameExists(state.topicTags, normalized)) return {};
+      const tag = {
+        id: generateTopicTagId(),
+        name: normalized,
+        color: color || pickDistinctColor(state.topicTags.map((entry) => entry.color), state.topicTags.length),
+        type: "CUSTOM",
+        ownerId: useAuthStore.getState().currentUser?.id || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      return {
+        topicTags: [...state.topicTags, tag],
+        userCustomTopics: [...state.userCustomTopics, tag],
+        hasPendingChanges: true,
+      };
+    }),
+
+  updateCustomTopicTag: (tagId, updates) =>
+    set((state) => {
+      const applyUpdate = (tag) => (tag.id === tagId ? { ...tag, ...updates, updatedAt: new Date().toISOString() } : tag);
+      return {
+        topicTags: state.topicTags.map(applyUpdate),
+        userCustomTopics: state.userCustomTopics.map(applyUpdate),
+        hasPendingChanges: true,
+      };
+    }),
+
+  deleteCustomTopicTag: (tagId) =>
+    set((state) => {
+      const topics = state.topics.map((topic) => ({
+        ...topic,
+        subTopics: (topic.subTopics || []).map((sub) => ({
+          ...sub,
+          questions: (sub.questions || []).map((question) => ({
+            ...question,
+            topicTagIds: (question.topicTagIds || []).filter((id) => id !== tagId),
+          })),
+        })),
+      }));
+      const nextState = applyTopicsWithHistoryAndDirty(state, topics);
+      return {
+        ...nextState,
+        topicTags: state.topicTags.filter((tag) => tag.id !== tagId),
+        userCustomTopics: state.userCustomTopics.filter((tag) => tag.id !== tagId),
+      };
     }),
 });

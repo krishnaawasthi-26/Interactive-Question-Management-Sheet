@@ -13,6 +13,7 @@ import { navigateTo, ROUTES, slugifySegment } from "../services/routes";
 import { useAuthStore } from "../store/authStore";
 import { useSheetStore } from "../store/sheetStore";
 import { buildDistribution, DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
+import { buildTopicDistribution } from "../services/topicTags";
 
 function ProfilePage({ theme, onThemeChange, onLogout }) {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -86,6 +87,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
   const renderSheetRow = (sheet, options = { showManageActions: false }) => {
     const progress = calculateSheetProgress(sheet);
     const categorySummary = buildDistribution(sheet.topics || [], DEFAULT_DIFFICULTY_CATEGORIES).categories.slice(0, 3);
+    const topicSummary = buildTopicDistribution(sheet.topics || [], sheet.topicTags || []).items.slice(0, 3);
     return (
       <article key={sheet.id} className="surface-card surface-card-elevated profile-sheet-row">
         <div className="profile-sheet-row__layout">
@@ -98,6 +100,7 @@ function ProfilePage({ theme, onThemeChange, onLogout }) {
             <p className="meta-text">{progress.completedQuestions}/{progress.totalQuestions} solved · {progress.percent}% · {sheet.isPublic ? "Public" : "Private"}{sheet.isArchived ? " · Archived" : ""}</p>
             <ProgressBar percent={progress.percent} tone={progress.percent > 70 ? "success" : "warning"} />
             {categorySummary.length > 0 ? <div className="flex flex-wrap gap-2">{categorySummary.map((entry) => <span key={entry.key} className="text-xs" style={{ color: entry.color }}>{entry.label}: {entry.completed}/{entry.count}</span>)}</div> : null}
+            {topicSummary.length > 0 ? <div className="flex flex-wrap gap-2">{topicSummary.map((entry) => <span key={entry.key} className="text-xs" style={{ color: entry.color }}>{entry.label}: {entry.count}</span>)}</div> : null}
             {sheet.isPublic ? (
               <p className="meta-text profile-sheet-row__url">{`${window.location.origin}/profile/${persistedUsername}/${slugifySegment(sheet.title || "Untitled Sheet")}`}</p>
             ) : null}

@@ -8,6 +8,8 @@ const initialState = {
   sheets: [],
   activeSheetId: null,
   topics: [],
+  topicTags: [],
+  userCustomTopics: [],
   sheetTitle: "Question Sheet",
   isLoading: false,
   loadError: null,

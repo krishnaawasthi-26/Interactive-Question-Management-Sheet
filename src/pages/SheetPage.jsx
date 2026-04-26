@@ -18,6 +18,7 @@ import ProgressBar from "../components/ui/ProgressBar";
 import EmptyState from "../components/ui/EmptyState";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
+import TopicDistributionChart from "../components/TopicDistributionChart";
 import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
 import { createDifficultyCategory, listDifficultyCategories } from "../api/difficultyCategoryApi";
 
@@ -100,6 +101,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   const lastSavedAt = useSheetStore((state) => state.lastSavedAt);
   const sheetTitle = useSheetStore((state) => state.sheetTitle);
   const topics = useSheetStore((state) => state.topics);
+  const topicTags = useSheetStore((state) => state.topicTags);
   const limitWarning = useSheetStore((state) => state.limitWarning);
   const clearLimitWarning = useSheetStore((state) => state.clearLimitWarning);
   const undo = useSheetStore((state) => state.undo);
@@ -803,6 +805,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
           )}
 
           <main>
+            <TopicDistributionChart topics={topics} topicTags={topicTags} />
             <DifficultyDistributionWidget topics={topics} categories={difficultyCategories} />
             {(isLoading || loadError || saveError) && (
               <p className="mb-4 text-sm text-[var(--text-secondary)]">{isLoading ? "Loading sheet..." : loadError || saveError}</p>
@@ -848,6 +851,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                 }
                 navigateTo(ROUTES.PREMIUM);
               }}
+              topicTags={topicTags}
             />
           </main>
             </>

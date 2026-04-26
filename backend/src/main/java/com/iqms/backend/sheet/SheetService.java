@@ -111,6 +111,8 @@ public class SheetService {
       String sheetId,
       String title,
       List<Map<String, Object>> topics,
+      List<Map<String, Object>> topicTags,
+      List<Map<String, Object>> userCustomTopics,
       Boolean isPublic,
       Boolean isArchived,
       Boolean shareProgress) {
@@ -127,6 +129,12 @@ public class SheetService {
         User user = premiumAccessService.findUser(sheet.getOwnerId());
         premiumAccessService.assertFreeLimits(user, topics);
         sheet.setTopics(topics);
+      }
+      if (topicTags != null) {
+        sheet.setTopicTags(topicTags);
+      }
+      if (userCustomTopics != null) {
+        sheet.setUserCustomTopics(userCustomTopics);
       }
       if (isPublic != null) {
         collaborationService.requireOwner(sheet, actorUserId);
@@ -194,6 +202,8 @@ public class SheetService {
     }
     Sheet remixed = createSheet(actorUserId, title == null ? source.getTitle() + " (Remix)" : title);
     remixed.setTopics(source.getTopics());
+    remixed.setTopicTags(source.getTopicTags());
+    remixed.setUserCustomTopics(source.getUserCustomTopics());
     remixed.setParentSheetId(source.getId());
     remixed.setRemixSourceOwnerId(source.getOwnerId());
     remixed.setUpdatedAt(Instant.now());
@@ -223,6 +233,8 @@ public class SheetService {
     String copyTitle = title == null || title.isBlank() ? source.getTitle() + " (Copy)" : title.trim();
     Sheet copied = createSheet(actorUserId, copyTitle);
     copied.setTopics(source.isShareProgress() ? markSharedProgressSeedData(source.getTopics()) : stripProgressData(source.getTopics()));
+    copied.setTopicTags(source.getTopicTags());
+    copied.setUserCustomTopics(source.getUserCustomTopics());
     copied.setParentSheetId(source.getId());
     copied.setRemixSourceOwnerId(source.getOwnerId());
     copied.setUpdatedAt(Instant.now());

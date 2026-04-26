@@ -36,6 +36,8 @@ public class Sheet {
   private List<Collaborator> collaborators = new ArrayList<>();
 
   private List<Map<String, Object>> topics = new ArrayList<>();
+  private List<Map<String, Object>> topicTags = new ArrayList<>();
+  private List<Map<String, Object>> userCustomTopics = new ArrayList<>();
 
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
@@ -63,6 +65,10 @@ public class Sheet {
   public void setShareProgress(boolean shareProgress) { this.shareProgress = shareProgress; }
   public List<Map<String, Object>> getTopics() { return topics; }
   public void setTopics(List<Map<String, Object>> topics) { this.topics = topics; }
+  public List<Map<String, Object>> getTopicTags() { return topicTags; }
+  public void setTopicTags(List<Map<String, Object>> topicTags) { this.topicTags = topicTags == null ? new ArrayList<>() : topicTags; }
+  public List<Map<String, Object>> getUserCustomTopics() { return userCustomTopics; }
+  public void setUserCustomTopics(List<Map<String, Object>> userCustomTopics) { this.userCustomTopics = userCustomTopics == null ? new ArrayList<>() : userCustomTopics; }
   public List<String> getDownloadedByUsernames() { return downloadedByUsernames; }
   public void setDownloadedByUsernames(List<String> downloadedByUsernames) { this.downloadedByUsernames = downloadedByUsernames; }
   public List<String> getCopiedByUsernames() { return copiedByUsernames; }

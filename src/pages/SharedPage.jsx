@@ -25,6 +25,7 @@ import { seoDefaults } from "../config/seo";
 import PremiumLotusBadge from "../components/PremiumLotusBadge";
 import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
 import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
+import TopicDistributionChart from "../components/TopicDistributionChart";
 
 function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
@@ -617,12 +618,14 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         structuredData={[breadcrumbSchema, pageSchema]}
       />
       <DifficultyDistributionWidget topics={sharedSheet?.topics || []} categories={DEFAULT_DIFFICULTY_CATEGORIES} showCompleted={isProgressVisible} />
+      <TopicDistributionChart topics={sharedSheet?.topics || []} topicTags={sharedSheet?.topicTags || []} />
       <TopicList
         isEditing={isOwnerViewingSheet}
         allowReorder={isOwnerViewingSheet}
         allowProgressToggle={isOwnerViewingSheet && isProgressVisible}
         showAttemptInsights={isOwnerViewingSheet}
         onRequireCopy={() => setCopyPromptOpen(true)}
+        topicTags={sharedSheet?.topicTags || []}
       />
       {canToggleSharedProgress && !isProgressVisible && (
         <p className="meta-text mt-2 text-sm">
