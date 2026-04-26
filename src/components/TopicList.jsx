@@ -70,6 +70,8 @@ function TopicList({
   const deleteQuestion = useSheetStore((state) => state.deleteQuestion);
   const updateQuestionResources = useSheetStore((state) => state.updateQuestionResources);
   const moveSubTopic = useSheetStore((state) => state.moveSubTopic);
+  const reorderTopics = useSheetStore((state) => state.reorderTopics);
+  const moveQuestion = useSheetStore((state) => state.moveQuestion);
   const updateQuestionAttempt = useSheetStore((state) => state.updateQuestionAttempt);
   const toggleQuestionRevised = useSheetStore((state) => state.toggleQuestionRevised);
   const setQuestionDifficulty = useSheetStore((state) => state.setQuestionDifficulty);
@@ -138,10 +140,29 @@ function TopicList({
     const { source, destination, type } = result;
     if (!destination) return;
 
+    if (type === "topic") {
+      if (source.index === destination.index) return;
+      reorderTopics(source.index, destination.index);
+      return;
+    }
+
     if (type === "subtopic") {
-      const fromTopicId = parseInt(source.droppableId.split("-")[1]);
-      const toTopicId = parseInt(destination.droppableId.split("-")[1]);
+      const fromTopicId = Number(source.droppableId.split("-")[1]);
+      const toTopicId = Number(destination.droppableId.split("-")[1]);
+      if (Number.isNaN(fromTopicId) || Number.isNaN(toTopicId)) return;
       moveSubTopic(fromTopicId, toTopicId, source.index, destination.index);
+      return;
+    }
+
+    if (type === "question") {
+      const fromTokens = source.droppableId.split("-");
+      const toTokens = destination.droppableId.split("-");
+      const fromTopicId = Number(fromTokens[1]);
+      const fromSubId = Number(fromTokens[2]);
+      const toTopicId = Number(toTokens[1]);
+      const toSubId = Number(toTokens[2]);
+      if ([fromTopicId, fromSubId, toTopicId, toSubId].some((value) => Number.isNaN(value))) return;
+      moveQuestion(fromTopicId, fromSubId, toTopicId, toSubId, source.index, destination.index);
     }
   };
 
@@ -238,16 +259,16 @@ function TopicList({
                 return (
               <Draggable
                 key={topic.id}
-                draggableId={topic.id.toString()}
+                draggableId={`topic-${topic.id}`}
                 index={tIndex}
-                isDragDisabled
+                isDragDisabled={!isEditing || !allowReorder}
               >
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className="cursor-default rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55"
+                    className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2.5 transition hover:bg-[var(--surface-elevated)]/55`}
                   >
                     {/* Topic */}
                     <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
@@ -506,7 +527,12 @@ function TopicList({
                                               >
                                                 {sub.questions.map((q, qIndex) => (
                                                   
-                                                  <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled>
+                                                  <Draggable
+                                                    key={q.id}
+                                                    draggableId={`question-${topic.id}-${sub.id}-${q.id}`}
+                                                    index={qIndex}
+                                                    isDragDisabled={!isEditing || !allowReorder}
+                                                  >
                                                     {(provided) => (
                                                       (() => {
                                                         const attemptLogs = getQuestionAttemptLogs(q);
@@ -531,7 +557,7 @@ function TopicList({
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
-                                                            className="cursor-default rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60"
+                                                            className={`${!isEditing || !allowReorder ? "cursor-default" : "cursor-grab active:cursor-grabbing"} rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/75 p-2.5 transition hover:bg-[var(--surface-elevated)]/60`}
                                                           >
                                                         {editingQuestionId === q.id && isEditing ? (
                                                           <div className="flex gap-2 flex-1">
