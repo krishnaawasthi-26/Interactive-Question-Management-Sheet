@@ -19,6 +19,7 @@ import EmptyState from "../components/ui/EmptyState";
 import SurfaceCard from "../components/ui/SurfaceCard";
 import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
 import TopicDistributionChart from "../components/TopicDistributionChart";
+import SheetHeader from "../components/SheetHeader";
 import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
 import { createDifficultyCategory, listDifficultyCategories } from "../api/difficultyCategoryApi";
 
@@ -512,21 +513,6 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
     }
   }, [createNewSheet, currentUser?.token, handleSheetActionError]);
 
-  const handleRenameOpenedSheet = useCallback(async () => {
-    if (!currentUser?.token || !sheetId) return;
-
-    const defaultTitle = (sheetTitle || "Untitled Sheet").trim();
-    const nextTitle = window.prompt("Enter a new sheet name", defaultTitle)?.trim();
-
-    if (!nextTitle || nextTitle === defaultTitle) return;
-
-    try {
-      await renameSheet(currentUser.token, sheetId, nextTitle);
-    } catch (error) {
-      handleSheetActionError("rename-sheet-error", "Could not rename sheet", error);
-    }
-  }, [currentUser?.token, handleSheetActionError, renameSheet, sheetId, sheetTitle]);
-
   const createSheetActions = useCallback(
     (sheet) => [
       {
@@ -630,6 +616,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
   );
   const openedSheet = useMemo(() => sheets.find((sheet) => sheet.id === sheetId) || null, [sheetId, sheets]);
   const openedSheetActions = useMemo(() => (openedSheet ? createSheetActions(openedSheet) : []), [createSheetActions, openedSheet]);
+  const activeSheetProgress = useMemo(() => calculateSheetProgress({ topics }), [topics]);
   const handleCreateCustomDifficulty = useCallback(async ({ name, color }) => {
     if (!currentUser?.token) return null;
     const created = await createDifficultyCategory(currentUser.token, { name, color });
@@ -685,9 +672,9 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
         keywords={["sheet dashboard", "question tracker", "coding practice tracker"]}
       />
       <AppShell
-        title={isEditing ? sheetTitle || "Untitled Sheet" : null}
-        subtitle={isEditing ? `${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}` : null}
-        titleActions={isEditing && sheetId ? <button type="button" className="btn-base btn-neutral px-3 py-1.5" onClick={handleRenameOpenedSheet}>Rename</button> : null}
+        title={!sheetId && isEditing ? sheetTitle || "Untitled Sheet" : null}
+        subtitle={!sheetId && isEditing ? `${saveStatusLabel} • Last saved ${formatRelativeTime(lastSavedAt)}` : null}
+        titleActions={null}
         theme={theme}
         onThemeChange={onThemeChange}
         userLabel={currentUser?.fullName || currentUser?.email || "Account"}
@@ -781,6 +768,17 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
             </div>
           ) : (
             <>
+              <SheetHeader
+                title={sheetTitle || openedSheet?.title || "Untitled Sheet"}
+                description={openedSheet?.description || ""}
+                completedCount={activeSheetProgress.completedQuestions}
+                totalCount={activeSheetProgress.totalQuestions}
+                updatedAt={openedSheet?.updatedAt || lastSavedAt}
+                metadata={[
+                  { label: "Visibility", value: openedSheet?.isPublic ? "Public" : "Private" },
+                  { label: "Mode", value: isEditing ? "Edit" : "View only" },
+                ]}
+              />
               {openedSheet ? (
                 <div className="mb-3 space-y-2 panel-elevated rounded-xl p-3">
                   <p className="text-xs text-[var(--text-secondary)]">
@@ -789,7 +787,7 @@ function SheetPage({ sheetId, onOpenImport, onOpenExport, theme, onThemeChange }
                     {openedSheet.shareProgress ? " • Shared progress on" : " • Shared progress off"}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {openedSheetActions.filter((action) => ["visibility", "share-progress", "archive", "copy", "delete"].includes(action.key)).map((action) => (
+                    {openedSheetActions.filter((action) => ["save-name", "visibility", "share-progress", "archive", "copy", "delete"].includes(action.key)).map((action) => (
                       <button key={action.key} type="button" className={`btn-base ${action.className} px-2 py-1`} onClick={action.onClick}>
                         {action.label}
                       </button>
