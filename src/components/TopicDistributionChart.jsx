@@ -34,7 +34,7 @@ function TopicDistributionChart({ topics = [], topicTags = [] }) {
         <div className="max-h-56 flex-1 space-y-2 overflow-auto pr-1">
           {rows.length === 0 ? <p className="text-sm text-[var(--text-secondary)]">No questions/tags yet. Add your first question to see distribution.</p> : rows.map((entry) => (
             <div key={entry.key} className="flex items-center justify-between rounded-md border border-[var(--border-subtle)] bg-[var(--surface)]/70 px-3 py-2">
-              <p className="text-sm font-medium" style={{ color: entry.color }}>{entry.label}</p>
+              <p className="flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]"><span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} aria-hidden="true" />{entry.label}</p>
               <p className="text-sm text-[var(--text-primary)]">{entry.count} <span className="text-xs text-[var(--text-secondary)]">({entry.percent}%)</span></p>
             </div>
           ))}
