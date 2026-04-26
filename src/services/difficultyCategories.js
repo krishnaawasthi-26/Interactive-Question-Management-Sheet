@@ -1,3 +1,5 @@
+import { isQuestionCompleted } from "./questionProgress";
+
 export const DEFAULT_DIFFICULTY_CATEGORIES = [
   { key: "basic", label: "Basic", color: "#64748b", type: "default", tier: "default" },
   { key: "easy", label: "Easy", color: "#22c55e", type: "default", tier: "default" },
@@ -50,7 +52,7 @@ export const buildDistribution = (topics = [], allCategories = []) => {
           completed: 0,
         };
         current.count += 1;
-        if (question.done) current.completed += 1;
+        if (isQuestionCompleted(question)) current.completed += 1;
         map.set(key, current);
       });
     });

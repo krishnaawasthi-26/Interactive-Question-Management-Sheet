@@ -264,7 +264,7 @@ export const createSheetCrudSlice = ({ set, get }, { applyTopicsWithHistoryAndDi
     set((state) => {
       const topics = updateQuestionById(state.topics, topicId, subId, questionId, (question) => ({
         ...question,
-        done: true,
+        done: attemptLog?.result === "solved",
         attemptLog,
         attemptLogs: [...(Array.isArray(question.attemptLogs) ? question.attemptLogs : (question.attemptLog ? [question.attemptLog] : [])), attemptLog],
       }));
