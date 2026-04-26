@@ -22,6 +22,20 @@ const arcPath = (cx, cy, innerRadius, outerRadius, startAngle, endAngle) => {
 
 function DonutChart({ items, total }) {
   const [activeKey, setActiveKey] = useState(null);
+
+  const chartSize = useMemo(() => {
+    if (items.length >= 14) return 420;
+    if (items.length >= 10) return 380;
+    if (items.length >= 7) return 340;
+    return 300;
+  }, [items.length]);
+
+  const center = chartSize / 2;
+  const outerRadius = Math.round(chartSize * 0.31);
+  const innerRadius = Math.round(chartSize * 0.17);
+  const labelRadius = outerRadius + 18;
+  const arrowRadius = outerRadius + 8;
+
   const slices = useMemo(() => {
     let start = 0;
     return items.map((item) => {
@@ -32,34 +46,65 @@ function DonutChart({ items, total }) {
     });
   }, [items, total]);
 
+  const activeSlice = useMemo(() => slices.find((slice) => slice.key === activeKey) || null, [activeKey, slices]);
+
   if (!total) return <div className="flex h-56 items-center justify-center text-sm text-[var(--text-secondary)]">No questions yet</div>;
 
   return (
-    <div className="relative h-56 w-56">
-      <svg viewBox="0 0 220 220" className="h-full w-full">
+    <div className="relative" style={{ height: chartSize, width: chartSize }}>
+      <svg viewBox={`0 0 ${chartSize} ${chartSize}`} className="h-full w-full">
         {slices.map((slice) => {
           const active = activeKey === slice.key;
           const midAngle = (slice.start + slice.end) / 2;
-          const nudge = active ? 4 : 0;
-          const point = polarToCartesian(110, 110, nudge, midAngle);
+          const arrowStart = polarToCartesian(center, center, outerRadius, midAngle);
+          const arrowBend = polarToCartesian(center, center, arrowRadius, midAngle);
+          const labelPoint = polarToCartesian(center, center, labelRadius, midAngle);
+          const textAnchor = labelPoint.x >= center ? "start" : "end";
+          const horizontalOffset = labelPoint.x >= center ? 10 : -10;
+          const labelX = labelPoint.x + horizontalOffset;
+
           return (
-            <path
-              key={slice.key}
-              d={arcPath(point.x, point.y, 56, active ? 94 : 90, slice.start, slice.end)}
-              fill={slice.color}
-              stroke="#111"
-              strokeWidth="1.4"
-              onMouseEnter={() => setActiveKey(slice.key)}
-              onMouseLeave={() => setActiveKey(null)}
-              onClick={() => setActiveKey((current) => (current === slice.key ? null : slice.key))}
-            />
+            <g key={slice.key}>
+              <path
+                d={arcPath(center, center, innerRadius, outerRadius, slice.start, slice.end)}
+                fill={slice.color}
+                stroke={active ? "#ffffff" : "#111"}
+                strokeWidth={active ? "2.4" : "1.4"}
+                onMouseEnter={() => setActiveKey(slice.key)}
+                onMouseLeave={() => setActiveKey(null)}
+                onFocus={() => setActiveKey(slice.key)}
+                onBlur={() => setActiveKey((current) => (current === slice.key ? null : current))}
+                role="presentation"
+                aria-label={`${slice.label}: ${slice.count}`}
+              />
+              <polyline
+                points={`${arrowStart.x},${arrowStart.y} ${arrowBend.x},${arrowBend.y} ${labelX},${labelPoint.y}`}
+                fill="none"
+                stroke={slice.color}
+                strokeWidth={active ? "2.4" : "1.6"}
+                opacity={active ? 1 : 0.8}
+              />
+              <text
+                x={labelX + (textAnchor === "start" ? 2 : -2)}
+                y={labelPoint.y - 2}
+                textAnchor={textAnchor}
+                fontSize={items.length > 12 ? "10" : "11"}
+                fill="var(--text-primary)"
+                className="font-medium"
+              >
+                {slice.label}
+              </text>
+            </g>
           );
         })}
-        <circle cx="110" cy="110" r="48" fill="var(--surface-elevated)" />
+        <circle cx={center} cy={center} r={innerRadius - 6} fill="var(--surface-elevated)" />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-xs text-[var(--text-secondary)]">Total</span>
         <span className="text-2xl font-semibold text-[var(--text-primary)]">{total}</span>
+      </div>
+      <div className="pointer-events-none absolute bottom-2 left-1/2 w-[90%] -translate-x-1/2 rounded-md bg-[var(--surface)]/85 px-2 py-1 text-center text-xs text-[var(--text-secondary)] backdrop-blur-sm">
+        {activeSlice ? `${activeSlice.label}: ${activeSlice.count} questions` : "Hover a section to see details"}
       </div>
     </div>
   );
