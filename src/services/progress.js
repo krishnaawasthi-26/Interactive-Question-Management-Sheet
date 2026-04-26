@@ -1,3 +1,5 @@
+import { getSubtopicProgress } from "./questionProgress";
+
 export const calculateSheetProgress = (sheet) => {
   const topics = Array.isArray(sheet?.topics) ? sheet.topics : [];
   let totalQuestions = 0;
@@ -6,13 +8,9 @@ export const calculateSheetProgress = (sheet) => {
   topics.forEach((topic) => {
     const subTopics = Array.isArray(topic?.subTopics) ? topic.subTopics : [];
     subTopics.forEach((subTopic) => {
-      const questions = Array.isArray(subTopic?.questions) ? subTopic.questions : [];
-      questions.forEach((question) => {
-        totalQuestions += 1;
-        if (question?.done) {
-          completedQuestions += 1;
-        }
-      });
+      const progress = getSubtopicProgress(subTopic);
+      totalQuestions += progress.totalQuestions;
+      completedQuestions += progress.completedQuestions;
     });
   });
 

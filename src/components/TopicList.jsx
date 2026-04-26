@@ -10,6 +10,13 @@ import CustomTopicModal from "./CustomTopicModal";
 import DifficultyBadge from "./DifficultyBadge";
 import TopicChipsPreview from "./TopicChipsPreview";
 import QuestionDetailsDrawer from "./QuestionDetailsDrawer";
+import {
+  getLatestAttemptResult,
+  getQuestionAttemptLogs,
+  getSubtopicProgress,
+  getTopicProgress,
+  isQuestionCompleted,
+} from "../services/questionProgress";
 
 const normalizeText = (value) =>
   `${value || ""}`.trim().toLowerCase().replace(/\s+/g, " ");
@@ -35,18 +42,6 @@ const ATTEMPT_RESULT_META = {
     label: "Unsolved",
     color: "var(--border-strong)",
   },
-};
-
-const getAttemptLogs = (question) => {
-  if (Array.isArray(question.attemptLogs) && question.attemptLogs.length > 0) return question.attemptLogs;
-  if (question.attemptLog) return [question.attemptLog];
-  return [];
-};
-
-const getLatestAttempt = (question) => {
-  const attempts = getAttemptLogs(question);
-  if (!attempts.length) return null;
-  return attempts[attempts.length - 1];
 };
 
 function TopicList({
@@ -233,6 +228,14 @@ function TopicList({
               className="space-y-3"
             >
             {visibleTopics.map((topic, tIndex) => (
+              (() => {
+                const topicProgress = getTopicProgress(topic);
+                const topicSegments = [
+                  { key: "completed", count: topicProgress.completedSubtopics, color: ATTEMPT_RESULT_META.solved.color, label: "Completed subtopics" },
+                  { key: "in_progress", count: topicProgress.inProgressSubtopics, color: ATTEMPT_RESULT_META.partially_solved.color, label: "In progress subtopics" },
+                  { key: "not_started", count: topicProgress.notStartedSubtopics, color: ATTEMPT_RESULT_META.unresolved.color, label: "Not started subtopics" },
+                ].filter((segment) => segment.count > 0);
+                return (
               <Draggable
                 key={topic.id}
                 draggableId={topic.id.toString()}
@@ -274,7 +277,12 @@ function TopicList({
                             </button>
                           </div>
                         ) : (
-                          <h2 className="text-sm font-semibold text-[var(--text-primary)] break-words">{topic.title}</h2>
+                          <div className="min-w-0">
+                            <h2 className="text-sm font-semibold text-[var(--text-primary)] break-words">{topic.title}</h2>
+                            <p className="text-xs text-[var(--text-secondary)]">
+                              {topicProgress.completedSubtopics} / {topicProgress.totalSubtopics} subtopics completed
+                            </p>
+                          </div>
                         )}
                       </div>
 
@@ -297,6 +305,23 @@ function TopicList({
                           </button>
                         </div>
                       )}
+                    </div>
+                    <div className="mb-2">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full border border-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+                        <div className="flex h-full w-full">
+                          {topicProgress.totalSubtopics === 0 ? (
+                            <span className="h-full w-full bg-[var(--surface-elevated)]" />
+                          ) : (
+                            topicSegments.map((segment) => (
+                              <span
+                                key={segment.key}
+                                style={{ width: `${(segment.count / topicProgress.totalSubtopics) * 100}%`, background: segment.color }}
+                                title={`${segment.label}: ${segment.count}/${topicProgress.totalSubtopics}`}
+                              />
+                            ))
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {(expandedTopics[topic.id] || shouldExpandAll) && (
@@ -343,6 +368,15 @@ function TopicList({
                               className="space-y-2 pl-2 sm:pl-4"
                             >
                               {topic.subTopics.map((sub, sIndex) => (
+                                (() => {
+                                  const subtopicProgress = getSubtopicProgress(sub);
+                                  const subtopicSegments = [
+                                    { key: "solved", count: subtopicProgress.resultCounts.solved, color: ATTEMPT_RESULT_META.solved.color, label: ATTEMPT_RESULT_META.solved.label },
+                                    { key: "partially_solved", count: subtopicProgress.resultCounts.partially_solved, color: ATTEMPT_RESULT_META.partially_solved.color, label: ATTEMPT_RESULT_META.partially_solved.label },
+                                    { key: "failed", count: subtopicProgress.resultCounts.failed, color: ATTEMPT_RESULT_META.failed.color, label: ATTEMPT_RESULT_META.failed.label },
+                                    { key: "unresolved", count: subtopicProgress.resultCounts.unresolved, color: ATTEMPT_RESULT_META.unresolved.color, label: ATTEMPT_RESULT_META.unresolved.label },
+                                  ].filter((segment) => segment.count > 0);
+                                  return (
                                 <Draggable key={sub.id} draggableId={sub.id.toString()} index={sIndex} isDragDisabled={!isEditing || !allowReorder}>
                                   {(provided) => (
                                     <div
@@ -378,7 +412,12 @@ function TopicList({
                                               </button>
                                             </div>
                                           ) : (
-                                            <h3 className="text-sm font-medium text-[var(--text-primary)] break-words">{sub.title}</h3>
+                                            <div className="min-w-0">
+                                              <h3 className="text-sm font-medium text-[var(--text-primary)] break-words">{sub.title}</h3>
+                                              <p className="text-xs text-[var(--text-secondary)]">
+                                                {subtopicProgress.completedQuestions} / {subtopicProgress.totalQuestions} questions completed
+                                              </p>
+                                            </div>
                                           )}
                                         </div>
 
@@ -401,6 +440,23 @@ function TopicList({
                                             </button>
                                           </div>
                                         )}
+                                      </div>
+                                      <div className="px-2 pb-2">
+                                        <div className="h-1.5 w-full overflow-hidden rounded-full border border-[var(--border-subtle)] bg-[var(--surface-elevated)]">
+                                          <div className="flex h-full w-full">
+                                            {subtopicProgress.totalQuestions === 0 ? (
+                                              <span className="h-full w-full bg-[var(--surface-elevated)]" />
+                                            ) : (
+                                              subtopicSegments.map((segment) => (
+                                                <span
+                                                  key={segment.key}
+                                                  style={{ width: `${(segment.count / subtopicProgress.totalQuestions) * 100}%`, background: segment.color }}
+                                                  title={`${segment.label}: ${segment.count}/${subtopicProgress.totalQuestions}`}
+                                                />
+                                              ))
+                                            )}
+                                          </div>
+                                        </div>
                                       </div>
 
                                       {(expandedSubtopics[sub.id] || shouldExpandAll) && (
@@ -453,11 +509,11 @@ function TopicList({
                                                   <Draggable key={q.id} draggableId={q.id.toString()} index={qIndex} isDragDisabled>
                                                     {(provided) => (
                                                       (() => {
-                                                        const attemptLogs = getAttemptLogs(q);
+                                                        const attemptLogs = getQuestionAttemptLogs(q);
                                                         const totalAttempts = attemptLogs.length;
-                                                        const latestAttempt = getLatestAttempt(q);
-                                                        const latestResult = latestAttempt?.result || (q.done ? "solved" : "unresolved");
+                                                        const latestResult = getLatestAttemptResult(q);
                                                         const tickMeta = ATTEMPT_RESULT_META[latestResult] || ATTEMPT_RESULT_META.unresolved;
+                                                        const questionCompleted = isQuestionCompleted(q);
                                                         const isQuestionRevised = Boolean(q.revised);
                                                         const resultCounts = attemptLogs.reduce((acc, attempt) => {
                                                           if (!attempt?.result) return acc;
@@ -504,13 +560,13 @@ function TopicList({
                                                                   className={`mt-0.5 h-5 w-5 rounded border text-xs font-bold transition ${showAttemptInsights
                                                                       ? tickMeta.tickClasses
                                                                       : (
-                                                                        q.done
+                                                                        questionCompleted
                                                                           ? "border-[color-mix(in_srgb,var(--accent-success)_80%,black)] bg-[var(--accent-success)] text-[var(--btn-on-success)]"
                                                                           : "border-[var(--border-strong)] bg-transparent text-transparent"
                                                                       )
                                                                   } ${allowProgressToggle ? "question-done-toggle--open" : "cursor-pointer opacity-85"}`}
-                                                                  aria-label={q.done ? "Log another attempt" : "Log attempt"}
-                                                                  title={showAttemptInsights ? tickMeta.label : (q.done ? "Solved" : "Unsolved")}
+                                                                  aria-label={questionCompleted ? "Log another attempt" : "Log attempt"}
+                                                                  title={showAttemptInsights ? tickMeta.label : (questionCompleted ? "Solved" : "Unsolved")}
                                                                 >
                                                                   ✓
                                                                 </button>
@@ -668,6 +724,8 @@ function TopicList({
                                     </div>
                                   )}
                                 </Draggable>
+                                  );
+                                })()
                               ))}
                               {provided.placeholder}
                             </div>
@@ -678,6 +736,8 @@ function TopicList({
                   </div>
                 )}
               </Draggable>
+                );
+              })()
             ))}
             {provided.placeholder}
             </div>
