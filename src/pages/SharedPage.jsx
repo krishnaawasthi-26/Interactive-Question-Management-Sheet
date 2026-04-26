@@ -23,6 +23,8 @@ import {
 import AppShell from "../components/AppShell";
 import { seoDefaults } from "../config/seo";
 import PremiumLotusBadge from "../components/PremiumLotusBadge";
+import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
+import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
 
 function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
@@ -614,6 +616,7 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         keywords={["public dsa sheet", "coding practice sheet", "interview preparation sheet"]}
         structuredData={[breadcrumbSchema, pageSchema]}
       />
+      <DifficultyDistributionWidget topics={sharedSheet?.topics || []} categories={DEFAULT_DIFFICULTY_CATEGORIES} showCompleted={isProgressVisible} />
       <TopicList
         isEditing={isOwnerViewingSheet}
         allowReorder={isOwnerViewingSheet}

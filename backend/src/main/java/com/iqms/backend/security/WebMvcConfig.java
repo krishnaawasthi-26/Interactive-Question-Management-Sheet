@@ -23,6 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         .addInterceptor(authInterceptor)
         .addPathPatterns(
             "/api/profile/**",
+            "/api/difficulty-categories/**",
             "/api/sheets/**",
             "/api/notifications/**",
             "/api/notification-preferences/**",
