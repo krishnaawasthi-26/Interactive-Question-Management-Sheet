@@ -26,6 +26,8 @@ import PremiumLotusBadge from "../components/PremiumLotusBadge";
 import DifficultyDistributionWidget from "../components/DifficultyDistributionWidget";
 import { DEFAULT_DIFFICULTY_CATEGORIES } from "../services/difficultyCategories";
 import TopicDistributionChart from "../components/TopicDistributionChart";
+import SheetHeader from "../components/SheetHeader";
+import { calculateSheetProgress } from "../services/progress";
 
 function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: usernameProp, sheetSlug: sheetSlugProp, theme, onThemeChange }) {
   const { shareType: shareTypeFromRoute, shareId: shareIdFromRoute, username: usernameFromRoute, sheetSlug: sheetSlugFromRoute } = useParams();
@@ -163,6 +165,9 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
     };
   const canToggleSharedProgress = Boolean(sharedSheet?.shareProgress);
   const isProgressVisible = canToggleSharedProgress && showSharedProgress;
+  const sharedSheetProgress = calculateSheetProgress(sharedSheet || { topics: [] });
+  const downloadedUsers = (sharedSheet?.downloadedByUsernames || []).map((entry) => ({ username: entry, sheetTitle: sharedSheet?.title }));
+  const copiedUsers = (sharedSheet?.copiedByUsernames || []).map((entry) => ({ username: entry, sheetTitle: sharedSheet?.title }));
 
   const handleCopySheet = async ({ sourceSheetId, sourceShareId, customTitle = null } = {}) => {
     if (!currentUser?.token) return;
@@ -569,8 +574,8 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
 
   return (
     <AppShell
-      title={sharedSheet?.title || sheetTitle}
-      subtitle={isOwnerViewingSheet ? "Owner view" : "Public read-only view"}
+      title={null}
+      subtitle={null}
       titleActions={canToggleSharedProgress ? (
         <button
           type="button"
@@ -617,6 +622,20 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
         keywords={["public dsa sheet", "coding practice sheet", "interview preparation sheet"]}
         structuredData={[breadcrumbSchema, pageSchema]}
       />
+      <SheetHeader
+        title={sharedSheet?.title || sheetTitle}
+        description={sharedSheet?.description || ""}
+        completedCount={sharedSheetProgress.completedQuestions}
+        totalCount={sharedSheetProgress.totalQuestions}
+        updatedAt={sharedSheet?.updatedAt}
+        metadata={[
+          { label: "Access", value: isOwnerViewingSheet ? "Owner view" : "Public read-only" },
+        ]}
+        downloadsCount={sharedSheet?.downloadedByUsernames?.length}
+        copiesCount={sharedSheet?.copiedByUsernames?.length}
+        onDownloadsClick={downloadedUsers.length ? (() => setEngagementViewer({ title: "Downloaded by", users: downloadedUsers })) : undefined}
+        onCopiesClick={copiedUsers.length ? (() => setEngagementViewer({ title: "Copied by", users: copiedUsers })) : undefined}
+      />
       <DifficultyDistributionWidget topics={sharedSheet?.topics || []} categories={DEFAULT_DIFFICULTY_CATEGORIES} showCompleted={isProgressVisible} />
       <TopicDistributionChart topics={sharedSheet?.topics || []} topicTags={sharedSheet?.topicTags || []} />
       <TopicList
@@ -645,6 +664,28 @@ function SharedPage({ shareType: shareTypeProp, shareId: shareIdProp, username: 
             <a href={`/profile/${profile?.username || username}`} className="btn-base btn-neutral px-3 py-1.5 text-sm">
               View profile
             </a>
+          </div>
+        </div>
+      )}
+      {engagementViewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-backdrop)] p-4">
+          <div className="surface-card w-full max-w-md space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">{engagementViewer.title}</h3>
+              <button type="button" className="btn-base btn-neutral rounded-md px-2 py-1" onClick={() => setEngagementViewer(null)}>✕</button>
+            </div>
+            {engagementViewer.users.length === 0 ? (
+              <p className="meta-text text-sm">No users yet.</p>
+            ) : (
+              <div className="max-h-72 space-y-2 overflow-auto">
+                {engagementViewer.users.map((entry, index) => (
+                  <div key={`${entry.username}-${index}`} className="rounded border border-[var(--border-subtle)] bg-[var(--surface-elevated)]/55 p-2 text-sm">
+                    <p className="font-medium">@{entry.username}</p>
+                    {entry.sheetTitle ? <p className="meta-text text-xs">Sheet: {entry.sheetTitle}</p> : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
